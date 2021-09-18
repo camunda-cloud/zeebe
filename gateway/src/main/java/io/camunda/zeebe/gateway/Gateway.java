@@ -18,11 +18,15 @@ import io.camunda.zeebe.gateway.impl.configuration.SecurityCfg;
 import io.camunda.zeebe.gateway.impl.job.ActivateJobsHandler;
 import io.camunda.zeebe.gateway.impl.job.LongPollingActivateJobsHandler;
 import io.camunda.zeebe.gateway.impl.job.RoundRobinActivateJobsHandler;
+import io.camunda.zeebe.gateway.protocol.GatewayGrpc;
 import io.camunda.zeebe.util.sched.ActorSchedulingService;
+import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptors;
+import io.grpc.health.v1.HealthCheckResponse.ServingStatus;
 import io.grpc.netty.NettyServerBuilder;
+import io.grpc.protobuf.services.HealthStatusManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -38,6 +42,7 @@ public final class Gateway {
   private static final Function<GatewayCfg, ServerBuilder> DEFAULT_SERVER_BUILDER_FACTORY =
       cfg -> setNetworkConfig(cfg.getNetwork());
 
+  private final HealthStatusManager healthStatusManager = new HealthStatusManager();
   private final Function<GatewayCfg, ServerBuilder> serverBuilderFactory;
   private final Function<GatewayCfg, BrokerClient> brokerClientFactory;
   private final GatewayCfg gatewayCfg;
@@ -46,7 +51,7 @@ public final class Gateway {
   private Server server;
   private BrokerClient brokerClient;
 
-  private volatile Status status = Status.INITIAL;
+  private volatile Status status;
 
   public Gateway(
       final GatewayCfg gatewayCfg,
@@ -77,6 +82,7 @@ public final class Gateway {
     this.brokerClientFactory = brokerClientFactory;
     this.serverBuilderFactory = serverBuilderFactory;
     this.actorSchedulingService = actorSchedulingService;
+    this.setStatus(Status.INITIAL);
   }
 
   public GatewayCfg getGatewayCfg() {
@@ -87,12 +93,33 @@ public final class Gateway {
     return status;
   }
 
+  public void setStatus(final Status status) {
+    this.status = status;
+    updateGrpcHealthStatus(status);
+  }
+
+  private void updateGrpcHealthStatus(final Status status) {
+    if (status == Status.INITIAL || status == Status.STARTING) {
+      setGrpcHealthStatus(ServingStatus.NOT_SERVING);
+    } else if (status == Status.SHUTDOWN) {
+      healthStatusManager.clearStatus(GatewayGrpc.SERVICE_NAME);
+      healthStatusManager.clearStatus(HealthStatusManager.SERVICE_NAME_ALL_SERVICES);
+    } else if (status == Status.RUNNING) {
+      setGrpcHealthStatus(ServingStatus.SERVING);
+    }
+  }
+
+  private void setGrpcHealthStatus(final ServingStatus servingStatus) {
+    healthStatusManager.setStatus(GatewayGrpc.SERVICE_NAME, servingStatus);
+    healthStatusManager.setStatus(HealthStatusManager.SERVICE_NAME_ALL_SERVICES, servingStatus);
+  }
+
   public BrokerClient getBrokerClient() {
     return brokerClient;
   }
 
   public void start() throws IOException {
-    status = Status.STARTING;
+    setStatus(Status.STARTING);
     brokerClient = buildBrokerClient();
 
     final ActivateJobsHandler activateJobsHandler;
@@ -109,13 +136,16 @@ public final class Gateway {
     final GatewayGrpcService gatewayGrpcService = new GatewayGrpcService(endpointManager);
     final ServerBuilder<?> serverBuilder = serverBuilderFactory.apply(gatewayCfg);
 
+    final BindableService healthService = healthStatusManager.getHealthService();
     if (gatewayCfg.getMonitoring().isEnabled()) {
       final MonitoringServerInterceptor monitoringInterceptor =
           MonitoringServerInterceptor.create(Configuration.allMetrics());
       serverBuilder.addService(
           ServerInterceptors.intercept(gatewayGrpcService, monitoringInterceptor));
+      serverBuilder.addService(ServerInterceptors.intercept(healthService, monitoringInterceptor));
     } else {
       serverBuilder.addService(gatewayGrpcService);
+      serverBuilder.addService(healthService);
     }
 
     final SecurityCfg securityCfg = gatewayCfg.getSecurity();
@@ -126,7 +156,7 @@ public final class Gateway {
     server = serverBuilder.build();
 
     server.start();
-    status = Status.RUNNING;
+    setStatus(Status.RUNNING);
   }
 
   private static NettyServerBuilder setNetworkConfig(final NetworkCfg cfg) {
@@ -188,7 +218,7 @@ public final class Gateway {
   }
 
   public void stop() {
-    status = Status.SHUTDOWN;
+    setStatus(Status.SHUTDOWN);
     if (server != null && !server.isShutdown()) {
       server.shutdownNow();
       try {
