@@ -14,45 +14,50 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.camunda.zeebe.broker.SpringBrokerBridge;
-import io.camunda.zeebe.broker.system.monitoring.BrokerHealthCheckService;
+import io.camunda.zeebe.broker.clustering.ClusterServicesImpl;
+import io.camunda.zeebe.broker.system.management.LeaderManagementRequestHandler;
+import io.camunda.zeebe.protocol.impl.encoding.BrokerInfo;
 import io.camunda.zeebe.util.sched.ActorSchedulingService;
 import io.camunda.zeebe.util.sched.TestConcurrencyControl;
 import io.camunda.zeebe.util.sched.future.ActorFuture;
-import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
-class MonitoringServerStepTest {
+class LeaderManagementRequestHandlerStepTest {
   private static final TestConcurrencyControl CONCURRENCY_CONTROL = new TestConcurrencyControl();
 
-  private SpringBrokerBridge mockSpringBrokerBridge;
   private BrokerStartupContext mockBrokerStartupContext;
-  private BrokerHealthCheckService mockHealthCheckService;
   private ActorSchedulingService mockActorSchedulingService;
+  private LeaderManagementRequestHandler mockLeaderManagementRequestHandler;
 
   private ActorFuture<BrokerStartupContext> future;
 
-  private final MonitoringServerStep sut = new MonitoringServerStep();
+  private final LeaderManagementRequestHandlerStep sut = new LeaderManagementRequestHandlerStep();
 
   @BeforeEach
   void setUp() {
-    mockSpringBrokerBridge = mock(SpringBrokerBridge.class);
-    mockBrokerStartupContext = mock(BrokerStartupContext.class);
     mockActorSchedulingService = mock(ActorSchedulingService.class);
-
-    mockHealthCheckService = mock(BrokerHealthCheckService.class);
-    when(mockHealthCheckService.closeAsync()).thenReturn(CONCURRENCY_CONTROL.completedFuture(null));
-
-    when(mockBrokerStartupContext.getConcurrencyControl()).thenReturn(CONCURRENCY_CONTROL);
-    when(mockBrokerStartupContext.getSpringBrokerBridge()).thenReturn(mockSpringBrokerBridge);
-    when(mockBrokerStartupContext.getHealthCheckService()).thenReturn(mockHealthCheckService);
-    when(mockBrokerStartupContext.getActorSchedulingService())
-        .thenReturn(mockActorSchedulingService);
 
     when(mockActorSchedulingService.submitActor(any()))
         .thenReturn(CONCURRENCY_CONTROL.completedFuture(null));
+
+    mockLeaderManagementRequestHandler = mock(LeaderManagementRequestHandler.class);
+    when(mockLeaderManagementRequestHandler.closeAsync())
+        .thenReturn(CONCURRENCY_CONTROL.completedFuture(null));
+
+    mockBrokerStartupContext = mock(BrokerStartupContext.class);
+
+    when(mockBrokerStartupContext.getConcurrencyControl()).thenReturn(CONCURRENCY_CONTROL);
+    when(mockBrokerStartupContext.getBrokerInfo()).thenReturn(mock(BrokerInfo.class));
+    when(mockBrokerStartupContext.getActorSchedulingService())
+        .thenReturn(mockActorSchedulingService);
+    when(mockBrokerStartupContext.getLeaderManagementRequestHandler())
+        .thenReturn(mockLeaderManagementRequestHandler);
+
+    when(mockBrokerStartupContext.getClusterServices())
+        .thenReturn(mock(ClusterServicesImpl.class, Mockito.RETURNS_DEEP_STUBS));
 
     future = CONCURRENCY_CONTROL.createFuture();
   }
@@ -64,41 +69,44 @@ class MonitoringServerStepTest {
     await().until(future::isDone);
 
     // then
+    assertThat(future.isDone()).isTrue();
     assertThat(future.isCompletedExceptionally()).isFalse();
   }
 
   @Test
-  void shouldScheduleHealthMonitorActorOnStartup() {
+  void shouldScheduleLeaderManagementRequestHandlerActorOnStartup() {
     // when
     sut.startupInternal(mockBrokerStartupContext, CONCURRENCY_CONTROL, future);
     await().until(future::isDone);
 
     // then
-    verify(mockActorSchedulingService).submitActor(mockHealthCheckService);
+    final var argumentCaptor = ArgumentCaptor.forClass(LeaderManagementRequestHandler.class);
+    verify(mockActorSchedulingService).submitActor(argumentCaptor.capture());
+    verify(mockBrokerStartupContext).setLeaderManagementRequestHandler(argumentCaptor.getValue());
   }
 
   @Test
-  void shouldRegisterHealthMonitorAsPartitionListenerOnStartup() {
+  void shouldRegisterLeaderRequestManagementHandlerAsPartitionListenerOnStartup() {
     // when
     sut.startupInternal(mockBrokerStartupContext, CONCURRENCY_CONTROL, future);
     await().until(future::isDone);
 
     // then
-    verify(mockBrokerStartupContext).addPartitionListener(mockHealthCheckService);
+    final var argumentCaptor = ArgumentCaptor.forClass(LeaderManagementRequestHandler.class);
+    verify(mockBrokerStartupContext).setLeaderManagementRequestHandler(argumentCaptor.capture());
+    verify(mockBrokerStartupContext).addPartitionListener(argumentCaptor.getValue());
   }
 
   @Test
-  void shouldRegisterHealthMonitorInSpringBrokerBridgeOnStartup() {
+  void shouldRegisterLeaderRequestManagementHandlerAsDiskSpaceListenerOnStartup() {
     // when
     sut.startupInternal(mockBrokerStartupContext, CONCURRENCY_CONTROL, future);
     await().until(future::isDone);
 
     // then
-    final var argumentCaptor = ArgumentCaptor.forClass(Supplier.class);
-    verify(mockSpringBrokerBridge)
-        .registerBrokerHealthCheckServiceSupplier(argumentCaptor.capture());
-
-    assertThat(argumentCaptor.getValue().get()).isSameAs(mockHealthCheckService);
+    final var argumentCaptor = ArgumentCaptor.forClass(LeaderManagementRequestHandler.class);
+    verify(mockBrokerStartupContext).setLeaderManagementRequestHandler(argumentCaptor.capture());
+    verify(mockBrokerStartupContext).addDiskSpaceUsageListener(argumentCaptor.getValue());
   }
 
   @Test
@@ -108,6 +116,7 @@ class MonitoringServerStepTest {
     await().until(future::isDone);
 
     // then
+    assertThat(future.isDone()).isTrue();
     assertThat(future.isCompletedExceptionally()).isFalse();
   }
 
@@ -118,30 +127,28 @@ class MonitoringServerStepTest {
     await().until(future::isDone);
 
     // then
-    verify(mockHealthCheckService).closeAsync();
+    verify(mockLeaderManagementRequestHandler).closeAsync();
+    verify(mockBrokerStartupContext).setLeaderManagementRequestHandler(null);
   }
 
   @Test
-  void shouldUnregisterHealthCheckServiceAsPartitionListenerOnShutdown() {
+  void shouldRemoveLeaderRequestManagementHandlerAsPartitionListenerOnStartup() {
     // when
     sut.shutdownInternal(mockBrokerStartupContext, CONCURRENCY_CONTROL, future);
     await().until(future::isDone);
 
     // then
-    verify(mockBrokerStartupContext).removePartitionListener(mockHealthCheckService);
+    verify(mockBrokerStartupContext).removePartitionListener(mockLeaderManagementRequestHandler);
   }
 
   @Test
-  void shouldUnregisterHealthMonitorInSpringBrokerBridgeOnStartup() {
+  void shouldRemoveLeaderRequestManagementHandlerAsDiskSpaceListenerOnStartup() {
     // when
     sut.shutdownInternal(mockBrokerStartupContext, CONCURRENCY_CONTROL, future);
     await().until(future::isDone);
 
     // then
-    final var argumentCaptor = ArgumentCaptor.forClass(Supplier.class);
-    verify(mockSpringBrokerBridge)
-        .registerBrokerHealthCheckServiceSupplier(argumentCaptor.capture());
-
-    assertThat(argumentCaptor.getValue().get()).isNull();
+    verify(mockBrokerStartupContext)
+        .removeDiskSpaceUsageListener(mockLeaderManagementRequestHandler);
   }
 }

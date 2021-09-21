@@ -11,26 +11,18 @@ import io.atomix.cluster.AtomixCluster;
 import io.camunda.zeebe.broker.bootstrap.BrokerContext;
 import io.camunda.zeebe.broker.bootstrap.BrokerStartupContextImpl;
 import io.camunda.zeebe.broker.bootstrap.BrokerStartupProcess;
-import io.camunda.zeebe.broker.bootstrap.CloseProcess;
-import io.camunda.zeebe.broker.bootstrap.StartProcess;
 import io.camunda.zeebe.broker.clustering.ClusterServices;
 import io.camunda.zeebe.broker.clustering.ClusterServicesImpl;
 import io.camunda.zeebe.broker.exporter.repo.ExporterLoadException;
 import io.camunda.zeebe.broker.exporter.repo.ExporterRepository;
 import io.camunda.zeebe.broker.partitioning.PartitionManager;
-import io.camunda.zeebe.broker.partitioning.PartitionManagerImpl;
 import io.camunda.zeebe.broker.system.EmbeddedGatewayService;
 import io.camunda.zeebe.broker.system.SystemContext;
 import io.camunda.zeebe.broker.system.configuration.BrokerCfg;
-import io.camunda.zeebe.broker.system.configuration.DataCfg;
 import io.camunda.zeebe.broker.system.management.BrokerAdminService;
-import io.camunda.zeebe.broker.system.management.BrokerAdminServiceImpl;
-import io.camunda.zeebe.broker.system.management.LeaderManagementRequestHandler;
 import io.camunda.zeebe.broker.system.monitoring.BrokerHealthCheckService;
-import io.camunda.zeebe.broker.system.monitoring.DiskSpaceUsageListener;
 import io.camunda.zeebe.broker.system.monitoring.DiskSpaceUsageMonitor;
 import io.camunda.zeebe.protocol.impl.encoding.BrokerInfo;
-import io.camunda.zeebe.util.FileUtil;
 import io.camunda.zeebe.util.LogUtil;
 import io.camunda.zeebe.util.VersionUtil;
 import io.camunda.zeebe.util.exception.UncheckedExecutionException;
@@ -39,10 +31,7 @@ import io.camunda.zeebe.util.sched.Actor;
 import io.camunda.zeebe.util.sched.ActorScheduler;
 import io.camunda.zeebe.util.sched.future.ActorFuture;
 import io.netty.util.NetUtil;
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
@@ -52,21 +41,13 @@ public final class Broker implements AutoCloseable {
   public static final Logger LOG = Loggers.SYSTEM_LOGGER;
 
   private final SystemContext systemContext;
-  private final List<PartitionListener> partitionListeners;
   private boolean isClosed = false;
 
   private ClusterServicesImpl clusterServices;
   private CompletableFuture<Broker> startFuture;
-  private LeaderManagementRequestHandler managementRequestHandler;
   private final ActorScheduler scheduler;
-  private CloseProcess closeProcess;
-  private EmbeddedGatewayService embeddedGatewayService;
   private BrokerHealthCheckService healthCheckService;
-  private final List<DiskSpaceUsageListener> diskSpaceUsageListeners = new ArrayList<>();
-  private final SpringBrokerBridge springBrokerBridge;
-  private DiskSpaceUsageMonitor diskSpaceUsageMonitor;
   private BrokerAdminService brokerAdminService;
-  private PartitionManagerImpl partitionManager;
 
   private final TestCompanionClass testCompanionObject = new TestCompanionClass();
   // TODO make Broker class itself the actor
@@ -76,9 +57,14 @@ public final class Broker implements AutoCloseable {
   // TODO make Broker class itself the actor
 
   public Broker(final SystemContext systemContext, final SpringBrokerBridge springBrokerBridge) {
+    this(systemContext, springBrokerBridge, Collections.emptyList());
+  }
+
+  public Broker(
+      final SystemContext systemContext,
+      final SpringBrokerBridge springBrokerBridge,
+      final List<PartitionListener> additionalPartitionListeners) {
     this.systemContext = systemContext;
-    partitionListeners = new ArrayList<>();
-    this.springBrokerBridge = springBrokerBridge;
     scheduler = this.systemContext.getScheduler();
 
     localBroker = createBrokerInfo(getConfig());
@@ -91,14 +77,12 @@ public final class Broker implements AutoCloseable {
             systemContext.getBrokerConfiguration(),
             springBrokerBridge,
             scheduler,
-            healthCheckService);
+            healthCheckService,
+            buildExporterRepository(getConfig()),
+            additionalPartitionListeners);
 
     brokerStartupActor = new BrokerStartupActor(startupContext);
     scheduler.submitActor(brokerStartupActor);
-  }
-
-  public void addPartitionListener(final PartitionListener listener) {
-    partitionListeners.add(listener);
   }
 
   public synchronized CompletableFuture<Broker> start() {
@@ -123,10 +107,15 @@ public final class Broker implements AutoCloseable {
   }
 
   private void internalStart() {
-    final StartProcess startProcess = initStart();
-
     try {
-      closeProcess = startProcess.start();
+      brokerContext = brokerStartupActor.start().join();
+
+      testCompanionObject.embeddedGatewayService = brokerContext.getEmbeddedGatewayService();
+      testCompanionObject.diskSpaceUsageMonitor = brokerContext.getDiskSpaceUsageMonitor();
+      brokerAdminService = brokerContext.getBrokerAdminService();
+      clusterServices = brokerContext.getClusterServices();
+      testCompanionObject.atomix = clusterServices.getAtomixCluster();
+
       startFuture.complete(this);
       healthCheckService.setBrokerStarted();
     } catch (final Exception bootStrapException) {
@@ -139,54 +128,6 @@ public final class Broker implements AutoCloseable {
       startFuture.completeExceptionally(exception);
       throw exception;
     }
-  }
-
-  private StartProcess initStart() {
-    final BrokerCfg brokerCfg = getConfig();
-
-    final StartProcess startContext = new StartProcess("Broker-" + localBroker.getNodeId());
-
-    startContext.addStep("Migrated Startup Steps", this::migratedStartupSteps);
-
-    startContext.addStep("cluster services", () -> clusterServices.start().join());
-    if (brokerCfg.getGateway().isEnable()) {
-      startContext.addStep(
-          "embedded gateway",
-          () -> {
-            embeddedGatewayService =
-                new EmbeddedGatewayService(
-                    brokerCfg,
-                    scheduler,
-                    clusterServices.getMessagingService(),
-                    clusterServices.getMembershipService(),
-                    clusterServices.getEventService());
-            return embeddedGatewayService;
-          });
-    }
-
-    startContext.addStep("disk space monitor", () -> diskSpaceMonitorStep(brokerCfg.getData()));
-    startContext.addStep(
-        "leader management request handler", () -> managementRequestStep(localBroker));
-    startContext.addStep("zeebe partitions", () -> partitionsStep(brokerCfg, localBroker));
-    startContext.addStep("register diskspace usage listeners", this::addDiskSpaceUsageListeners);
-    startContext.addStep("upgrade manager", this::addBrokerAdminService);
-
-    return startContext;
-  }
-
-  private AutoCloseable migratedStartupSteps() {
-    brokerContext = brokerStartupActor.start().join();
-
-    partitionListeners.addAll(brokerContext.getPartitionListeners());
-    diskSpaceUsageListeners.addAll(brokerContext.getDiskSpaceUsageListeners());
-
-    clusterServices = brokerContext.getClusterServices();
-    testCompanionObject.atomix = clusterServices.getAtomixCluster();
-
-    return () -> {
-      brokerStartupActor.stop().join();
-      healthCheckService = null;
-    };
   }
 
   private BrokerInfo createBrokerInfo(final BrokerCfg brokerCfg) {
@@ -208,82 +149,6 @@ public final class Broker implements AutoCloseable {
       result.setVersion(version);
     }
     return result;
-  }
-
-  private AutoCloseable addBrokerAdminService() {
-    final var adminService = new BrokerAdminServiceImpl();
-    scheduleActor(adminService);
-
-    adminService.injectAdminAccess(partitionManager.createAdminAccess(adminService));
-    adminService.injectPartitionInfoSource(partitionManager.getPartitions());
-
-    brokerAdminService = adminService;
-    springBrokerBridge.registerBrokerAdminServiceSupplier(() -> brokerAdminService);
-    return adminService;
-  }
-
-  private void addDiskSpaceUsageListeners() {
-    diskSpaceUsageListeners.forEach(diskSpaceUsageMonitor::addDiskUsageListener);
-  }
-
-  private void scheduleActor(final Actor actor) {
-    systemContext.getScheduler().submitActor(actor).join();
-  }
-
-  private AutoCloseable diskSpaceMonitorStep(final DataCfg data) {
-    /* the folder needs to be created at this point. If it doesn't exist, then the DiskSpaceUsageMonitor
-     * will calculate the wrong watermark, as a non-existing folder has a total size of 0
-     */
-    try {
-      FileUtil.ensureDirectoryExists(new File(data.getDirectory()).toPath());
-    } catch (final IOException e) {
-      throw new UncheckedIOException("Failed to create data directory", e);
-    }
-
-    diskSpaceUsageMonitor = new DiskSpaceUsageMonitor(data);
-    if (data.isDiskUsageMonitoringEnabled()) {
-      scheduleActor(diskSpaceUsageMonitor);
-      diskSpaceUsageListeners.forEach(l -> diskSpaceUsageMonitor.addDiskUsageListener(l));
-      return () -> diskSpaceUsageMonitor.close();
-    } else {
-      LOG.info("Skipping start of disk space usage monitor, as it is disabled by configuration");
-      return () -> {};
-    }
-  }
-
-  private AutoCloseable managementRequestStep(final BrokerInfo localBroker) {
-    managementRequestHandler =
-        new LeaderManagementRequestHandler(
-            localBroker,
-            clusterServices.getCommunicationService(),
-            clusterServices.getEventService());
-    scheduleActor(managementRequestHandler);
-    partitionListeners.add(managementRequestHandler);
-    diskSpaceUsageListeners.add(managementRequestHandler);
-    return managementRequestHandler;
-  }
-
-  private AutoCloseable partitionsStep(final BrokerCfg brokerCfg, final BrokerInfo localBroker) {
-    partitionManager =
-        new PartitionManagerImpl(
-            scheduler,
-            brokerCfg,
-            localBroker,
-            clusterServices,
-            healthCheckService,
-            managementRequestHandler.getPushDeploymentRequestHandler(),
-            diskSpaceUsageListeners::add,
-            partitionListeners,
-            brokerContext.getCommandApiService(),
-            buildExporterRepository(brokerCfg));
-
-    partitionManager.start().join();
-
-    return () -> {
-      partitionManager.stop().join();
-      partitionManager = null;
-      // TODO shutdown snapshot store
-    };
   }
 
   private ExporterRepository buildExporterRepository(final BrokerCfg cfg) {
@@ -318,8 +183,10 @@ public final class Broker implements AutoCloseable {
             startFuture
                 .thenAccept(
                     b -> {
-                      closeProcess.closeReverse();
+                      brokerStartupActor.stop().join();
+                      healthCheckService = null;
                       isClosed = true;
+                      testCompanionObject.atomix = null;
                       LOG.info("Broker shut down.");
                     })
                 .join();
@@ -327,8 +194,9 @@ public final class Broker implements AutoCloseable {
         });
   }
 
+  @Deprecated
   public EmbeddedGatewayService getEmbeddedGatewayService() {
-    return embeddedGatewayService;
+    return testCompanionObject.embeddedGatewayService;
   }
 
   // only used for tests
@@ -342,7 +210,7 @@ public final class Broker implements AutoCloseable {
   }
 
   public DiskSpaceUsageMonitor getDiskSpaceUsageMonitor() {
-    return diskSpaceUsageMonitor;
+    return testCompanionObject.diskSpaceUsageMonitor;
   }
 
   public BrokerAdminService getBrokerAdminService() {
@@ -354,12 +222,14 @@ public final class Broker implements AutoCloseable {
   }
 
   public PartitionManager getPartitionManager() {
-    return partitionManager;
+    return brokerContext.getPartitionManager();
   }
 
   @Deprecated // only used for test; temporary work around
   private static final class TestCompanionClass {
     private AtomixCluster atomix;
+    private EmbeddedGatewayService embeddedGatewayService;
+    private DiskSpaceUsageMonitor diskSpaceUsageMonitor;
   }
 
   /**

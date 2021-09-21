@@ -16,23 +16,25 @@ import static org.mockito.Mockito.when;
 
 import io.atomix.cluster.messaging.ManagedMessagingService;
 import io.camunda.zeebe.broker.SpringBrokerBridge;
+import io.camunda.zeebe.broker.exporter.repo.ExporterRepository;
 import io.camunda.zeebe.broker.system.configuration.BrokerCfg;
 import io.camunda.zeebe.broker.system.monitoring.BrokerHealthCheckService;
+import io.camunda.zeebe.broker.system.monitoring.DiskSpaceUsageMonitor;
 import io.camunda.zeebe.broker.transport.commandapi.CommandApiServiceImpl;
 import io.camunda.zeebe.protocol.impl.encoding.BrokerInfo;
 import io.camunda.zeebe.test.util.socket.SocketUtil;
 import io.camunda.zeebe.transport.impl.AtomixServerTransport;
-import io.camunda.zeebe.util.sched.ActorSchedulingService;
+import io.camunda.zeebe.util.sched.ActorScheduler;
 import io.camunda.zeebe.util.sched.TestConcurrencyControl;
 import io.camunda.zeebe.util.sched.future.ActorFuture;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-public class CommandApiServiceStepTest {
+class CommandApiServiceStepTest {
   private static final TestConcurrencyControl CONCURRENCY_CONTROL = new TestConcurrencyControl();
   private static final BrokerCfg TEST_BROKER_CONFIG = new BrokerCfg();
   private static final BrokerInfo TEST_BROKER_INFO = new BrokerInfo(0, "localhost");
@@ -43,8 +45,7 @@ public class CommandApiServiceStepTest {
     commandApiCfg.setAdvertisedHost("localhost");
   }
 
-  private final ActorSchedulingService mockActorSchedulingService =
-      mock(ActorSchedulingService.class);
+  private final ActorScheduler mockActorSchedulingService = mock(ActorScheduler.class);
 
   private BrokerStartupContextImpl testBrokerStartupContext;
 
@@ -59,9 +60,11 @@ public class CommandApiServiceStepTest {
         new BrokerStartupContextImpl(
             TEST_BROKER_INFO,
             TEST_BROKER_CONFIG,
-            Mockito.mock(SpringBrokerBridge.class),
+            mock(SpringBrokerBridge.class),
             mockActorSchedulingService,
-            Mockito.mock(BrokerHealthCheckService.class));
+            mock(BrokerHealthCheckService.class),
+            mock(ExporterRepository.class),
+            Collections.emptyList());
     testBrokerStartupContext.setConcurrencyControl(CONCURRENCY_CONTROL);
   }
 
@@ -166,6 +169,10 @@ public class CommandApiServiceStepTest {
 
     @Test
     void shouldAddCommandApiServiceAsDiskSpaceUsageListener() {
+      // given
+      final var mockDiskSpaceUsageMonitor = mock(DiskSpaceUsageMonitor.class);
+      testBrokerStartupContext.setDiskSpaceUsageMonitor(mockDiskSpaceUsageMonitor);
+
       // when
       sut.startupInternal(testBrokerStartupContext, CONCURRENCY_CONTROL, startupFuture);
       await().until(startupFuture::isDone);
@@ -174,7 +181,7 @@ public class CommandApiServiceStepTest {
       final var commandApiService = testBrokerStartupContext.getCommandApiService();
 
       assertThat(commandApiService).isNotNull();
-      assertThat(testBrokerStartupContext.getDiskSpaceUsageListeners()).contains(commandApiService);
+      verify(mockDiskSpaceUsageMonitor).addDiskUsageListener(commandApiService);
     }
   }
 
@@ -211,13 +218,16 @@ public class CommandApiServiceStepTest {
 
     @Test
     void shouldRemoveCommandApiFromDiskSpaceUsageListenerList() {
+      // given
+      final var mockDiskSpaceUsageMonitor = mock(DiskSpaceUsageMonitor.class);
+      testBrokerStartupContext.setDiskSpaceUsageMonitor(mockDiskSpaceUsageMonitor);
+
       // when
       sut.shutdownInternal(testBrokerStartupContext, CONCURRENCY_CONTROL, shutdownFuture);
       await().until(shutdownFuture::isDone);
 
       // then
-      assertThat(testBrokerStartupContext.getDiskSpaceUsageListeners())
-          .doesNotContain(mockCommandApiService);
+      verify(mockDiskSpaceUsageMonitor).removeDiskUsageListener(mockCommandApiService);
     }
 
     @Test
