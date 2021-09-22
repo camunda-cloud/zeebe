@@ -28,10 +28,7 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
   private PartitionTransitionContext context;
   private ConcurrencyControl concurrencyControl;
   private PartitionTransitionProcess lastTransition;
-  // these two should be set/cleared in tandem
-  private PartitionTransitionProcess currentTransition;
   private ActorFuture<Void> currentTransitionFuture;
-  // these two should be set in tandem
 
   public NewPartitionTransitionImpl(
       final List<PartitionTransitionStep> steps, final PartitionTransitionContext context) {
