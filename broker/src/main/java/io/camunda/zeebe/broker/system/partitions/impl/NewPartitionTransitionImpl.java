@@ -81,6 +81,13 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
         currentTransitionFuture == null
             ? concurrencyControl.createCompletedFuture()
             : currentTransitionFuture;
+
+    // For safety reasons we have to immediately replace the current transition future with the next
+    // transition future, such that we make sure that we enqueue all transitions after another.
+    //
+    // This means we will always add the next transition to the tail, this can become a chain of
+    // futures if we have many transitions after another. Ideally we would execute after the current
+    // transition only the last enqueue one. This should be implemented as soon we have time for it.
     currentTransitionFuture = nextTransitionFuture;
 
     ongoingTransitionFuture.onComplete(
