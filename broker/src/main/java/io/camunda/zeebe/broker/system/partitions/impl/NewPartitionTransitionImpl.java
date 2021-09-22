@@ -73,67 +73,41 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
     steps.forEach(step -> step.onNewRaftRole(context, role));
 
     final ActorFuture<Void> nextTransitionFuture = concurrencyControl.createFuture();
+    final var nextTransition =
+        new PartitionTransitionProcess(steps, concurrencyControl, context, term, role);
+    nextTransitionFuture.onComplete((v, e) -> lastTransition = nextTransition);
 
-    concurrencyControl.run(
-        () -> {
-          if (currentTransition != null) {
-            LOG.info(
-                format(
-                    "Transition to %s on term %d requested while another transition is still running",
-                    role, term));
-            currentTransition.cancel(); // this will drop any subsequent transition steps
+    final var ongoingTransitionFuture =
+        currentTransitionFuture == null
+            ? concurrencyControl.createCompletedFuture()
+            : currentTransitionFuture;
+    currentTransitionFuture = nextTransitionFuture;
 
-            // schedule new transition as soon as the current step of the current transition
-            // has completed
-            concurrencyControl.runOnCompletion(
-                currentTransitionFuture,
-                (ok, error) -> cleanupLastTransition(nextTransitionFuture, term, role));
+    ongoingTransitionFuture.onComplete(
+        (nothing, error) -> {
+          context.setCurrentTerm(term);
+          context.setCurrentRole(role);
 
+          if (lastTransition == null) {
+            nextTransition.start(nextTransitionFuture);
           } else {
-            cleanupLastTransition(nextTransitionFuture, term, role);
+            final var cleanupFuture = lastTransition.cleanup(term, role);
+            cleanupFuture.onComplete(
+                (ok, e) -> {
+                  if (error != null) {
+                    LOG.error(
+                        String.format("Error during transition clean up: %s", error.getMessage()),
+                        error);
+                    LOG.info(
+                        String.format(
+                            "Aborting transition to %s on term %d due to error.", role, term));
+                    nextTransitionFuture.completeExceptionally(error);
+                  } else {
+                    nextTransition.start(nextTransitionFuture);
+                  }
+                });
           }
         });
     return nextTransitionFuture;
-  }
-
-  private void cleanupLastTransition(
-      final ActorFuture<Void> nextTransitionFuture, final long term, final Role role) {
-    if (lastTransition == null) {
-      startNewTransition(nextTransitionFuture, term, role);
-    } else {
-      final var cleanupFuture = lastTransition.cleanup(term, role);
-      concurrencyControl.runOnCompletion(
-          cleanupFuture,
-          (ok, error) -> {
-            if (error != null) {
-              LOG.error(
-                  String.format("Error during transition clean up: %s", error.getMessage()), error);
-              LOG.info(
-                  String.format("Aborting transition to %s on term %d due to error.", role, term));
-              nextTransitionFuture.completeExceptionally(error);
-            } else {
-              startNewTransition(nextTransitionFuture, term, role);
-            }
-          });
-    }
-  }
-
-  private void startNewTransition(
-      final ActorFuture<Void> nextTransitionFuture, final long term, final Role role) {
-    currentTransition =
-        new PartitionTransitionProcess(steps, concurrencyControl, context, term, role);
-    currentTransitionFuture = nextTransitionFuture;
-    concurrencyControl.runOnCompletion(
-        currentTransitionFuture,
-        (ok, error) -> {
-          if (error == null) {
-            context.setCurrentTerm(term);
-            context.setCurrentRole(role);
-          }
-          lastTransition = currentTransition;
-          currentTransition = null;
-          currentTransitionFuture = null;
-        });
-    currentTransition.start(currentTransitionFuture);
   }
 }
