@@ -112,10 +112,12 @@ class NewPartitionTransitionImplTest {
     inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
     inOrder.verify(mockStep1).transitionTo(mockContext, 1, Role.FOLLOWER);
 
-    // second transition
     inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.LEADER);
-    inOrder.verify(mockStep1).prepareTransition(mockContext, 2, Role.LEADER);
-    inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.LEADER);
+    inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
+
+    // transition to third transition, since other is canceled
+    inOrder.verify(mockStep1, never()).transitionTo(mockContext, 2, Role.LEADER);
+    inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.FOLLOWER);
 
     // when reaching wait state (future) nothing more should happen
     inOrder.verifyNoMoreInteractions();
@@ -156,11 +158,10 @@ class NewPartitionTransitionImplTest {
     inOrder.verify(mockStep1).transitionTo(mockContext, 1, Role.FOLLOWER);
 
     // second transition
-    inOrder.verify(mockStep1).prepareTransition(mockContext, 2, Role.LEADER);
-    inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.LEADER);
+    // Leader transition canceled
+    inOrder.verify(mockStep1, never()).transitionTo(mockContext, 2, Role.LEADER);
 
     // third transition
-    inOrder.verify(mockStep1).prepareTransition(mockContext, 2, Role.FOLLOWER);
     inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.FOLLOWER);
 
     inOrder.verifyNoMoreInteractions();
