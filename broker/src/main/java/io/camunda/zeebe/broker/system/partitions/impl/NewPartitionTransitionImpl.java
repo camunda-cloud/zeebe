@@ -121,7 +121,7 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
 
     ongoingTransitionFuture.onComplete(
         (nothing, error) ->
-            performNextTransition(term, role, nextTransitionFuture, nextTransition, error));
+            performNextTransition(term, role, nextTransitionFuture, nextTransition));
   }
 
   /**
@@ -132,14 +132,13 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
       final long term,
       final Role role,
       final ActorFuture<Void> nextTransitionFuture,
-      final PartitionTransitionProcess nextTransition,
-      final Throwable error) {
+      final PartitionTransitionProcess nextTransition) {
     if (lastTransition == null) {
       nextTransition.start(nextTransitionFuture);
     } else {
       final var cleanupFuture = lastTransition.cleanup(term, role);
       cleanupFuture.onComplete(
-          (ok, e) -> {
+          (ok, error) -> {
             if (error != null) {
               LOG.error("Error during transition clean up: {}", error.getMessage(), error);
               LOG.info("Aborting transition to {} on term {} due to error.", role, term);
