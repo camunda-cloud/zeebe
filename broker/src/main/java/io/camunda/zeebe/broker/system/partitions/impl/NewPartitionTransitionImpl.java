@@ -28,6 +28,9 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
   private PartitionTransitionContext context;
   private ConcurrencyControl concurrencyControl;
   private PartitionTransitionProcess lastTransition;
+
+  // transient state - to keep track of the current transitions
+  private PartitionTransitionProcess currentTransition;
   private ActorFuture<Void> currentTransitionFuture;
 
   public NewPartitionTransitionImpl(
@@ -71,42 +74,80 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
     final ActorFuture<Void> nextTransitionFuture = concurrencyControl.createFuture();
     final var nextTransition =
         new PartitionTransitionProcess(steps, concurrencyControl, context, term, role);
-    nextTransitionFuture.onComplete((v, e) -> lastTransition = nextTransition);
+    nextTransitionFuture.onComplete(
+        (v, error) -> {
+          // term and role should only bet set after the transition is completed, since on clean up
+          // we expect old term and role to make decision based on that
+          if (error != null) {
+            context.setCurrentTerm(term);
+            context.setCurrentRole(role);
+          }
+          lastTransition = nextTransition;
+        });
 
-    final var ongoingTransitionFuture =
-        currentTransitionFuture == null
-            ? concurrencyControl.createCompletedFuture()
-            : currentTransitionFuture;
+    concurrencyControl.run(
+        () -> enqueueNextTransition(term, role, nextTransitionFuture, nextTransition));
 
-    // For safety reasons we have to immediately replace the current transition future with the next
-    // transition future, such that we make sure that we enqueue all transitions after another.
-    //
-    // This means we will always add the next transition to the tail, this can become a chain of
-    // futures if we have many transitions after another. Ideally we would execute after the current
-    // transition only the last enqueue one. This should be implemented as soon we have time for it.
+    return nextTransitionFuture;
+  }
+
+  /**
+   * Enqueues the new next transition after the current ongoing transition. It will cancel the
+   * ongoing transition to speed up the process of execution.
+   */
+  private void enqueueNextTransition(
+      final long term,
+      final Role role,
+      final ActorFuture<Void> nextTransitionFuture,
+      final PartitionTransitionProcess nextTransition) {
+    final ActorFuture<Void> ongoingTransitionFuture;
+    if (currentTransition == null) {
+      // we run our first transition nothing to cancel nor to enqueue
+      ongoingTransitionFuture = concurrencyControl.createCompletedFuture();
+    } else {
+      // we can be sure that the currentTransitionFuture is also set, since it is always set
+      // with the currentTransition
+      ongoingTransitionFuture = currentTransitionFuture;
+
+      final var ongoingTransition = currentTransition;
+      ongoingTransition.cancel();
+    }
+
+    // For safety reasons we have to immediately replace the current transition future with
+    // the next transition future, such that we make sure that we enqueue all transitions
+    // after another. We cancel current transitions to make the process faster.
     currentTransitionFuture = nextTransitionFuture;
+    currentTransition = nextTransition;
 
     ongoingTransitionFuture.onComplete(
-        (nothing, error) -> {
-          context.setCurrentTerm(term);
-          context.setCurrentRole(role);
+        (nothing, error) ->
+            performNextTransition(term, role, nextTransitionFuture, nextTransition, error));
+  }
 
-          if (lastTransition == null) {
-            nextTransition.start(nextTransitionFuture);
-          } else {
-            final var cleanupFuture = lastTransition.cleanup(term, role);
-            cleanupFuture.onComplete(
-                (ok, e) -> {
-                  if (error != null) {
-                    LOG.error("Error during transition clean up: {}", error.getMessage(), error);
-                    LOG.info("Aborting transition to {} on term {} due to error.", role, term);
-                    nextTransitionFuture.completeExceptionally(error);
-                  } else {
-                    nextTransition.start(nextTransitionFuture);
-                  }
-                });
-          }
-        });
-    return nextTransitionFuture;
+  /**
+   * Performs the next transition after the ongoing transition is completed. It will start to clean
+   * resources of the previous transition before performing the next transition.
+   */
+  private void performNextTransition(
+      final long term,
+      final Role role,
+      final ActorFuture<Void> nextTransitionFuture,
+      final PartitionTransitionProcess nextTransition,
+      final Throwable error) {
+    if (lastTransition == null) {
+      nextTransition.start(nextTransitionFuture);
+    } else {
+      final var cleanupFuture = lastTransition.cleanup(term, role);
+      cleanupFuture.onComplete(
+          (ok, e) -> {
+            if (error != null) {
+              LOG.error("Error during transition clean up: {}", error.getMessage(), error);
+              LOG.info("Aborting transition to {} on term {} due to error.", role, term);
+              nextTransitionFuture.completeExceptionally(error);
+            } else {
+              nextTransition.start(nextTransitionFuture);
+            }
+          });
+    }
   }
 }
