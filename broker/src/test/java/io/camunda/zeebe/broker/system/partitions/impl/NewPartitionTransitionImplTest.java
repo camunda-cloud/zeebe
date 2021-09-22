@@ -153,6 +153,93 @@ class NewPartitionTransitionImplTest {
   }
 
   @Test
+  // regression test for https://github.com/camunda-cloud/zeebe/issues/7873
+  void shouldNotStartMultipleTransitions() {
+    // given
+    final var firstStepFirstTransitionFuture = TEST_CONCURRENCY_CONTROL.<Void>createFuture();
+    final var firstStepSecondTransitionFuture = TEST_CONCURRENCY_CONTROL.<Void>createFuture();
+    final var firstStepThirdTransitionFuture = TEST_CONCURRENCY_CONTROL.<Void>createFuture();
+    when(mockStep1.transitionTo(any(), anyLong(), any()))
+        .thenReturn(firstStepFirstTransitionFuture)
+        .thenReturn(firstStepSecondTransitionFuture)
+        .thenReturn(firstStepThirdTransitionFuture);
+    when(mockStep1.prepareTransition(any(), anyLong(), any()))
+        .thenReturn(TEST_CONCURRENCY_CONTROL.completedFuture(null));
+
+    final var transition = new NewPartitionTransitionImpl(of(mockStep1), mockContext);
+    transition.setConcurrencyControl(TEST_CONCURRENCY_CONTROL);
+
+    final var firstTransitionFuture = transition.transitionTo(1, Role.FOLLOWER);
+
+    // when
+    transition.transitionTo(2, Role.LEADER);
+    transition.transitionTo(2, Role.FOLLOWER);
+
+    firstStepFirstTransitionFuture.complete(null);
+    await().until(firstTransitionFuture::isDone);
+
+    // then
+    final var inOrder = inOrder(mockStep1);
+
+    // first transition sequence
+    inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
+    inOrder.verify(mockStep1).transitionTo(mockContext, 1, Role.FOLLOWER);
+
+    // second transition
+    inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.LEADER);
+    inOrder.verify(mockStep1).prepareTransition(mockContext, 2, Role.LEADER);
+    inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.LEADER);
+
+    // when reaching wait state (future) nothing more should happen
+    inOrder.verifyNoMoreInteractions();
+  }
+
+  @Test
+  // regression test for https://github.com/camunda-cloud/zeebe/issues/7873
+  void shouldExecuteTransitionsInOrder() {
+    // given
+    final var firstStepFirstTransitionFuture = TEST_CONCURRENCY_CONTROL.<Void>createFuture();
+    final var firstStepSecondTransitionFuture = TEST_CONCURRENCY_CONTROL.<Void>createFuture();
+    final var firstStepThirdTransitionFuture = TEST_CONCURRENCY_CONTROL.<Void>createFuture();
+    when(mockStep1.transitionTo(any(), anyLong(), any()))
+        .thenReturn(firstStepFirstTransitionFuture)
+        .thenReturn(firstStepSecondTransitionFuture)
+        .thenReturn(firstStepThirdTransitionFuture);
+    when(mockStep1.prepareTransition(any(), anyLong(), any()))
+        .thenReturn(TEST_CONCURRENCY_CONTROL.completedFuture(null));
+
+    final var transition = new NewPartitionTransitionImpl(of(mockStep1), mockContext);
+    transition.setConcurrencyControl(TEST_CONCURRENCY_CONTROL);
+
+    transition.transitionTo(1, Role.FOLLOWER);
+    transition.transitionTo(2, Role.LEADER);
+    final var lastTransitionFuture = transition.transitionTo(2, Role.FOLLOWER);
+
+    // when
+    firstStepFirstTransitionFuture.complete(null);
+    firstStepSecondTransitionFuture.complete(null);
+    firstStepThirdTransitionFuture.complete(null);
+
+    // then
+    await().until(lastTransitionFuture::isDone);
+    final var inOrder = inOrder(mockStep1);
+
+    // first transition sequence
+    inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
+    inOrder.verify(mockStep1).transitionTo(mockContext, 1, Role.FOLLOWER);
+
+    // second transition
+    inOrder.verify(mockStep1).prepareTransition(mockContext, 2, Role.LEADER);
+    inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.LEADER);
+
+    // third transition
+    inOrder.verify(mockStep1).prepareTransition(mockContext, 2, Role.FOLLOWER);
+    inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.FOLLOWER);
+
+    inOrder.verifyNoMoreInteractions();
+  }
+
+  @Test
   void shouldCallTransitionStepsInReverseOrderDuringPreparationForTransitionPhase() {
     // given
     when(mockStep1.transitionTo(any(), anyLong(), any()))
