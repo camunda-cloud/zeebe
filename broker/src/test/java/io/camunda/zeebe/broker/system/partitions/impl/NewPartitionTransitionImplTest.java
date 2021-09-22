@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -77,6 +78,78 @@ class NewPartitionTransitionImplTest {
     invocationRecorder.verify(mockStep2).onNewRaftRole(mockContext, DEFAULT_ROLE);
     invocationRecorder.verify(mockStep1).transitionTo(mockContext, DEFAULT_TERM, DEFAULT_ROLE);
     invocationRecorder.verify(mockStep2).transitionTo(mockContext, DEFAULT_TERM, DEFAULT_ROLE);
+  }
+
+  @Test
+  void shouldAbortTransitionIfOneStepThrowsAnException() {
+    // given
+    final var testException = new Exception("TEST_EXCEPTION");
+    when(mockStep1.transitionTo(mockContext, DEFAULT_TERM, DEFAULT_ROLE))
+        .thenReturn(TEST_CONCURRENCY_CONTROL.failedFuture(testException));
+    when(mockStep2.transitionTo(mockContext, DEFAULT_TERM, DEFAULT_ROLE))
+        .thenReturn(TEST_CONCURRENCY_CONTROL.completedFuture(null));
+
+    final var sut = new NewPartitionTransitionImpl(of(mockStep1, mockStep2), mockContext);
+    sut.setConcurrencyControl(TEST_CONCURRENCY_CONTROL);
+
+    // when
+    final var actualResult = sut.transitionTo(DEFAULT_TERM, DEFAULT_ROLE);
+
+    // then
+    verify(mockStep2, never()).transitionTo(mockContext, DEFAULT_TERM, DEFAULT_ROLE);
+
+    assertThatThrownBy(actualResult::join)
+        .isInstanceOf(CompletionException.class)
+        .getCause()
+        .isSameAs(testException);
+  }
+
+  @Test
+  void shouldAbortOngoingTransitionWhenNewTransitionIsRequested() {
+    // given
+    final var step1CountdownLatch = new CountDownLatch(1);
+    final var step1 = new WaitingTransitionStep(TEST_CONCURRENCY_CONTROL, step1CountdownLatch);
+    final var spyStep1 = spy(step1);
+
+    when(mockStep2.transitionTo(any(), anyLong(), any()))
+        .thenReturn(TEST_CONCURRENCY_CONTROL.completedFuture(null));
+
+    final var sut = new NewPartitionTransitionImpl(of(spyStep1, mockStep2), mockContext);
+    sut.setConcurrencyControl(TEST_CONCURRENCY_CONTROL);
+
+    final var secondTerm = 2L;
+    final var secondRole = Role.FOLLOWER;
+
+    // when
+    final var firstTransitionFuture = sut.transitionTo(DEFAULT_TERM, DEFAULT_ROLE);
+    final var secondTransitionFuture = sut.transitionTo(secondTerm, secondRole);
+
+    step1CountdownLatch.countDown();
+    await().until(firstTransitionFuture::isDone);
+    await().until(secondTransitionFuture::isDone);
+
+    // then
+
+    // both transitions completed orderly
+    assertThat(firstTransitionFuture.isCompletedExceptionally()).isFalse();
+    assertThat(secondTransitionFuture.isCompletedExceptionally()).isFalse();
+
+    // the first transition was cancelled before the second step
+    verify(mockStep2, never()).transitionTo(mockContext, DEFAULT_TERM, DEFAULT_ROLE);
+    verify(mockStep2, never()).prepareTransition(mockContext, secondTerm, secondRole);
+
+    final var invocationRecorder = inOrder(spyStep1, mockStep2);
+    // first transition sequence
+    invocationRecorder.verify(spyStep1).onNewRaftRole(mockContext, DEFAULT_ROLE);
+    invocationRecorder.verify(mockStep2).onNewRaftRole(mockContext, DEFAULT_ROLE);
+    invocationRecorder.verify(spyStep1).transitionTo(mockContext, DEFAULT_TERM, DEFAULT_ROLE);
+
+    // second transition sequence
+    invocationRecorder.verify(spyStep1).onNewRaftRole(mockContext, secondRole);
+    invocationRecorder.verify(mockStep2).onNewRaftRole(mockContext, secondRole);
+    invocationRecorder.verify(spyStep1).prepareTransition(mockContext, secondTerm, secondRole);
+    invocationRecorder.verify(spyStep1).transitionTo(mockContext, secondTerm, secondRole);
+    invocationRecorder.verify(mockStep2).transitionTo(mockContext, secondTerm, secondRole);
   }
 
   @Test
