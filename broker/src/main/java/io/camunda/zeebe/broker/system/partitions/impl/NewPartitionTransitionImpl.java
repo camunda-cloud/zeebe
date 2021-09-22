@@ -7,7 +7,6 @@
  */
 package io.camunda.zeebe.broker.system.partitions.impl;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 import io.atomix.raft.RaftServer.Role;
@@ -66,7 +65,7 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
   }
 
   public ActorFuture<Void> transitionTo(final long term, final Role role) {
-    LOG.info(format("Transition to %s on term %d requested.", role, term));
+    LOG.info("Transition to {} on term {} requested.", role, term);
 
     // notify steps immediately that a transition is coming; steps are encouraged to cancel any
     // ongoing activity at this point in time
@@ -102,12 +101,8 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
             cleanupFuture.onComplete(
                 (ok, e) -> {
                   if (error != null) {
-                    LOG.error(
-                        String.format("Error during transition clean up: %s", error.getMessage()),
-                        error);
-                    LOG.info(
-                        String.format(
-                            "Aborting transition to %s on term %d due to error.", role, term));
+                    LOG.error("Error during transition clean up: {}", error.getMessage(), error);
+                    LOG.info("Aborting transition to {} on term {} due to error.", role, term);
                     nextTransitionFuture.completeExceptionally(error);
                   } else {
                     nextTransition.start(nextTransitionFuture);
