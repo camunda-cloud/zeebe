@@ -72,21 +72,24 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
     steps.forEach(step -> step.onNewRaftRole(context, role));
 
     final ActorFuture<Void> nextTransitionFuture = concurrencyControl.createFuture();
-    final var nextTransition =
-        new PartitionTransitionProcess(steps, concurrencyControl, context, term, role);
-    nextTransitionFuture.onComplete(
-        (v, error) -> {
-          // term and role should only bet set after the transition is completed, since on clean up
-          // we expect old term and role to make decision based on that
-          if (error == null) {
-            context.setCurrentTerm(term);
-            context.setCurrentRole(role);
-          }
-          lastTransition = nextTransition;
-        });
-
     concurrencyControl.run(
-        () -> enqueueNextTransition(term, role, nextTransitionFuture, nextTransition));
+        () -> {
+          final var nextTransition =
+              new PartitionTransitionProcess(steps, concurrencyControl, context, term, role);
+          nextTransitionFuture.onComplete(
+              (v, error) -> {
+                // term and role should only bet set after the transition is completed, since on
+                // clean up
+                // we expect old term and role to make decision based on that
+                if (error == null) {
+                  context.setCurrentTerm(term);
+                  context.setCurrentRole(role);
+                }
+                lastTransition = nextTransition;
+              });
+
+          enqueueNextTransition(term, role, nextTransitionFuture, nextTransition);
+        });
 
     return nextTransitionFuture;
   }
