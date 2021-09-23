@@ -179,19 +179,26 @@ class NewPartitionTransitionImplTest {
     firstStepFirstTransitionFuture.complete(null);
     await().until(firstTransitionFuture::isDone);
 
+    //
     // then
+    //
     final var inOrder = inOrder(mockStep1);
 
     // first transition sequence
     inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
     inOrder.verify(mockStep1).transitionTo(mockContext, 1, Role.FOLLOWER);
 
+    // notify for concurrent transitions
     inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.LEADER);
     inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
 
-    // transition to third transition, since other is canceled
+    // prepare for transition - close resources
     inOrder.verify(mockStep1).prepareTransition(mockContext, 2L, RaftServer.Role.LEADER);
+
+    // skip transition
     inOrder.verify(mockStep1, never()).transitionTo(mockContext, 2, Role.LEADER);
+
+    // transition to third transition, since other is canceled
     inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.FOLLOWER);
 
     // when reaching wait state (future) nothing more should happen
@@ -232,8 +239,12 @@ class NewPartitionTransitionImplTest {
     inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
     inOrder.verify(mockStep1).transitionTo(mockContext, 1, Role.FOLLOWER);
 
+    inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.LEADER);
+    inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
+
     // second transition
     // Leader transition canceled
+    inOrder.verify(mockStep1).prepareTransition(mockContext, 2L, Role.LEADER);
     inOrder.verify(mockStep1, never()).transitionTo(mockContext, 2, Role.LEADER);
 
     // third transition
