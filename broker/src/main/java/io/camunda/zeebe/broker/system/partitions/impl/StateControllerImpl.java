@@ -63,117 +63,108 @@ public class StateControllerImpl implements StateController {
   public ActorFuture<Optional<TransientSnapshot>> takeTransientSnapshot(
       final long lowerBoundSnapshotPosition) {
     final ActorFuture<Optional<TransientSnapshot>> future = concurrencyControl.createFuture();
-    concurrencyControl.run(
-        () -> {
-          if (!isDbOpened()) {
-            LOG.warn(
-                "Expected to take snapshot for last processed position {}, but database was closed.",
-                lowerBoundSnapshotPosition);
-            future.complete(Optional.empty());
-          }
-
-          final long exportedPosition = exporterPositionSupplier.applyAsLong(db);
-          final long snapshotPosition =
-              determineSnapshotPosition(lowerBoundSnapshotPosition, exportedPosition);
-          final var optionalIndexed = entrySupplier.getPreviousIndexedEntry(snapshotPosition);
-          if (optionalIndexed.isEmpty()) {
-            future.completeExceptionally(
-                new IllegalStateException(
-                    String.format(
-                        "Failed to take snapshot. Expected to find an indexed entry for determined snapshot position %d (processedPosition = %d, exportedPosition=%d), but found no matching indexed entry which contains this position.",
-                        snapshotPosition, lowerBoundSnapshotPosition, exportedPosition)));
-          }
-
-          final var snapshotIndexedEntry = optionalIndexed.get();
-          final Optional<TransientSnapshot> transientSnapshot =
-              constructableSnapshotStore.newTransientSnapshot(
-                  snapshotIndexedEntry.index(),
-                  snapshotIndexedEntry.term(),
-                  lowerBoundSnapshotPosition,
-                  exportedPosition);
-
-          // Now takeSnapshot result can be either true, false or error.
-          // TODO: Remove boolean response, and always thrown error when snapshot was not taken.
-          transientSnapshot.ifPresentOrElse(
-              snapshot ->
-                  takeSnapshot(snapshot)
-                      .onComplete(
-                          (taken, error) -> {
-                            if (error != null) {
-                              future.completeExceptionally(error);
-                            } else if (taken) {
-                              future.complete(transientSnapshot);
-                            } else {
-                              future.complete(Optional.empty());
-                            }
-                          }),
-              () -> future.complete(Optional.empty()));
-        });
-
+    concurrencyControl.run(() -> takeTransientSnapshotInternal(lowerBoundSnapshotPosition, future));
     return future;
   }
 
   @Override
   public ActorFuture<ZeebeDb> recover() {
     final ActorFuture<ZeebeDb> future = concurrencyControl.createFuture();
-    concurrencyControl.run(
-        () -> {
-          try {
-            FileUtil.deleteFolderIfExists(runtimeDirectory);
-          } catch (final IOException e) {
-            future.completeExceptionally(
-                new RuntimeException(
-                    "Failed to delete runtime folder. Cannot recover from snapshot.", e));
-          }
-
-          final var optLatestSnapshot = constructableSnapshotStore.getLatestSnapshot();
-          if (optLatestSnapshot.isPresent()) {
-            final var snapshot = optLatestSnapshot.get();
-            LOG.debug("Recovering state from available snapshot: {}", snapshot);
-            constructableSnapshotStore
-                .copySnapshot(snapshot, runtimeDirectory)
-                .onComplete(
-                    (ok, error) -> {
-                      if (error != null) {
-                        future.completeExceptionally(
-                            new RuntimeException(
-                                String.format(
-                                    "Failed to recover from snapshot %s", snapshot.getId()),
-                                error));
-                      } else {
-                        openDb(future);
-                      }
-                    });
-          } else {
-            // If there is no snapshot, open empty database
-            openDb(future);
-          }
-        });
-
+    concurrencyControl.run(() -> recoverInternal(future));
     return future;
   }
 
   @Override
   public ActorFuture<Void> closeDb() {
     final ActorFuture<Void> future = concurrencyControl.createFuture();
-    concurrencyControl.run(
-        () -> {
-          try {
-            if (db != null) {
-              final var dbToClose = db;
-              db = null;
-              dbToClose.close();
-
-              LOG.debug("Closed database from '{}'.", runtimeDirectory);
-            }
-
-            tryDeletingRuntimeDirectory();
-            future.complete(null);
-          } catch (final Exception e) {
-            future.completeExceptionally(e);
-          }
-        });
+    concurrencyControl.run(() -> closeDbInternal(future));
     return future;
+  }
+
+  private void closeDbInternal(final ActorFuture<Void> future) {
+    try {
+      if (db != null) {
+        final var dbToClose = db;
+        db = null;
+        dbToClose.close();
+
+        LOG.debug("Closed database from '{}'.", runtimeDirectory);
+      }
+
+      tryDeletingRuntimeDirectory();
+      future.complete(null);
+    } catch (final Exception e) {
+      future.completeExceptionally(e);
+    }
+  }
+
+  private void recoverInternal(final ActorFuture<ZeebeDb> future) {
+    try {
+      FileUtil.deleteFolderIfExists(runtimeDirectory);
+    } catch (final IOException e) {
+      future.completeExceptionally(
+          new RuntimeException(
+              "Failed to delete runtime folder. Cannot recover from snapshot.", e));
+    }
+
+    final var optLatestSnapshot = constructableSnapshotStore.getLatestSnapshot();
+    if (optLatestSnapshot.isPresent()) {
+      final var snapshot = optLatestSnapshot.get();
+      LOG.debug("Recovering state from available snapshot: {}", snapshot);
+      constructableSnapshotStore
+          .copySnapshot(snapshot, runtimeDirectory)
+          .onComplete(
+              (ok, error) -> {
+                if (error != null) {
+                  future.completeExceptionally(
+                      new RuntimeException(
+                          String.format("Failed to recover from snapshot %s", snapshot.getId()),
+                          error));
+                } else {
+                  openDb(future);
+                }
+              });
+    } else {
+      // If there is no snapshot, open empty database
+      openDb(future);
+    }
+  }
+
+  private void takeTransientSnapshotInternal(
+      final long lowerBoundSnapshotPosition,
+      final ActorFuture<Optional<TransientSnapshot>> future) {
+    if (!isDbOpened()) {
+      LOG.warn(
+          "Expected to take snapshot for last processed position {}, but database was closed.",
+          lowerBoundSnapshotPosition);
+      future.complete(Optional.empty());
+      return;
+    }
+
+    final long exportedPosition = exporterPositionSupplier.applyAsLong(db);
+    final long snapshotPosition =
+        determineSnapshotPosition(lowerBoundSnapshotPosition, exportedPosition);
+    final var optionalIndexed = entrySupplier.getPreviousIndexedEntry(snapshotPosition);
+    if (optionalIndexed.isEmpty()) {
+      future.completeExceptionally(
+          new IllegalStateException(
+              String.format(
+                  "Failed to take snapshot. Expected to find an indexed entry for determined snapshot position %d (processedPosition = %d, exportedPosition=%d), but found no matching indexed entry which contains this position.",
+                  snapshotPosition, lowerBoundSnapshotPosition, exportedPosition)));
+      return;
+    }
+
+    final var snapshotIndexedEntry = optionalIndexed.get();
+    final Optional<TransientSnapshot> transientSnapshot =
+        constructableSnapshotStore.newTransientSnapshot(
+            snapshotIndexedEntry.index(),
+            snapshotIndexedEntry.term(),
+            lowerBoundSnapshotPosition,
+            exportedPosition);
+
+    // Now takeSnapshot result can be either true, false or error.
+    transientSnapshot.ifPresentOrElse(
+        snapshot -> takeSnapshot(snapshot, future), () -> future.complete(Optional.empty()));
   }
 
   @SuppressWarnings("rawtypes")
@@ -206,23 +197,38 @@ public class StateControllerImpl implements StateController {
     return db != null;
   }
 
-  private ActorFuture<Boolean> takeSnapshot(final TransientSnapshot snapshot) {
-    return snapshot.take(
-        snapshotDir -> {
-          if (db == null) {
-            LOG.error("Expected to take a snapshot, but no database was opened");
-            return false;
-          }
+  private void takeSnapshot(
+      final TransientSnapshot snapshot,
+      final ActorFuture<Optional<TransientSnapshot>> transientSnapshotFuture) {
+    final var snapshotTaken =
+        snapshot.take(
+            snapshotDir -> {
+              if (db == null) {
+                LOG.error("Expected to take a snapshot, but no database was opened");
+                return false;
+              }
 
-          LOG.debug("Taking temporary snapshot into {}.", snapshotDir);
-          try {
-            db.createSnapshot(snapshotDir.toFile());
-          } catch (final Exception e) {
-            LOG.error("Failed to create snapshot of runtime database", e);
-            return false;
-          }
+              LOG.debug("Taking temporary snapshot into {}.", snapshotDir);
+              try {
+                db.createSnapshot(snapshotDir.toFile());
+              } catch (final Exception e) {
+                LOG.error("Failed to create snapshot of runtime database", e);
+                return false;
+              }
 
-          return true;
+              return true;
+            });
+
+    // TODO: Remove boolean response, and always throw error when snapshot was not taken.
+    snapshotTaken.onComplete(
+        (taken, error) -> {
+          if (error != null) {
+            transientSnapshotFuture.completeExceptionally(error);
+          } else if (taken) {
+            transientSnapshotFuture.complete(Optional.of(snapshot));
+          } else {
+            transientSnapshotFuture.complete(Optional.empty());
+          }
         });
   }
 
