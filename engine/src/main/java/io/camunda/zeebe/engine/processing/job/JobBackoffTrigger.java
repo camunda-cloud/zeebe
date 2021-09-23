@@ -15,41 +15,38 @@ import io.camunda.zeebe.engine.state.immutable.JobState;
 import io.camunda.zeebe.protocol.record.intent.JobIntent;
 import java.time.Duration;
 
-public final class JobTimeoutTrigger extends ScheduledTrigger {
-  public static final Duration TIME_OUT_POLLING_INTERVAL = Duration.ofSeconds(30);
+public class JobBackoffTrigger extends ScheduledTrigger {
+  // TODO: Maybe we should put this timer in the config?
+  public static final Duration POLLING_INTERVAL = Duration.ofMillis(200);
   private final JobState state;
 
   private TypedCommandWriter writer;
 
-  public JobTimeoutTrigger(final JobState state) {
+  public JobBackoffTrigger(final JobState state) {
     this.state = state;
   }
 
   @Override
   protected Duration getPollingInterval() {
-    return TIME_OUT_POLLING_INTERVAL;
+    return POLLING_INTERVAL;
   }
 
   @Override
   protected void executeOnTrigger() {
-    deactivateTimedOutJobs();
+    final long now = currentTimeMillis();
+    state.forEachBackOffTimedOutJobs(
+        now,
+        (key, record) -> {
+          writer.reset();
+          writer.appendFollowUpCommand(key, JobIntent.MAKE_ACTIVABLE, record);
+
+          return writer.flush() >= 0;
+        });
   }
 
   @Override
   public void onRecovered(final ReadonlyProcessingContext processingContext) {
     super.onRecovered(processingContext);
     writer = processingContext.getLogStreamWriter();
-  }
-
-  void deactivateTimedOutJobs() {
-    final long now = currentTimeMillis();
-    state.forEachTimedOutEntry(
-        now,
-        (key, record) -> {
-          writer.reset();
-          writer.appendFollowUpCommand(key, JobIntent.TIME_OUT, record);
-
-          return writer.flush() >= 0;
-        });
   }
 }
