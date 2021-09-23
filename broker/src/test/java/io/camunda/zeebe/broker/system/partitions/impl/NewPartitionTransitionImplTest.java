@@ -20,6 +20,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.atomix.raft.RaftServer;
 import io.atomix.raft.RaftServer.Role;
 import io.camunda.zeebe.broker.system.partitions.PartitionTransitionContext;
 import io.camunda.zeebe.broker.system.partitions.PartitionTransitionStep;
@@ -189,6 +190,7 @@ class NewPartitionTransitionImplTest {
     inOrder.verify(mockStep1).onNewRaftRole(mockContext, Role.FOLLOWER);
 
     // transition to third transition, since other is canceled
+    inOrder.verify(mockStep1).prepareTransition(mockContext, 2L, RaftServer.Role.LEADER);
     inOrder.verify(mockStep1, never()).transitionTo(mockContext, 2, Role.LEADER);
     inOrder.verify(mockStep1).transitionTo(mockContext, 2, Role.FOLLOWER);
 
