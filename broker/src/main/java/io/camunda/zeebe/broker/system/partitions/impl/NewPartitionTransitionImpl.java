@@ -78,7 +78,7 @@ public final class NewPartitionTransitionImpl implements PartitionTransition {
         (v, error) -> {
           // term and role should only bet set after the transition is completed, since on clean up
           // we expect old term and role to make decision based on that
-          if (error != null) {
+          if (error == null) {
             context.setCurrentTerm(term);
             context.setCurrentRole(role);
           }
