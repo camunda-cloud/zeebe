@@ -7,6 +7,10 @@
  */
 package io.camunda.search.es.transformers;
 
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.CardinalityAggregate;
+import io.camunda.search.clients.aggregation.SearchAggregation;
+import io.camunda.search.clients.aggregation.SearchCardinalityAggregation;
 import io.camunda.search.clients.core.SearchQueryHit;
 import io.camunda.search.clients.core.SearchQueryRequest;
 import io.camunda.search.clients.core.SearchQueryResponse;
@@ -27,6 +31,10 @@ import io.camunda.search.clients.query.SearchWildcardQuery;
 import io.camunda.search.clients.sort.SearchFieldSort;
 import io.camunda.search.clients.sort.SearchSortOptions;
 import io.camunda.search.clients.types.TypedValue;
+import io.camunda.search.es.transformers.aggregation.CardinalityAggregateTransformer;
+import io.camunda.search.es.transformers.aggregation.CardinalityAggregationTransformer;
+import io.camunda.search.es.transformers.aggregation.SearchAggregateTransformer;
+import io.camunda.search.es.transformers.aggregation.SearchAggregationTransformer;
 import io.camunda.search.es.transformers.query.BoolQueryTransformer;
 import io.camunda.search.es.transformers.query.ConstantScoreQueryTransformer;
 import io.camunda.search.es.transformers.query.ExistsQueryTransformer;
@@ -95,5 +103,13 @@ public final class ElasticsearchTransformers {
 
     // types
     mappers.put(TypedValue.class, new TypedValueTransformer(mappers));
+
+    // aggregations
+    mappers.put(SearchAggregation.class, new SearchAggregationTransformer(mappers));
+    mappers.put(SearchCardinalityAggregation.class, new CardinalityAggregationTransformer(mappers));
+
+    // aggregates
+    mappers.put(Aggregate.class, new SearchAggregateTransformer(mappers));
+    mappers.put(CardinalityAggregate.class, new CardinalityAggregateTransformer(mappers));
   }
 }
