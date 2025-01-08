@@ -22,12 +22,17 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+<<<<<<< HEAD
+=======
+import org.apache.commons.codec.digest.MessageDigestAlgorithms;
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class LocalStorageDocumentStoreTest {
 
+<<<<<<< HEAD
   private Path storagePath;
   private LocalStorageDocumentStore documentStore;
   private final FileHandler fileHandler = new FileHandler();
@@ -38,15 +43,36 @@ class LocalStorageDocumentStoreTest {
     documentStore =
         new LocalStorageDocumentStore(
             storagePath, fileHandler, new ObjectMapper(), Executors.newSingleThreadExecutor());
+=======
+  private Path STORAGE_PATH;
+  private LocalStorageDocumentStore documentStore;
+  private final FileHandler fileHandler = new FileHandler();
+  private final ObjectMapper mapper = new ObjectMapper();
+
+  @BeforeEach
+  void setUp() throws IOException {
+    STORAGE_PATH = Files.createTempDirectory("test-storage");
+    documentStore =
+        new LocalStorageDocumentStore(
+            STORAGE_PATH, fileHandler, new ObjectMapper(), Executors.newSingleThreadExecutor());
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
   }
 
   @AfterEach
   void cleanUp() throws IOException {
+<<<<<<< HEAD
     deleteDirectoryRecursively(storagePath);
   }
 
   @Test
   void createDocumentShouldSucceed() {
+=======
+    deleteDirectoryRecursively(STORAGE_PATH);
+  }
+
+  @Test
+  void createDocumentShouldSucceed() throws IOException {
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
     // given
     final String documentId = UUID.randomUUID().toString();
     final byte[] content = "test-content".getBytes();
@@ -61,6 +87,7 @@ class LocalStorageDocumentStoreTest {
     // then
     assertTrue(result.isRight());
     assertEquals(documentId, result.get().documentId());
+<<<<<<< HEAD
     assertTrue(Files.exists(storagePath.resolve(documentId)));
     assertTrue(
         Files.exists(storagePath.resolve(documentId + LocalStorageDocumentStore.METADATA_SUFFIX)));
@@ -68,6 +95,12 @@ class LocalStorageDocumentStoreTest {
 
   @Test
   void createDocumentShouldFailIfDocumentAlreadyExists() {
+=======
+  }
+
+  @Test
+  void createDocumentShouldFailIfDocumentAlreadyExists() throws IOException {
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
     // given
     final String documentId = UUID.randomUUID().toString();
     final byte[] content = "test-content".getBytes();
@@ -86,7 +119,11 @@ class LocalStorageDocumentStoreTest {
   }
 
   @Test
+<<<<<<< HEAD
   void getDocumentShouldSucceed() {
+=======
+  void getDocumentShouldSucceed() throws IOException {
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
     // given
     final String documentId = UUID.randomUUID().toString();
     final byte[] content = "test-content".getBytes();
@@ -125,9 +162,15 @@ class LocalStorageDocumentStoreTest {
 
     // then
     assertTrue(result.isRight());
+<<<<<<< HEAD
     assertFalse(Files.exists(storagePath.resolve(documentId)));
     assertFalse(
         Files.exists(storagePath.resolve(documentId + LocalStorageDocumentStore.METADATA_SUFFIX)));
+=======
+    assertFalse(Files.exists(STORAGE_PATH.resolve(documentId)));
+    assertFalse(
+        Files.exists(STORAGE_PATH.resolve(documentId + LocalStorageDocumentStore.METADATA_SUFFIX)));
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
   }
 
   @Test
@@ -145,14 +188,24 @@ class LocalStorageDocumentStoreTest {
   }
 
   @Test
+<<<<<<< HEAD
   void verifyContentHashShouldSucceed() {
+=======
+  void verifyContentHashShouldSucceed() throws IOException {
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
     // given
     final String documentId = UUID.randomUUID().toString();
     final byte[] content = "test-content".getBytes();
     createDocumentForTest(content, documentId);
 
     final String contentHash =
+<<<<<<< HEAD
         DocumentHashProcessor.hash(new ByteArrayInputStream(content)).contentHash();
+=======
+        DocumentHashProcessor.hash(
+                new ByteArrayInputStream(content), MessageDigestAlgorithms.SHA_256)
+            .contentHash();
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
 
     // when
     final var result = documentStore.verifyContentHash(documentId, contentHash).join();

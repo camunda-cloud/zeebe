@@ -7,6 +7,11 @@
  */
 package io.camunda.document.store.localstorage;
 
+<<<<<<< HEAD
+=======
+import static org.apache.commons.codec.digest.MessageDigestAlgorithms.SHA_256;
+
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.document.api.DocumentContent;
 import io.camunda.document.api.DocumentCreationRequest;
@@ -59,12 +64,20 @@ public class LocalStorageDocumentStore implements DocumentStore {
   @Override
   public CompletableFuture<Either<DocumentError, DocumentContent>> getDocument(
       final String documentId) {
+<<<<<<< HEAD
     return CompletableFuture.supplyAsync(() -> getDocumentInternal(documentId), executor);
+=======
+    return CompletableFuture.supplyAsync(() -> getDocumentInternal(documentId));
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
   }
 
   @Override
   public CompletableFuture<Either<DocumentError, Void>> deleteDocument(final String documentId) {
+<<<<<<< HEAD
     return CompletableFuture.supplyAsync(() -> deleteDocumentInternal(documentId), executor);
+=======
+    return CompletableFuture.supplyAsync(() -> deleteDocumentInternal(documentId));
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
   }
 
   @Override
@@ -79,8 +92,12 @@ public class LocalStorageDocumentStore implements DocumentStore {
   @Override
   public CompletableFuture<Either<DocumentError, Void>> verifyContentHash(
       final String documentId, final String contentHash) {
+<<<<<<< HEAD
     return CompletableFuture.supplyAsync(
         () -> verifyContentHashInternal(documentId, contentHash), executor);
+=======
+    return CompletableFuture.supplyAsync(() -> verifyContentHashInternal(documentId, contentHash));
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
   }
 
   private Either<DocumentError, DocumentReference> createDocumentInternal(
@@ -94,7 +111,11 @@ public class LocalStorageDocumentStore implements DocumentStore {
       return Either.left(new DocumentAlreadyExists(documentId));
     }
 
+<<<<<<< HEAD
     final HashResult hashResult = DocumentHashProcessor.hash(request.contentInputStream());
+=======
+    final HashResult hashResult = DocumentHashProcessor.hash(request.contentInputStream(), SHA_256);
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
 
     try (final InputStream stream = hashResult.inputStream();
         final InputStream metadataStream =
@@ -151,7 +172,11 @@ public class LocalStorageDocumentStore implements DocumentStore {
     }
 
     try (final InputStream inputStream = fileHandler.getInputStream(documentPath)) {
+<<<<<<< HEAD
       final var result = DocumentHashProcessor.hash(inputStream);
+=======
+      final var result = DocumentHashProcessor.hash(inputStream, SHA_256);
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
       if (!result.contentHash().equals(contentHash)) {
         return Either.left(new DocumentHashMismatch(documentId, contentHash));
       }
