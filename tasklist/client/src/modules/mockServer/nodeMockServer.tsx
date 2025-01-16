@@ -7,7 +7,30 @@
  */
 
 import {setupServer} from 'msw/node';
+import {http, HttpResponse, HttpHandler} from 'msw';
+import {currentUser} from '../mock-schema/mocks/current-user';
+import type {CurrentUser} from '../types';
 
-const nodeMockServer = setupServer();
+export function createMockAuthenticationMeHandler(
+  currentUser: CurrentUser,
+  overrides?: object,
+): HttpHandler {
+  return http.get(
+    '/v2/authentication/me',
+    () => {
+      return HttpResponse.json({
+        ...currentUser,
+        userKey: 112233,
+        username: currentUser.displayName,
+        email: 'user@camunda.test',
+        canLogout: true,
+        ...overrides,
+      });
+    },
+    {once: false},
+  );
+}
 
-export {nodeMockServer};
+export const nodeMockServer = setupServer(
+  createMockAuthenticationMeHandler(currentUser),
+);

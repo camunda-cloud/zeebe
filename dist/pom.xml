@@ -228,12 +228,10 @@
       <groupId>io.camunda</groupId>
       <artifactId>operate-common</artifactId>
     </dependency>
-
     <dependency>
       <groupId>io.camunda</groupId>
       <artifactId>operate-webapp</artifactId>
     </dependency>
-
     <dependency>
       <groupId>io.camunda</groupId>
       <artifactId>identity-webjar</artifactId>
@@ -829,6 +827,7 @@
           <usedDependencies>
             <dependency>io.camunda:zeebe-elasticsearch-exporter</dependency>
             <dependency>io.camunda:zeebe-opensearch-exporter</dependency>
+            <dependency>io.camunda:operate-webapp</dependency>
 
             <!-- Needed for Spring Actuators, and REST API -->
             <dependency>org.springframework.boot:spring-boot-starter-web</dependency>
