@@ -20,7 +20,7 @@ import io.camunda.exporter.cache.TestProcessCache;
 import io.camunda.exporter.cache.process.CachedProcessEntity;
 import io.camunda.exporter.store.BatchRequest;
 import io.camunda.exporter.utils.ExporterUtil;
-import io.camunda.webapps.schema.entities.operate.IncidentEntity;
+import io.camunda.webapps.schema.entities.incident.IncidentEntity;
 import io.camunda.zeebe.protocol.record.Record;
 import io.camunda.zeebe.protocol.record.ValueType;
 import io.camunda.zeebe.protocol.record.intent.IncidentIntent;
@@ -341,7 +341,7 @@ public class IncidentHandlerTest {
 
     // then
     assertThat(incidentEntity.getErrorType())
-        .isEqualTo(io.camunda.webapps.schema.entities.operate.ErrorType.JOB_NO_RETRIES);
+        .isEqualTo(io.camunda.webapps.schema.entities.ErrorType.JOB_NO_RETRIES);
   }
 
   /**
@@ -372,8 +372,7 @@ public class IncidentHandlerTest {
 
     // then
     assertThat(incidentEntity.getErrorType())
-        .isEqualTo(
-            io.camunda.webapps.schema.entities.operate.ErrorType.EXECUTION_LISTENER_NO_RETRIES);
+        .isEqualTo(io.camunda.webapps.schema.entities.ErrorType.EXECUTION_LISTENER_NO_RETRIES);
   }
 
   @Test
@@ -401,7 +400,7 @@ public class IncidentHandlerTest {
 
     // then
     assertThat(incidentEntity.getErrorType())
-        .isEqualTo(io.camunda.webapps.schema.entities.operate.ErrorType.TASK_LISTENER_NO_RETRIES);
+        .isEqualTo(io.camunda.webapps.schema.entities.ErrorType.TASK_LISTENER_NO_RETRIES);
   }
 
   private String concurrencyScriptMock() {
