@@ -9,7 +9,9 @@ package io.camunda.migration.identity;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.camunda.migration.api.Migrator;
-import io.camunda.migration.identity.config.IdentityMigrationProperties;
+import io.camunda.migration.identity.config.prop.ClusterProperties;
+import io.camunda.migration.identity.config.prop.ConsoleProperties;
+import io.camunda.migration.identity.config.prop.ManagementIdentityProperties;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -17,7 +19,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@EnableConfigurationProperties(IdentityMigrationProperties.class)
+@EnableConfigurationProperties({
+  ClusterProperties.class,
+  ManagementIdentityProperties.class,
+  ConsoleProperties.class
+})
 @Component("identity-migrator")
 public class MigrationRunner implements Migrator {
 
@@ -29,6 +35,7 @@ public class MigrationRunner implements Migrator {
   private final UserTenantsMigrationHandler userTenantsMigrationHandler;
   private final RoleMigrationHandler roleMigrationHandler;
   private final GroupMigrationHandler groupMigrationHandler;
+  private final ClientMigrationHandler clientMigrationHandler;
 
   public MigrationRunner(
       final AuthorizationMigrationHandler authorizationMigrationHandler,
@@ -36,13 +43,15 @@ public class MigrationRunner implements Migrator {
       final TenantMappingRuleMigrationHandler tenantMappingRuleMigrationHandler,
       final UserTenantsMigrationHandler userTenantsMigrationHandler,
       final RoleMigrationHandler roleMigrationHandler,
-      final GroupMigrationHandler groupMigrationHandler) {
+      final GroupMigrationHandler groupMigrationHandler,
+      final ClientMigrationHandler clientMigrationHandler) {
     this.authorizationMigrationHandler = authorizationMigrationHandler;
     this.tenantMigrationHandler = tenantMigrationHandler;
     this.tenantMappingRuleMigrationHandler = tenantMappingRuleMigrationHandler;
     this.userTenantsMigrationHandler = userTenantsMigrationHandler;
     this.roleMigrationHandler = roleMigrationHandler;
     this.groupMigrationHandler = groupMigrationHandler;
+    this.clientMigrationHandler = clientMigrationHandler;
   }
 
   @Override
@@ -60,6 +69,7 @@ public class MigrationRunner implements Migrator {
         groupMigrationHandler.migrate();
         roleMigrationHandler.migrate();
         authorizationMigrationHandler.migrate();
+        clientMigrationHandler.migrate();
         break;
       } catch (final NotImplementedException e) {
         LOGGER.error("Identity endpoint is not implemented {}", e.getCode());
