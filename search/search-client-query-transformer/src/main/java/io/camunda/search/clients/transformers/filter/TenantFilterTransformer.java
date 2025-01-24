@@ -12,7 +12,6 @@ import static io.camunda.search.clients.query.SearchQueryBuilders.hasChildQuery;
 import static io.camunda.search.clients.query.SearchQueryBuilders.longTerms;
 import static io.camunda.search.clients.query.SearchQueryBuilders.matchNone;
 import static io.camunda.search.clients.query.SearchQueryBuilders.term;
-import static io.camunda.webapps.schema.descriptors.usermanagement.index.TenantIndex.KEY;
 import static io.camunda.webapps.schema.descriptors.usermanagement.index.TenantIndex.NAME;
 import static io.camunda.webapps.schema.descriptors.usermanagement.index.TenantIndex.TENANT_ID;
 
@@ -32,7 +31,6 @@ public class TenantFilterTransformer extends IndexFilterTransformer<TenantFilter
   public SearchQuery toSearchQuery(final TenantFilter filter) {
     return and(
         term(TenantIndex.JOIN, IdentityJoinRelationshipType.TENANT.getType()),
-        filter.key() == null ? null : term(KEY, filter.key()),
         filter.tenantId() == null ? null : term(TENANT_ID, filter.tenantId()),
         filter.name() == null ? null : term(NAME, filter.name()),
         filter.memberKeys() == null

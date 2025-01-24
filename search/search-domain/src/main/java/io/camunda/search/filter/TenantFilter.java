@@ -11,7 +11,7 @@ import io.camunda.util.ObjectBuilder;
 import java.util.Set;
 import java.util.function.Function;
 
-public record TenantFilter(Long key, String tenantId, String name, Set<Long> memberKeys)
+public record TenantFilter(String tenantId, String name, Set<Long> memberKeys)
     implements FilterBase {
 
   public static TenantFilter of(final Function<Builder, Builder> builderFunction) {
@@ -20,15 +20,9 @@ public record TenantFilter(Long key, String tenantId, String name, Set<Long> mem
 
   public static final class Builder implements ObjectBuilder<TenantFilter> {
 
-    private Long key;
     private String tenantId;
     private String name;
     private Set<Long> memberKeys;
-
-    public Builder key(final Long value) {
-      key = value;
-      return this;
-    }
 
     public Builder tenantId(final String value) {
       tenantId = value;
@@ -51,7 +45,7 @@ public record TenantFilter(Long key, String tenantId, String name, Set<Long> mem
 
     @Override
     public TenantFilter build() {
-      return new TenantFilter(key, tenantId, name, memberKeys);
+      return new TenantFilter(tenantId, name, memberKeys);
     }
   }
 }

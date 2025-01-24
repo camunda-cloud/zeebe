@@ -478,13 +478,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TenantUpdateResult"
-            application/vnd.camunda.api.keys.number+json:
-              schema:
                 $ref: "#/components/schemas/TenantUpdateResponse"
-            application/vnd.camunda.api.keys.string+json:
-              schema:
-                $ref: "#/components/schemas/TenantUpdateResult"
         "400":
           description: The provided data is not valid.
           content:
@@ -607,168 +601,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           description: Not found. The tenant or user was not found.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /tenants/{tenantKey}/mapping-rules/{mappingKey}:
-    put:
-      tags:
-        - Tenant
-      operationId: assignMappingRuleToTenant
-      summary: Assign a mapping rule to a tenant
-      description: Assign a single mapping rule to a specified tenant.
-      parameters:
-        - name: tenantKey
-          in: path
-          required: true
-          description: The unique identifier of the tenant.
-          schema:
-            type: string
-        - name: mappingKey
-          in: path
-          required: true
-          description: The unique identifier of the mapping rule.
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "202":
-          description: The mapping rule was successfully assigned to the tenant.
-        "400":
-          description: The provided data is not valid.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          description: Not found. The tenant or mapping rule was not found.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-    delete:
-      tags:
-        - Tenant
-      operationId: removeMappingRuleFromTenant
-      summary: Remove a mapping rule from a tenant
-      description: Removes a single mapping rule from a specified tenant without deleting the rule.
-      parameters:
-        - name: tenantKey
-          in: path
-          required: true
-          description: The unique identifier of the tenant.
-          schema:
-            type: string
-        - name: mappingKey
-          in: path
-          required: true
-          description: The unique identifier of the mapping rule.
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "202":
-          description: The mapping rule was successfully removed from the tenant.
-        "400":
-          description: The provided data is not valid.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          description: Not found. The tenant or mapping rule was not found.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-  /tenants/{tenantKey}/groups/{groupKey}:
-    put:
-      tags:
-        - Tenant
-      operationId: assignGroupToTenant
-      summary: Assign a group to a tenant
-      description: Assign a single group to a specified tenant.
-      parameters:
-        - name: tenantKey
-          in: path
-          required: true
-          description: The unique identifier of the tenant.
-          schema:
-            type: string
-        - name: groupKey
-          in: path
-          required: true
-          description: The unique identifier of the group.
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "202":
-          description: The group was successfully assigned to the tenant.
-        "400":
-          description: The provided data is not valid.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          description: Not found. The tenant or group was not found.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "500":
-          $ref: "#/components/responses/InternalServerError"
-
-    delete:
-      tags:
-        - Tenant
-      operationId: removeGroupFromTenant
-      summary: Remove a group from a tenant
-      description: Removes a single group from a specified tenant without deleting the group.
-      parameters:
-        - name: tenantKey
-          in: path
-          required: true
-          description: The unique identifier of the tenant.
-          schema:
-            type: string
-        - name: groupKey
-          in: path
-          required: true
-          description: The unique identifier of the group.
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "202":
-          description: The group was successfully removed from the tenant.
-        "400":
-          description: The provided data is not valid.
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetail"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          description: Not found. The tenant or group was not found.
           content:
             application/problem+json:
               schema:
@@ -4033,9 +3865,6 @@ components:
     TenantCreateResult:
       type: object
       properties:
-        tenantKey:
-          description: The unique system-generated internal tenant ID.
-          type: string
         tenantId:
           type: string
           description: The unique external tenant ID
@@ -4059,7 +3888,7 @@ components:
         - name
         - description
 
-    TenantUpdateResponseBase:
+    TenantUpdateResponse:
       description: Base properties for TenantUpdateResponse.
       type: object
       properties:
@@ -4072,24 +3901,6 @@ components:
         description:
           type: string
           description: The description of the tenant.
-    TenantUpdateResponse:
-      deprecated: true
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/TenantUpdateResponseBase"
-      properties:
-        tenantKey:
-          type: integer
-          description: The unique system-generated internal tenant ID.
-          format: int64
-    TenantUpdateResult:
-      type: object
-      allOf:
-        - $ref: "#/components/schemas/TenantUpdateResponseBase"
-      properties:
-        tenantKey:
-          type: string
-          description: The unique system-generated internal tenant ID.
 
     TenantItemBase:
       description: Base properties for TenantItem.
@@ -4111,10 +3922,6 @@ components:
       allOf:
         - $ref: "#/components/schemas/TenantItemBase"
       properties:
-        tenantKey:
-          type: integer
-          description: The unique system-generated internal tenant ID.
-          format: int64
         assignedMemberKeys:
           type: array
           description: The set of keys of members assigned to the tenant.
@@ -4127,9 +3934,6 @@ components:
       allOf:
         - $ref: "#/components/schemas/TenantItemBase"
       properties:
-        tenantKey:
-          type: string
-          description: The unique system-generated internal tenant ID.
         assignedMemberKeys:
           type: array
           description: The set of keys of members assigned to the tenant.
@@ -4142,7 +3946,6 @@ components:
           description: The field to sort by.
           type: string
           enum:
-            - key
             - name
             - tenantId
         order:

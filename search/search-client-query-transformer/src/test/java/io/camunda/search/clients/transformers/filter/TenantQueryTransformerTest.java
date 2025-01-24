@@ -17,29 +17,6 @@ import org.junit.jupiter.api.Test;
 public class TenantQueryTransformerTest extends AbstractTransformerTest {
 
   @Test
-  public void shouldQueryByTenantKey() {
-    // given
-    final var filter = FilterBuilders.tenant((f) -> f.key(12345L));
-
-    // when
-    final var searchRequest = transformQuery(filter);
-
-    // then
-    assertThat(searchRequest)
-        .isEqualTo(
-            SearchQuery.of(
-                q ->
-                    q.bool(
-                        b ->
-                            b.must(
-                                List.of(
-                                    SearchQuery.of(
-                                        q1 -> q.term(t -> t.field("join").value("tenant"))),
-                                    SearchQuery.of(
-                                        q1 -> q.term(t -> t.field("key").value(12345L))))))));
-  }
-
-  @Test
   public void shouldQueryByTenantId() {
     // given
     final var filter = FilterBuilders.tenant((f) -> f.tenantId("tenant1"));
@@ -90,8 +67,7 @@ public class TenantQueryTransformerTest extends AbstractTransformerTest {
   @Test
   public void shouldQueryByMultipleTenantFields() {
     // given
-    final var filter =
-        FilterBuilders.tenant((f) -> f.key(12345L).tenantId("tenant1").name("TestTenant"));
+    final var filter = FilterBuilders.tenant((f) -> f.tenantId("tenant1").name("TestTenant"));
 
     // when
     final var searchRequest = transformQuery(filter);
@@ -107,7 +83,6 @@ public class TenantQueryTransformerTest extends AbstractTransformerTest {
                                 List.of(
                                     SearchQuery.of(
                                         q -> q.term(t -> t.field("join").value("tenant"))),
-                                    SearchQuery.of(q -> q.term(t -> t.field("key").value(12345L))),
                                     SearchQuery.of(
                                         q -> q.term(t -> t.field("tenantId").value("tenant1"))),
                                     SearchQuery.of(

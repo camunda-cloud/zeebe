@@ -64,8 +64,7 @@ public class TenantMappingRuleMigrationHandler extends MigrationHandler<TenantMa
               .map(MappingEntity::mappingKey)
               .orElseGet(() -> mappingServices.createMapping(request).join().getMappingKey());
       for (final Tenant mappingTenant : tenantMappingRule.getAppliedTenants()) {
-        final var tenant = tenantServices.getById(mappingTenant.tenantId());
-        assignMappingToTenant(tenant.key(), mappingKey);
+        assignMappingToTenant(mappingTenant.tenantId(), mappingKey);
       }
       return managementIdentityTransformer.toMigrationStatusUpdateRequest(tenantMappingRule, null);
     } catch (final Exception e) {
@@ -74,9 +73,10 @@ public class TenantMappingRuleMigrationHandler extends MigrationHandler<TenantMa
     }
   }
 
-  private void assignMappingToTenant(final long tenantKey, final long mappingKey) {
+  private void assignMappingToTenant(final String tenantId, final long mappingKey) {
     try {
-      tenantServices.addMember(tenantKey, EntityType.MAPPING, mappingKey).join();
+      // TODO: Should use mapping id, not key
+      tenantServices.addMember(tenantId, EntityType.MAPPING, Long.toString(mappingKey)).join();
     } catch (final Exception e) {
       if (!isConflictError(e)) {
         throw e;

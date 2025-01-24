@@ -486,7 +486,6 @@ public final class ResponseMapper {
   public static ResponseEntity<Object> toTenantCreateResponse(final TenantRecord record) {
     final var response =
         new TenantCreateResult()
-            .tenantKey(Long.toString(record.getTenantKey()))
             .tenantId(record.getTenantId())
             .name(record.getName())
             .description(record.getDescription());
@@ -496,7 +495,6 @@ public final class ResponseMapper {
   public static ResponseEntity<Object> toTenantUpdateResponse(final TenantRecord record) {
     final var response =
         new TenantUpdateResponse()
-            .tenantKey(record.getTenantKey())
             .tenantId(record.getTenantId())
             .name(record.getName())
             .description(record.getDescription());

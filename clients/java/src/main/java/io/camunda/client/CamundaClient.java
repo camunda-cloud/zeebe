@@ -17,8 +17,6 @@ package io.camunda.client;
 
 import io.camunda.client.api.ExperimentalApi;
 import io.camunda.client.api.command.AddPermissionsCommandStep1;
-import io.camunda.client.api.command.AssignGroupToTenantCommandStep1;
-import io.camunda.client.api.command.AssignMappingToTenantCommandStep1;
 import io.camunda.client.api.command.AssignUserTaskCommandStep1;
 import io.camunda.client.api.command.AssignUserToGroupCommandStep1;
 import io.camunda.client.api.command.AssignUserToTenantCommandStep1;
@@ -54,7 +52,6 @@ import io.camunda.client.api.command.RemoveUserFromTenantCommandStep1;
 import io.camunda.client.api.command.ResolveIncidentCommandStep1;
 import io.camunda.client.api.command.SetVariablesCommandStep1;
 import io.camunda.client.api.command.TopologyRequestStep1;
-import io.camunda.client.api.command.UnassignGroupFromTenantCommandStep1;
 import io.camunda.client.api.command.UnassignUserFromGroupCommandStep1;
 import io.camunda.client.api.command.UnassignUserTaskCommandStep1;
 import io.camunda.client.api.command.UpdateGroupCommandStep1;
@@ -1552,26 +1549,6 @@ public interface CamundaClient extends AutoCloseable, JobClient {
   DeleteTenantCommandStep1 newDeleteTenantCommand(String tenantId);
 
   /**
-   * Command to assign a mapping rule to a tenant.
-   *
-   * <p>Example usage:
-   *
-   * <pre>
-   * camundaClient
-   *   .newAssignMappingToTenantCommand(tenantKey)
-   *   .mappingKey(mappingKey)
-   *   .send();
-   * </pre>
-   *
-   * <p>This command sends an HTTP PUT request to assign the specified mapping rule to the given
-   * tenant.
-   *
-   * @param tenantKey the unique identifier of the tenant
-   * @return a builder for the assign mapping rule to tenant command
-   */
-  AssignMappingToTenantCommandStep1 newAssignMappingToTenantCommand(long tenantKey);
-
-  /**
    * Command to assign a user to a tenant.
    *
    * <p>Example usage:
@@ -1609,40 +1586,6 @@ public interface CamundaClient extends AutoCloseable, JobClient {
    * @return a builder for the remove user from tenant command
    */
   RemoveUserFromTenantCommandStep1 newRemoveUserFromTenantCommand(String tenantId);
-
-  /**
-   * Command to assign a group to a tenant.
-   *
-   * <p>Example usage:
-   *
-   * <pre>
-   * camundaClient
-   *   .newAssignGroupToTenantCommand(tenantKey)
-   *   .groupKey(groupKey)
-   *   .send();
-   * </pre>
-   *
-   * @param tenantKey the unique identifier of the tenant
-   * @return a builder to configure and send the assign group to tenant command
-   */
-  AssignGroupToTenantCommandStep1 newAssignGroupToTenantCommand(long tenantKey);
-
-  /**
-   * Command to unassign a group from a tenant.
-   *
-   * <p>Example usage:
-   *
-   * <pre>
-   * camundaClient
-   *   .newUnassignGroupFromTenantCommand(tenantKey)
-   *   .groupKey(groupKey)
-   *   .send();
-   * </pre>
-   *
-   * @param tenantKey the unique identifier of the tenant
-   * @return a builder to configure and send the unassign group from tenant command
-   */
-  UnassignGroupFromTenantCommandStep1 newUnassignGroupFromTenantCommand(long tenantKey);
 
   /**
    * Command to create an authorization

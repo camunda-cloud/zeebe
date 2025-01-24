@@ -776,7 +776,6 @@ public class RequestMapper {
         TenantRequestValidator.validateTenantCreateRequest(tenantCreateRequest),
         () ->
             new TenantDTO(
-                null,
                 tenantCreateRequest.getTenantId(),
                 tenantCreateRequest.getName(),
                 tenantCreateRequest.getDescription()));
@@ -788,10 +787,7 @@ public class RequestMapper {
         TenantRequestValidator.validateTenantUpdateRequest(tenantUpdateRequest),
         () ->
             new TenantDTO(
-                null,
-                tenantId,
-                tenantUpdateRequest.getName(),
-                tenantUpdateRequest.getDescription()));
+                tenantId, tenantUpdateRequest.getName(), tenantUpdateRequest.getDescription()));
   }
 
   private static List<ProcessInstanceModificationActivateInstruction>

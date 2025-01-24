@@ -42,28 +42,25 @@ public class TenantQueryControllerTest extends RestControllerTest {
 
   private static final List<TenantEntity> TENANT_ENTITIES =
       List.of(
-          new TenantEntity(100L, "tenant-id-1", "Tenant 1", "Description 1"),
-          new TenantEntity(200L, "tenant-id-2", "Tenant 2", "Description 2"),
-          new TenantEntity(300L, "tenant-id-3", "Tenant 12", "Description 3"));
+          new TenantEntity("tenant-id-1", "Tenant 1", "Description 1"),
+          new TenantEntity("tenant-id-2", "Tenant 2", "Description 2"),
+          new TenantEntity("tenant-id-3", "Tenant 12", "Description 3"));
 
   private static final String RESPONSE =
       """
       {
          "items": [
            {
-             "tenantKey": %s,
              "name": "%s",
              "description": "%s",
              "tenantId": "%s"
            },
            {
-             "tenantKey": %s,
              "name": "%s",
              "description": "%s",
              "tenantId": "%s"
            },
            {
-             "tenantKey": %s,
              "name": "%s",
              "description": "%s",
              "tenantId": "%s"
@@ -78,30 +75,24 @@ public class TenantQueryControllerTest extends RestControllerTest {
       """;
   private static final String EXPECTED_RESPONSE =
       RESPONSE.formatted(
-          "\"%s\"".formatted(TENANT_ENTITIES.get(0).key()),
           TENANT_ENTITIES.get(0).name(),
           TENANT_ENTITIES.get(0).description(),
           TENANT_ENTITIES.get(0).tenantId(),
-          "\"%s\"".formatted(TENANT_ENTITIES.get(1).key()),
           TENANT_ENTITIES.get(1).name(),
           TENANT_ENTITIES.get(1).description(),
           TENANT_ENTITIES.get(1).tenantId(),
-          "\"%s\"".formatted(TENANT_ENTITIES.get(2).key()),
           TENANT_ENTITIES.get(2).name(),
           TENANT_ENTITIES.get(2).description(),
           TENANT_ENTITIES.get(2).tenantId(),
           TENANT_ENTITIES.size());
   private static final String EXPECTED_RESPONSE_NUMBER_KEYS =
       RESPONSE.formatted(
-          TENANT_ENTITIES.get(0).key(),
           TENANT_ENTITIES.get(0).name(),
           TENANT_ENTITIES.get(0).description(),
           TENANT_ENTITIES.get(0).tenantId(),
-          TENANT_ENTITIES.get(1).key(),
           TENANT_ENTITIES.get(1).name(),
           TENANT_ENTITIES.get(1).description(),
           TENANT_ENTITIES.get(1).tenantId(),
-          TENANT_ENTITIES.get(2).key(),
           TENANT_ENTITIES.get(2).name(),
           TENANT_ENTITIES.get(2).description(),
           TENANT_ENTITIES.get(2).tenantId(),
@@ -129,7 +120,7 @@ public class TenantQueryControllerTest extends RestControllerTest {
     final var tenantName = "Tenant Name";
     final var tenantId = "tenant-id";
     final var tenantDescription = "Tenant Description";
-    final var tenant = new TenantEntity(100L, tenantId, tenantName, tenantDescription);
+    final var tenant = new TenantEntity(tenantId, tenantName, tenantDescription);
     when(tenantServices.getById(tenant.tenantId())).thenReturn(tenant);
 
     // when
@@ -144,13 +135,12 @@ public class TenantQueryControllerTest extends RestControllerTest {
         .json(
             """
             {
-              "tenantKey": "%d",
               "name": "%s",
               "description": "%s",
               "tenantId": "%s"
             }
             """
-                .formatted(tenant.key(), tenantName, tenantDescription, tenantId));
+                .formatted(tenantName, tenantDescription, tenantId));
 
     // then
     verify(tenantServices, times(1)).getById(tenant.tenantId());
@@ -348,7 +338,7 @@ public class TenantQueryControllerTest extends RestControllerTest {
                       "type": "about:blank",
                       "title": "Bad Request",
                       "status": 400,
-                      "detail": "Unexpected value 'unknownField' for enum field 'field'. Use any of the following values: [key, name, tenantId]",
+                      "detail": "Unexpected value 'unknownField' for enum field 'field'. Use any of the following values: [name, tenantId]",
                       "instance": "%s"
                     }""",
                 SEARCH_TENANT_URL)),
