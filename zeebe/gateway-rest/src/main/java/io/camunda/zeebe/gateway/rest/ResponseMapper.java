@@ -34,8 +34,12 @@ import io.camunda.zeebe.gateway.protocol.rest.DeploymentMetadata;
 import io.camunda.zeebe.gateway.protocol.rest.DeploymentProcess;
 import io.camunda.zeebe.gateway.protocol.rest.DeploymentResource;
 import io.camunda.zeebe.gateway.protocol.rest.DeploymentResponse;
+<<<<<<< HEAD
 import io.camunda.zeebe.gateway.protocol.rest.DocumentCreationBatchResponse;
 import io.camunda.zeebe.gateway.protocol.rest.DocumentCreationFailureDetail;
+=======
+import io.camunda.zeebe.gateway.protocol.rest.DeploymentRpa;
+>>>>>>> 378e5c3d (feat: REST support for RPA)
 import io.camunda.zeebe.gateway.protocol.rest.DocumentMetadata;
 import io.camunda.zeebe.gateway.protocol.rest.DocumentReference;
 import io.camunda.zeebe.gateway.protocol.rest.DocumentReference.CamundaDocumentTypeEnum;
@@ -65,7 +69,10 @@ import io.camunda.zeebe.protocol.impl.record.value.deployment.DecisionRequiremen
 import io.camunda.zeebe.protocol.impl.record.value.deployment.DeploymentRecord;
 import io.camunda.zeebe.protocol.impl.record.value.deployment.FormMetadataRecord;
 import io.camunda.zeebe.protocol.impl.record.value.deployment.ResourceMetadataRecord;
+<<<<<<< HEAD
 import io.camunda.zeebe.protocol.impl.record.value.group.GroupRecord;
+=======
+>>>>>>> 378e5c3d (feat: REST support for RPA)
 import io.camunda.zeebe.protocol.impl.record.value.job.JobRecord;
 import io.camunda.zeebe.protocol.impl.record.value.message.MessageCorrelationRecord;
 import io.camunda.zeebe.protocol.impl.record.value.message.MessageRecord;
@@ -307,7 +314,11 @@ public final class ResponseMapper {
     addDeployedDecision(response, brokerResponse.decisionsMetadata());
     addDeployedDecisionRequirements(response, brokerResponse.decisionRequirementsMetadata());
     addDeployedForm(response, brokerResponse.formMetadata());
+<<<<<<< HEAD
     addDeployedResource(response, brokerResponse.resourceMetadata());
+=======
+    addDeployedRPA(response, brokerResponse.resourceMetadata());
+>>>>>>> 378e5c3d (feat: REST support for RPA)
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
@@ -336,16 +347,27 @@ public final class ResponseMapper {
         .forEach(response::addDeploymentsItem);
   }
 
+<<<<<<< HEAD
   private static void addDeployedResource(
+=======
+  private static void addDeployedRPA(
+>>>>>>> 378e5c3d (feat: REST support for RPA)
       final DeploymentResponse response,
       final ValueArray<ResourceMetadataRecord> resourceMetadataRecords) {
     resourceMetadataRecords.stream()
         .map(
             resource ->
+<<<<<<< HEAD
                 new DeploymentResource()
                     .resourceId(resource.getResourceId())
                     .version(resource.getVersion())
                     .resourceKey(resource.getResourceKey())
+=======
+                new DeploymentRpa()
+                    .resourceId(resource.getResourceId())
+                    .version(resource.getVersion())
+                    .resourceKey(String.valueOf(resource.getResourceKey()))
+>>>>>>> 378e5c3d (feat: REST support for RPA)
                     .resourceName(resource.getResourceName())
                     .tenantId(resource.getTenantId()))
         .map(deploymentForm -> new DeploymentMetadata().resource(deploymentForm))

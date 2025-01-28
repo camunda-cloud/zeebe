@@ -8339,11 +8339,27 @@ components:
         deploymentKey:
           type: string
           description: The unique key identifying the deployment.
+<<<<<<< HEAD
         deployments:
           description: Items deployed by the request.
           type: array
           items:
             $ref: "#/components/schemas/DeploymentMetadataResult"
+=======
+    DeploymentMetadata:
+      type: object
+      properties:
+        processDefinition:
+          $ref: "#/components/schemas/DeploymentProcess"
+        decisionDefinition:
+          $ref: "#/components/schemas/DeploymentDecision"
+        decisionRequirements:
+          $ref: "#/components/schemas/DeploymentDecisionRequirements"
+        form:
+          $ref: "#/components/schemas/DeploymentForm"
+        resource:
+          $ref: "#/components/schemas/DeploymentRpa"
+>>>>>>> 378e5c3d (feat: REST support for RPA)
     DeploymentMetadataResult:
       type: object
       properties:
@@ -8356,6 +8372,7 @@ components:
         form:
           $ref: "#/components/schemas/DeploymentFormResult"
         resource:
+<<<<<<< HEAD
           $ref: "#/components/schemas/DeploymentResourceResult"
     DeploymentMetadata:
       type: object
@@ -8370,6 +8387,9 @@ components:
           $ref: "#/components/schemas/DeploymentForm"
         resource:
           $ref: "#/components/schemas/DeploymentResource"
+=======
+          $ref: "#/components/schemas/DeploymentRpaNumberKeys"
+>>>>>>> 378e5c3d (feat: REST support for RPA)
     DeploymentProcessBase:
       description: Base properties for DeploymentProcess.
       type: object
@@ -8541,18 +8561,28 @@ components:
         formKey:
           type: string
           description: The assigned key, which acts as a unique identifier for this form.
+<<<<<<< HEAD
     DeploymentResourceBase:
       description: Base properties for DeploymentResource.
+=======
+    DeploymentRpaBase:
+      description: Base properties for DeploymentRpa.
+>>>>>>> 378e5c3d (feat: REST support for RPA)
       type: object
       properties:
         resourceId:
           type: string
           description: |
+<<<<<<< HEAD
             The resource ID, as parsed during deployment, together with the version forms a
+=======
+            The RPA ID, as parsed during deployment, together with the version forms a
+>>>>>>> 378e5c3d (feat: REST support for RPA)
             unique identifier for a specific form.
         version:
           type: integer
           format: int32
+<<<<<<< HEAD
           description: The assigned resource version.
         resourceName:
           type: string
@@ -8565,10 +8595,25 @@ components:
       type: object
       allOf:
         - $ref: "#/components/schemas/DeploymentResourceBase"
+=======
+          description: The assigned RPA version.
+        resourceName:
+          type: string
+          description: The resource name from which this RPA was parsed.
+        tenantId:
+          type: string
+          description: The tenant ID of the deployed form.
+    DeploymentRpaNumberKeys:
+      description: A deployed RPA.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/DeploymentRpaBase"
+>>>>>>> 378e5c3d (feat: REST support for RPA)
       properties:
         resourceKey:
           type: integer
           format: int64
+<<<<<<< HEAD
           description: The assigned key, which acts as a unique identifier for this Resource.
     DeploymentResourceResult:
       description: A deployed Resource.
@@ -8579,6 +8624,18 @@ components:
         resourceKey:
           type: string
           description: The assigned key, which acts as a unique identifier for this Resource.
+=======
+          description: The assigned key, which acts as a unique identifier for this RPA.
+    DeploymentRpa:
+      description: A deployed RPA.
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/DeploymentRpaBase"
+      properties:
+        resourceKey:
+          type: string
+          description: The assigned key, which acts as a unique identifier for this RPA.
+>>>>>>> 378e5c3d (feat: REST support for RPA)
 
     CreateProcessInstanceRequestBase:
       description: Base properties for CreateProcessInstanceRequest
