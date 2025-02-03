@@ -10,10 +10,17 @@ package io.camunda.it.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
+<<<<<<< HEAD
 import io.camunda.client.CamundaClient;
 import io.camunda.client.api.command.ProblemException;
 import io.camunda.client.api.response.DocumentReferenceResponse;
 import io.camunda.qa.util.cluster.TestStandaloneCamunda;
+=======
+import io.camunda.qa.util.cluster.TestStandaloneCamunda;
+import io.camunda.zeebe.client.ZeebeClient;
+import io.camunda.zeebe.client.api.command.ProblemException;
+import io.camunda.zeebe.client.api.response.DocumentReferenceResponse;
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 import io.camunda.zeebe.qa.util.junit.ZeebeIntegration;
 import io.camunda.zeebe.qa.util.junit.ZeebeIntegration.TestZeebe;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +31,11 @@ public class DeleteDocumentTest {
 
   private static final String DOCUMENT_CONTENT = "test";
 
+<<<<<<< HEAD
   private static CamundaClient camundaClient;
+=======
+  private static ZeebeClient zeebeClient;
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
   @TestZeebe(initMethod = "initTestStandaloneCamunda")
   private static TestStandaloneCamunda testStandaloneCamunda;
@@ -33,24 +44,41 @@ public class DeleteDocumentTest {
 
   @SuppressWarnings("unused")
   static void initTestStandaloneCamunda() {
+<<<<<<< HEAD
     testStandaloneCamunda = new TestStandaloneCamunda().withUnauthenticatedAccess();
+=======
+    testStandaloneCamunda = new TestStandaloneCamunda();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
   }
 
   @BeforeEach
   public void beforeEach() {
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
     documentReference =
         camundaClient.newCreateDocumentCommand().content(DOCUMENT_CONTENT).send().join();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+    documentReference =
+        zeebeClient.newCreateDocumentCommand().content(DOCUMENT_CONTENT).send().join();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
   }
 
   @Test
   public void shouldWorkWithDocumentId() {
     // given
     final var documentId = documentReference.getDocumentId();
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
 
     // when
     camundaClient.newDeleteDocumentCommand(documentId).send().join();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+
+    // when
+    zeebeClient.newDeleteDocumentCommand(documentId).send().join();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
     // then
     assertDocumentIsDeleted(documentId);
@@ -61,10 +89,17 @@ public class DeleteDocumentTest {
     // given
     final var documentId = documentReference.getDocumentId();
     final var storeId = documentReference.getStoreId();
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
 
     // when
     camundaClient.newDeleteDocumentCommand(documentId).storeId(storeId).send().join();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+
+    // when
+    zeebeClient.newDeleteDocumentCommand(documentId).storeId(storeId).send().join();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
     // then
     assertDocumentIsDeleted(documentId);
@@ -73,10 +108,17 @@ public class DeleteDocumentTest {
   @Test
   public void shouldWorkWithDocumentReference() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
 
     // when
     camundaClient.newDeleteDocumentCommand(documentReference).send().join();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+
+    // when
+    zeebeClient.newDeleteDocumentCommand(documentReference).send().join();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
     // then
     assertDocumentIsDeleted(documentReference.getDocumentId());
@@ -86,14 +128,22 @@ public class DeleteDocumentTest {
   public void shouldReturnNotFoundIfDocumentDoesNotExist() {
     // given
     final var documentId = "non-existing-document";
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
     // when
     final var exception =
         assertThrowsExactly(
             ProblemException.class,
             () -> {
+<<<<<<< HEAD
               camundaClient.newDeleteDocumentCommand(documentId).send().join();
+=======
+              zeebeClient.newDeleteDocumentCommand(documentId).send().join();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             });
 
     // then
@@ -105,13 +155,21 @@ public class DeleteDocumentTest {
   @Test
   public void shouldReturnBadRequestForNonExistingStoreId() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent = "test";
     final var storeId = "non-existing";
 
     // when
     final var command =
+<<<<<<< HEAD
         camundaClient.newCreateDocumentCommand().content(documentContent).storeId(storeId).send();
+=======
+        zeebeClient.newCreateDocumentCommand().content(documentContent).storeId(storeId).send();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
     // then
     final var exception = assertThrowsExactly(ProblemException.class, command::join);
@@ -126,7 +184,11 @@ public class DeleteDocumentTest {
     final var exception =
         assertThrowsExactly(
             ProblemException.class,
+<<<<<<< HEAD
             () -> camundaClient.newDocumentContentGetRequest(documentId).send().join());
+=======
+            () -> zeebeClient.newDocumentContentGetRequest(documentId).send().join());
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     assertThat(exception.details().getStatus()).isEqualTo(404);
   }
 }

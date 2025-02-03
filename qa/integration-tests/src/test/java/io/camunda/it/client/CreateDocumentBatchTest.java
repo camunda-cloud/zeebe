@@ -11,8 +11,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+<<<<<<< HEAD
 import io.camunda.client.CamundaClient;
 import io.camunda.qa.util.cluster.TestStandaloneCamunda;
+=======
+import io.camunda.qa.util.cluster.TestStandaloneCamunda;
+import io.camunda.zeebe.client.ZeebeClient;
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 import io.camunda.zeebe.qa.util.junit.ZeebeIntegration;
 import io.camunda.zeebe.qa.util.junit.ZeebeIntegration.TestZeebe;
 import java.io.ByteArrayInputStream;
@@ -24,26 +29,42 @@ import org.junit.jupiter.api.Test;
 @ZeebeIntegration
 public class CreateDocumentBatchTest {
 
+<<<<<<< HEAD
   private static CamundaClient camundaClient;
+=======
+  private static ZeebeClient zeebeClient;
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
   @TestZeebe(initMethod = "initTestStandaloneCamunda")
   private static TestStandaloneCamunda testStandaloneCamunda;
 
   @SuppressWarnings("unused")
   static void initTestStandaloneCamunda() {
+<<<<<<< HEAD
     testStandaloneCamunda = new TestStandaloneCamunda().withUnauthenticatedAccess();
+=======
+    testStandaloneCamunda = new TestStandaloneCamunda();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
   }
 
   @Test
   public void shouldCreateDocumentsFromInputStreams() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent1 = new ByteArrayInputStream("test one".getBytes());
     final var documentContent2 = new ByteArrayInputStream("test two".getBytes());
 
     // when
     final var response =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .addDocument()
             .content(documentContent1)
@@ -65,13 +86,21 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldCreateDocumentsFromDifferentSources() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent1 = new ByteArrayInputStream("test one".getBytes());
     final var documentContent2 = "test two".getBytes();
 
     // when
     final var response =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .addDocument()
             .fileName("test1.txt")
@@ -93,13 +122,21 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldCreateDocumentsWithBasicMetadata() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent1 = new ByteArrayInputStream("test one".getBytes());
     final var documentContent2 = new ByteArrayInputStream("test two".getBytes());
 
     // when
     final var response =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .addDocument()
             .content(documentContent1)
@@ -143,13 +180,21 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldCreateDocumentsWithCustomMetadata() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent1 = new ByteArrayInputStream("test one".getBytes());
     final var documentContent2 = new ByteArrayInputStream("test two".getBytes());
 
     // when
     final var response =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .addDocument()
             .content(documentContent1)
@@ -193,10 +238,17 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldThrowIfContentIsMissing() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
 
     // when
     final var command = camundaClient.newCreateDocumentBatchCommand().addDocument().done();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+
+    // when
+    final var command = zeebeClient.newCreateDocumentBatchCommand().addDocument().done();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 
     // then
     final var exception = assertThrows(IllegalArgumentException.class, command::send);
@@ -206,13 +258,21 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldCalculateSize() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent1 = new ByteArrayInputStream("test one".getBytes());
     final var documentContent2 = new ByteArrayInputStream("test two".getBytes());
 
     // when
     final var response =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .addDocument()
             .content(documentContent1)
@@ -240,13 +300,21 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldUseProvidedStoreId() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent = new ByteArrayInputStream("test one".getBytes());
     final var storeId = "in-memory";
 
     // when
     final var response =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .storeId(storeId)
             .addDocument()
@@ -266,12 +334,20 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldReturnBadRequestForNonExistingStoreId() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent = new ByteArrayInputStream("test one".getBytes());
 
     // when
     final var command =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .storeId("non-existing-store")
             .addDocument()
@@ -288,7 +364,11 @@ public class CreateDocumentBatchTest {
   @Test
   public void shouldUseProvidedProcessDefinitionIdAndProcessInstanceKey() {
     // given
+<<<<<<< HEAD
     camundaClient = testStandaloneCamunda.newClientBuilder().build();
+=======
+    zeebeClient = testStandaloneCamunda.newClientBuilder().build();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
     final var documentContent1 = new ByteArrayInputStream("test one".getBytes());
     final var documentContent2 = new ByteArrayInputStream("test two".getBytes());
 
@@ -297,7 +377,11 @@ public class CreateDocumentBatchTest {
 
     // when
     final var response =
+<<<<<<< HEAD
         camundaClient
+=======
+        zeebeClient
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
             .newCreateDocumentBatchCommand()
             .processDefinitionId(processDefinitionId)
             .processInstanceKey(processInstanceKey)
