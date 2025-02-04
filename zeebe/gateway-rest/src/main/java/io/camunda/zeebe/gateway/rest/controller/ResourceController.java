@@ -10,11 +10,13 @@ package io.camunda.zeebe.gateway.rest.controller;
 import io.camunda.service.ResourceServices;
 import io.camunda.service.ResourceServices.DeployResourcesRequest;
 import io.camunda.service.ResourceServices.ResourceDeletionRequest;
+import io.camunda.service.ResourceServices.ResourceFetchRequest;
 import io.camunda.zeebe.gateway.impl.configuration.MultiTenancyCfg;
 import io.camunda.zeebe.gateway.protocol.rest.DeleteResourceRequest;
 import io.camunda.zeebe.gateway.rest.RequestMapper;
 import io.camunda.zeebe.gateway.rest.ResponseMapper;
 import io.camunda.zeebe.gateway.rest.RestErrorMapper;
+import io.camunda.zeebe.gateway.rest.annotation.CamundaGetMapping;
 import io.camunda.zeebe.gateway.rest.annotation.CamundaPostMapping;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -58,6 +60,12 @@ public class ResourceController {
         .fold(RestErrorMapper::mapProblemToCompletedResponse, this::delete);
   }
 
+  @CamundaGetMapping(path = "/resources/{resourceKey}/content")
+  public CompletableFuture<ResponseEntity<Object>> getResourceContent(
+      @PathVariable final long resourceKey) {
+    return getResourceContent(new ResourceFetchRequest(resourceKey));
+  }
+
   private CompletableFuture<ResponseEntity<Object>> deployResources(
       final DeployResourcesRequest request) {
     return RequestMapper.executeServiceMethod(
@@ -74,5 +82,15 @@ public class ResourceController {
             resourceServices
                 .withAuthentication(RequestMapper.getAuthentication())
                 .deleteResource(request));
+  }
+
+  private CompletableFuture<ResponseEntity<Object>> getResourceContent(
+      final ResourceFetchRequest request) {
+    return RequestMapper.executeServiceMethod(
+        () ->
+            resourceServices
+                .withAuthentication(RequestMapper.getAuthentication())
+                .fetchResource(request),
+        ResponseMapper::toGetResourceContentResponse);
   }
 }
