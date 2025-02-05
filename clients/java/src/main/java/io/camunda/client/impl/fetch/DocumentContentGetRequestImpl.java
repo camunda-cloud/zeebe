@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+<<<<<<< HEAD:clients/java/src/main/java/io/camunda/client/impl/fetch/DocumentContentGetRequestImpl.java
 package io.camunda.client.impl.fetch;
 
 import static io.camunda.client.impl.command.ArgumentUtil.ensureNotNull;
@@ -23,6 +24,18 @@ import io.camunda.client.api.command.FinalCommandStep;
 import io.camunda.client.api.fetch.DocumentContentGetRequest;
 import io.camunda.client.impl.http.HttpCamundaFuture;
 import io.camunda.client.impl.http.HttpClient;
+=======
+package io.camunda.zeebe.client.impl.fetch;
+
+import static io.camunda.zeebe.client.impl.command.ArgumentUtil.ensureNotNull;
+
+import io.camunda.zeebe.client.ZeebeClientConfiguration;
+import io.camunda.zeebe.client.api.ZeebeFuture;
+import io.camunda.zeebe.client.api.command.FinalCommandStep;
+import io.camunda.zeebe.client.api.fetch.DocumentContentGetRequest;
+import io.camunda.zeebe.client.impl.http.HttpClient;
+import io.camunda.zeebe.client.impl.http.HttpZeebeFuture;
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client):clients/java/src/main/java/io/camunda/zeebe/client/impl/fetch/DocumentContentGetRequestImpl.java
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.HashMap;
@@ -42,7 +55,11 @@ public class DocumentContentGetRequestImpl implements DocumentContentGetRequest 
       final String documentId,
       final String storeId,
       final String contentHash,
+<<<<<<< HEAD:clients/java/src/main/java/io/camunda/client/impl/fetch/DocumentContentGetRequestImpl.java
       final CamundaClientConfiguration configuration) {
+=======
+      final ZeebeClientConfiguration configuration) {
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client):clients/java/src/main/java/io/camunda/zeebe/client/impl/fetch/DocumentContentGetRequestImpl.java
     ensureNotNull("documentId", documentId);
     this.httpClient = httpClient;
     httpRequestConfig = httpClient.newRequestConfig();
@@ -60,8 +77,13 @@ public class DocumentContentGetRequestImpl implements DocumentContentGetRequest 
   }
 
   @Override
+<<<<<<< HEAD:clients/java/src/main/java/io/camunda/client/impl/fetch/DocumentContentGetRequestImpl.java
   public CamundaFuture<InputStream> send() {
     final HttpCamundaFuture<InputStream> result = new HttpCamundaFuture<>();
+=======
+  public ZeebeFuture<InputStream> send() {
+    final HttpZeebeFuture<InputStream> result = new HttpZeebeFuture<>();
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client):clients/java/src/main/java/io/camunda/zeebe/client/impl/fetch/DocumentContentGetRequestImpl.java
     final Map<String, String> queryParams = new HashMap<>();
     if (storeId != null) {
       queryParams.put("storeId", storeId);

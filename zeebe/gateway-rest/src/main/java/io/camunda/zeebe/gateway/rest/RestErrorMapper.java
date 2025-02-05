@@ -14,8 +14,12 @@ import io.camunda.document.api.DocumentError.DocumentNotFound;
 import io.camunda.document.api.DocumentError.InvalidInput;
 import io.camunda.document.api.DocumentError.OperationNotSupported;
 import io.camunda.document.api.DocumentError.StoreDoesNotExist;
+<<<<<<< HEAD
 import io.camunda.search.exception.CamundaSearchException;
 import io.camunda.search.exception.NotFoundException;
+=======
+import io.camunda.service.CamundaServiceException;
+>>>>>>> 26923896 (feat: add Create and Get document command to zeebe client)
 import io.camunda.service.DocumentServices.DocumentException;
 import io.camunda.service.exception.CamundaBrokerException;
 import io.camunda.service.exception.ForbiddenException;
