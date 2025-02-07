@@ -27,7 +27,10 @@ import io.camunda.zeebe.scheduler.ActorScheduler;
 import io.camunda.zeebe.scheduler.future.ActorFuture;
 import io.camunda.zeebe.test.util.asserts.grpc.ClientStatusExceptionAssert;
 import io.camunda.zeebe.test.util.socket.SocketUtil;
+import io.camunda.zeebe.util.micrometer.MicrometerUtil;
 import io.grpc.Status.Code;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.util.NetUtil;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -43,6 +46,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @Execution(ExecutionMode.CONCURRENT)
+
 class UnavailableBrokersTest {
   static Gateway gateway;
   static AtomixCluster cluster;
@@ -51,6 +55,7 @@ class UnavailableBrokersTest {
   static BrokerClient brokerClient;
   static JobStreamClient jobStreamClient;
   static BrokerTopologyManagerImpl topologyManager;
+  private static MeterRegistry registry = new SimpleMeterRegistry();
 
   @BeforeAll
   static void setUp() throws IOException {
@@ -58,7 +63,7 @@ class UnavailableBrokersTest {
     final GatewayCfg config = new GatewayCfg().setNetwork(networkCfg);
     config.init(InetAddress.getLocalHost().getHostName());
 
-    cluster = AtomixCluster.builder().build();
+    cluster = AtomixCluster.builder(registry).build();
     cluster.start();
 
     actorScheduler = ActorScheduler.newActorScheduler().build();
@@ -93,6 +98,7 @@ class UnavailableBrokersTest {
 
   @AfterAll
   static void tearDown() {
+    MicrometerUtil.closeRegistry(registry);
     CloseHelper.closeAll(
         client,
         gateway,
