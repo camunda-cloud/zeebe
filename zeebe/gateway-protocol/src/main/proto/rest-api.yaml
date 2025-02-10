@@ -4331,7 +4331,11 @@ components:
             $like:
               description: |
                 Checks if the property matches the provided like value.
-                Supported wildcard characters depend on the configured search client.
+
+                Supported wildcard characters are:
+
+                * `*`: matches zero, one, or multiple characters.
+                * `?`: matches one, single character.
               type: string
     AdvancedProcessInstanceStateFilter:
       title: Advanced filter
@@ -4357,7 +4361,11 @@ components:
         $like:
           description: |
             Checks if the property matches the provided like value.
-            Supported wildcard characters depend on the configured search client.
+
+            Supported wildcard characters are:
+
+            * `*`: matches zero, one, or multiple characters.
+            * `?`: matches one, single character.
           type: string
     AdvancedDateTimeFilter:
       title: Advanced filter
