@@ -10,7 +10,7 @@ package io.camunda.exporter;
 import static io.camunda.exporter.config.ConnectionTypes.ELASTICSEARCH;
 import static io.camunda.exporter.schema.SchemaTestUtil.mappingsMatch;
 import static io.camunda.exporter.utils.SearchDBExtension.CUSTOM_PREFIX;
-import static io.camunda.exporter.utils.SearchDBExtension.IT_OPENSEARCH_AWS_INSTANCE_URL_PROPERTY;
+import static io.camunda.exporter.utils.SearchDBExtension.TEST_INTEGRATION_OPENSEARCH_AWS_URL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -126,7 +126,7 @@ final class CamundaExporterIT {
   @AfterEach
   public void afterEach() throws IOException {
     final var openSearchAwsInstanceUrl =
-        Optional.ofNullable(System.getProperty(IT_OPENSEARCH_AWS_INSTANCE_URL_PROPERTY)).orElse("");
+        Optional.ofNullable(System.getProperty(TEST_INTEGRATION_OPENSEARCH_AWS_URL)).orElse("");
     if (openSearchAwsInstanceUrl.isEmpty()) {
       searchDB.esClient().indices().delete(req -> req.index(CUSTOM_PREFIX + "*"));
     }
@@ -212,7 +212,7 @@ final class CamundaExporterIT {
   @ParameterizedTest
   @MethodSource("containerProvider")
   @DisabledIfSystemProperty(
-      named = SearchDBExtension.IT_OPENSEARCH_AWS_INSTANCE_URL_PROPERTY,
+      named = SearchDBExtension.TEST_INTEGRATION_OPENSEARCH_AWS_URL,
       matches = "^(?=\\s*\\S).*$",
       disabledReason = "Container tests not supported in CI")
   void shouldExportRecordIfElasticsearchIsNotInitiallyReachableButThenIsReachableLater(
@@ -275,7 +275,7 @@ final class CamundaExporterIT {
 
   @TestTemplate
   @DisabledIfSystemProperty(
-      named = SearchDBExtension.IT_OPENSEARCH_AWS_INSTANCE_URL_PROPERTY,
+      named = SearchDBExtension.TEST_INTEGRATION_OPENSEARCH_AWS_URL,
       matches = "^(?=\\s*\\S).*$",
       disabledReason = "Ineligible test for AWS OS integration")
   void shouldHaveCorrectSchemaUpdatesWithMultipleExporters(
@@ -308,7 +308,7 @@ final class CamundaExporterIT {
 
   @TestTemplate
   @DisabledIfSystemProperty(
-      named = SearchDBExtension.IT_OPENSEARCH_AWS_INSTANCE_URL_PROPERTY,
+      named = SearchDBExtension.TEST_INTEGRATION_OPENSEARCH_AWS_URL,
       matches = "^(?=\\s*\\S).*$",
       disabledReason = "Ineligible test for AWS OS integration")
   void shouldNotErrorIfOldExporterRestartsWhileNewExporterHasAlreadyStarted(
@@ -860,7 +860,7 @@ final class CamundaExporterIT {
 
     @TestTemplate
     @DisabledIfSystemProperty(
-        named = SearchDBExtension.IT_OPENSEARCH_AWS_INSTANCE_URL_PROPERTY,
+        named = SearchDBExtension.TEST_INTEGRATION_OPENSEARCH_AWS_URL,
         matches = "^(?=\\s*\\S).*$",
         disabledReason = "Ineligible test for AWS OS integration")
     void shouldFailIfWaitingForImportersAndCachedRecordsCountReachesBulkSize(
