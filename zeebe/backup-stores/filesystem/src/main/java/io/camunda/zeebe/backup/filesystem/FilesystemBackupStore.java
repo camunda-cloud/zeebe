@@ -21,7 +21,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +44,10 @@ public final class FilesystemBackupStore implements BackupStore {
   private final FileSetManager fileSetManager;
   private final ManifestManager manifestManager;
 
-  public FilesystemBackupStore(final FilesystemBackupConfig config) {
+  public FilesystemBackupStore(
+      final FilesystemBackupConfig config, final ExecutorService executor) {
     validateConfig(config);
-    executor = Executors.newVirtualThreadPerTaskExecutor();
+    this.executor = executor;
 
     fileSetManager = new FileSetManager(config.basePath());
     manifestManager = new ManifestManager(config.basePath());

@@ -21,11 +21,13 @@ import io.camunda.zeebe.backup.common.Manifest;
 import io.camunda.zeebe.backup.testkit.BackupStoreTestKit;
 import io.camunda.zeebe.backup.testkit.support.TestBackupProvider;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,7 +50,8 @@ public class FilesystemBackupStoreIT implements BackupStoreTestKit {
   @BeforeEach
   public void setUpStore() {
     backupConfig = new FilesystemBackupConfig.Builder().withBasePath(backupDir.toString()).build();
-    backupStore = new FilesystemBackupStore(backupConfig);
+    backupStore =
+        new FilesystemBackupStore(backupConfig, Executors.newVirtualThreadPerTaskExecutor());
   }
 
   @Override
@@ -130,7 +133,7 @@ public class FilesystemBackupStoreIT implements BackupStoreTestKit {
       serializedManifest = MAPPER.writeValueAsBytes(manifest);
       Files.write(path, serializedManifest, StandardOpenOption.CREATE_NEW);
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException(e);
     }
   }
 }

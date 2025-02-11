@@ -8,9 +8,11 @@
 package io.camunda.zeebe.backup.filesystem;
 
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 public class ConfigTest {
 
@@ -21,7 +23,8 @@ public class ConfigTest {
     final FilesystemBackupConfig backupConfig =
         new FilesystemBackupConfig.Builder().withBasePath(path.toString()).build();
 
-    Assertions.assertThatCode(() -> new FilesystemBackupStore(backupConfig))
+    Assertions.assertThatCode(
+            () -> new FilesystemBackupStore(backupConfig, Mockito.mock(ExecutorService.class)))
         .doesNotThrowAnyException();
   }
 
@@ -29,7 +32,8 @@ public class ConfigTest {
   void shouldFailDueToMissingBaseDir() {
     final FilesystemBackupConfig backupConfig = new FilesystemBackupConfig.Builder().build();
 
-    Assertions.assertThatCode(() -> new FilesystemBackupStore(backupConfig))
+    Assertions.assertThatCode(
+            () -> new FilesystemBackupStore(backupConfig, Mockito.mock(ExecutorService.class)))
         .hasMessage("Base directory is required");
   }
 
@@ -38,7 +42,8 @@ public class ConfigTest {
     final FilesystemBackupConfig backupConfig =
         new FilesystemBackupConfig.Builder().withBasePath("").build();
 
-    Assertions.assertThatCode(() -> new FilesystemBackupStore(backupConfig))
+    Assertions.assertThatCode(
+            () -> new FilesystemBackupStore(backupConfig, Mockito.mock(ExecutorService.class)))
         .hasMessage("Base directory is required");
   }
 }

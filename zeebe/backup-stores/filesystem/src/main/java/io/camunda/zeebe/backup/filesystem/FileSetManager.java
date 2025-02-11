@@ -12,13 +12,13 @@ import io.camunda.zeebe.backup.api.NamedFileSet;
 import io.camunda.zeebe.backup.common.FileSet;
 import io.camunda.zeebe.backup.common.FileSet.NamedFile;
 import io.camunda.zeebe.backup.common.NamedFileSetImpl;
+import io.camunda.zeebe.util.FileUtil;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.util.stream.Collectors;
 
 final class FileSetManager {
@@ -35,9 +35,9 @@ final class FileSetManager {
     final Path fileSetPath = fileSetPath(id, fileSetName);
 
     try {
-      Files.createDirectories(fileSetPath);
+      FileUtil.ensureDirectoryExists(fileSetPath);
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException("Unable to create backup directory", e);
     }
 
     for (final var namedFile : fileSet.namedFiles().entrySet()) {
@@ -45,35 +45,22 @@ final class FileSetManager {
       final var filePath = namedFile.getValue();
 
       final Path targetFilePath = fileSetPath.resolve(fileName);
+      final Path sourceFilePath = Paths.get(String.valueOf(filePath));
       try {
-        final var binaryData = Files.readAllBytes(Paths.get(String.valueOf(filePath)));
-        Files.write(targetFilePath, binaryData, StandardOpenOption.CREATE_NEW);
+        Files.copy(sourceFilePath, targetFilePath);
+        FileUtil.flush(fileSetPath);
       } catch (final IOException e) {
-        throw new RuntimeException(e);
+        throw new UncheckedIOException("Unable to copy file " + sourceFilePath, e);
       }
     }
   }
 
   public void delete(final BackupIdentifier id, final String fileSetName) {
     final Path fileSetPath = fileSetPath(id, fileSetName);
-
-    try (final var files = Files.walk(fileSetPath)) {
-      files
-          .sorted((a, b) -> -a.compareTo(b))
-          .forEach(
-              p -> {
-                try {
-                  Files.delete(p);
-                } catch (final NoSuchFileException e) {
-                  // ignore
-                } catch (final IOException e) {
-                  throw new RuntimeException(e);
-                }
-              });
-    } catch (final NoSuchFileException e) {
-      // ignore
+    try {
+      FileUtil.deleteFolderIfExists(fileSetPath);
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException("Unable to delete directory " + fileSetPath, e);
     }
   }
 
@@ -87,16 +74,22 @@ final class FileSetManager {
         fileSet.files().stream()
             .collect(Collectors.toMap(NamedFile::name, f -> targetFolder.resolve(f.name())));
 
+    final Path fileSetPath = fileSetPath(id, fileSetName);
     for (final var entry : pathByName.entrySet()) {
       final var fileName = entry.getKey();
       final var filePath = entry.getValue();
-      final var backupFilePath = fileSetPath(id, fileSetName).resolve(fileName);
+      final var backupFilePath = fileSetPath.resolve(fileName);
 
       try {
         Files.copy(backupFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
       } catch (final IOException e) {
-        throw new RuntimeException(e);
+        throw new UncheckedIOException("Unable to restore file " + fileName, e);
       }
+    }
+    try {
+      FileUtil.flushDirectory(fileSetPath);
+    } catch (final IOException e) {
+      throw new UncheckedIOException("Unable to flush directory " + fileSetPath, e);
     }
 
     return new NamedFileSetImpl(pathByName);

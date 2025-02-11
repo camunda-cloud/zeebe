@@ -20,7 +20,9 @@ import io.camunda.zeebe.backup.common.BackupStoreException.UnexpectedManifestSta
 import io.camunda.zeebe.backup.common.Manifest;
 import io.camunda.zeebe.backup.common.Manifest.InProgressManifest;
 import io.camunda.zeebe.backup.common.Manifest.StatusCode;
+import io.camunda.zeebe.util.FileUtil;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -69,18 +71,25 @@ public final class ManifestManager {
 
     final var manifest = Manifest.createInProgress(backup);
     final byte[] serializedManifest;
-    try {
-      final var path = manifestPath(manifest);
-      Files.createDirectories(path.getParent());
+    final var path = manifestPath(manifest);
 
+    try {
+      FileUtil.ensureDirectoryExists(path.getParent());
+    } catch (final IOException e) {
+      throw new UncheckedIOException(
+          "Unable to create directories for manifest: " + path.getParent(), e);
+    }
+
+    try {
       serializedManifest = MAPPER.writeValueAsBytes(manifest);
-      Files.write(path, serializedManifest, StandardOpenOption.CREATE_NEW);
+      Files.write(path, serializedManifest, StandardOpenOption.CREATE_NEW, StandardOpenOption.SYNC);
+      FileUtil.flush(path);
 
       return manifest;
     } catch (final FileAlreadyExistsException e) {
       throw new UnexpectedManifestState("Manifest already exists.");
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException("Unable to write manifest to " + path, e);
     }
   }
 
@@ -99,9 +108,9 @@ public final class ManifestManager {
                 .formatted(existingManifest.statusCode().name()));
       }
       final var path = manifestPath(inProgressManifest);
-      Files.write(path, serializedManifest, StandardOpenOption.CREATE);
+      Files.write(path, serializedManifest, StandardOpenOption.CREATE, StandardOpenOption.SYNC);
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException("Unable to write updated manifest", e);
     }
   }
 
@@ -123,8 +132,8 @@ public final class ManifestManager {
         final var serializedManifest = MAPPER.writeValueAsBytes(updatedManifest);
         final var path = manifestPath(manifest);
         Files.write(path, serializedManifest);
-      } catch (final Exception e) {
-        throw new RuntimeException(e);
+      } catch (final IOException e) {
+        throw new UncheckedIOException("Unable to write updated manifest", e);
       }
     }
   }
@@ -145,7 +154,7 @@ public final class ManifestManager {
     } catch (final NoSuchFileException e) {
       LOGGER.warn("Try to remove unknown manifest with id {}", id);
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException("Unable to delete manifest", e);
     }
   }
 
@@ -162,21 +171,21 @@ public final class ManifestManager {
     }
 
     try {
-      final var binaryData = Files.readAllBytes(path);
-      return MAPPER.readValue(binaryData, Manifest.class);
+      return MAPPER.readValue(path.toFile(), Manifest.class);
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException("Unable to read manifest from path " + path, e);
     }
   }
 
   public Collection<Manifest> listManifests(final BackupIdentifierWildcard wildcard) {
-    try (final Stream<Path> files = Files.walk(Path.of(basePath + "/manifests/"))) {
+    final Path manifestBasePath = Path.of(basePath + "/manifests/");
+    try (final Stream<Path> files = Files.walk(manifestBasePath)) {
       return files
           .filter(filePath -> filterBlobsByWildcard(wildcard, filePath.toString()))
           .map(this::getManifestWithPath)
           .toList();
     } catch (final IOException e) {
-      throw new RuntimeException(e);
+      throw new UncheckedIOException("Unable to list manifests from path " + manifestBasePath, e);
     }
   }
 
