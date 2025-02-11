@@ -2714,8 +2714,7 @@ final class JsonSerializableToJsonTest {
                             .addResourceId("bpmnProcessId:foo"))
                     .addPermission(
                         new Permission().setPermissionType(PermissionType.READ).addResourceId("*"))
-                    .setAuthorizationPermissions(Set.of(PermissionType.CREATE))
-                    .setChangedAttributes(Set.of(AuthorizationRecord.OWNER_TYPE)),
+                    .setAuthorizationPermissions(Set.of(PermissionType.CREATE)),
         """
         {
           "authorizationKey": 1,
@@ -2736,9 +2735,6 @@ final class JsonSerializableToJsonTest {
           ],
           "authorizationPermissions": [
             "CREATE"
-          ],
-          "changedAttributes": [
-            "ownerType"
           ]
         }
         """
@@ -2762,8 +2758,7 @@ final class JsonSerializableToJsonTest {
           "resourceId": "",
           "resourceType": "RESOURCE",
           "permissions": [],
-          "authorizationPermissions": [],
-          "changedAttributes": []
+          "authorizationPermissions": []
         }
         """
       },
@@ -2977,12 +2972,14 @@ final class JsonSerializableToJsonTest {
                     .setMappingKey(1L)
                     .setClaimName("claimName")
                     .setClaimValue("claimValue")
+                    .setId("id1")
                     .setName("name"),
         """
       {
         "mappingKey": 1,
         "claimName": "claimName",
         "claimValue": "claimValue",
+        "id": "id1",
         "name": "name"
       }
       """
@@ -2998,6 +2995,7 @@ final class JsonSerializableToJsonTest {
         "mappingKey": -1,
         "claimName": "",
         "claimValue": "",
+        "id": "",
         "name": ""
       }
       """
@@ -3035,12 +3033,14 @@ final class JsonSerializableToJsonTest {
                     .addMapping(
                         new MappingRecord()
                             .setMappingKey(6)
+                            .setId("id1")
                             .setClaimName("claim1")
                             .setClaimValue("value1")
                             .setName("Claim 1"))
                     .addMapping(
                         new MappingRecord()
                             .setMappingKey(7)
+                            .setId("id2")
                             .setClaimName("claim2")
                             .setClaimValue("value2")
                             .setName("Claim 2")),
@@ -3080,12 +3080,14 @@ final class JsonSerializableToJsonTest {
         "mappings": [
           {
             "mappingKey": 6,
+            "id": "id1",
             "claimName": "claim1",
             "claimValue": "value1",
             "name": "Claim 1"
           },
           {
             "mappingKey": 7,
+            "id": "id2",
             "claimName": "claim2",
             "claimValue": "value2",
             "name": "Claim 2"

@@ -37,6 +37,7 @@ import io.camunda.client.CamundaClientBuilder;
 import io.camunda.client.api.response.BrokerInfo;
 import io.camunda.client.api.response.Topology;
 import io.camunda.security.configuration.SecurityConfiguration;
+import io.camunda.security.configuration.SecurityConfigurations;
 import io.camunda.zeebe.broker.Broker;
 import io.camunda.zeebe.broker.PartitionListener;
 import io.camunda.zeebe.broker.SpringBrokerBridge;
@@ -71,6 +72,7 @@ import io.camunda.zeebe.test.util.record.RecordingExporterTestWatcher;
 import io.camunda.zeebe.test.util.socket.SocketUtil;
 import io.camunda.zeebe.util.VersionUtil;
 import io.camunda.zeebe.util.exception.UncheckedExecutionException;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.util.NetUtil;
 import java.io.File;
@@ -104,6 +106,7 @@ import org.agrona.LangUtil;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
+import org.junit.jupiter.api.AutoClose;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
@@ -145,6 +148,7 @@ public class ClusteringRule extends ExternalResource {
   private final Map<Integer, SpringBrokerBridge> springBrokerBridge;
   private final Map<Integer, SystemContext> systemContexts;
   private final ActorClockConfiguration actorClockConfiguration;
+  @AutoClose private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
   public ClusteringRule() {
     this(3);
@@ -343,7 +347,10 @@ public class ClusteringRule extends ExternalResource {
 
     final var atomixCluster =
         new AtomixCluster(
-            brokerSpringConfig.clusterConfig(), Version.from(VersionUtil.getVersion()), "Broker");
+            brokerSpringConfig.clusterConfig(),
+            Version.from(VersionUtil.getVersion()),
+            "Broker",
+            meterRegistry);
 
     final var scheduler =
         new ActorSchedulerConfiguration(
@@ -478,7 +485,8 @@ public class ClusteringRule extends ExternalResource {
                 actorConfig, IdleStrategySupplier.ofDefault(), actorClockConfiguration)
             .scheduler();
 
-    final var clusterConfiguration = new AtomixClusterConfiguration(clusterConfig, actorConfig);
+    final var clusterConfiguration =
+        new AtomixClusterConfiguration(clusterConfig, actorConfig, meterRegistry);
     final var atomixCluster = clusterConfiguration.atomixCluster();
     atomixCluster.start().join();
 
@@ -502,12 +510,13 @@ public class ClusteringRule extends ExternalResource {
     final var gateway =
         new Gateway(
             gatewayCfg,
-            new SecurityConfiguration(),
+            SecurityConfigurations.unauthenticated(),
             brokerClient,
             actorScheduler,
             jobStreamClient.streamer(),
             null,
-            null);
+            null,
+            new SimpleMeterRegistry());
     gateway.start().join();
 
     return new GatewayResource(

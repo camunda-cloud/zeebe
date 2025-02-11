@@ -9,7 +9,6 @@ package io.camunda.it.tasklist.compatibility;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.camunda.application.Profile;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.protocol.rest.PermissionTypeEnum;
 import io.camunda.client.protocol.rest.ResourceTypeEnum;
@@ -58,8 +57,7 @@ public class CompatibilityTasklistUnassignUserTaskAuthorizationIT {
       new TestStandaloneCamunda()
           .withCamundaExporter()
           .withSecurityConfig(c -> c.getAuthorizations().setEnabled(true))
-          .withProperty("camunda.tasklist.zeebe.compatibility.enabled", true)
-          .withAdditionalProfile(Profile.AUTH_BASIC);
+          .withProperty("camunda.tasklist.zeebe.compatibility.enabled", true);
 
   @BeforeEach
   public void beforeAll() {

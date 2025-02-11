@@ -10,7 +10,6 @@ package io.camunda.it.tasklist;
 import static io.camunda.client.api.search.response.UserTaskState.COMPLETED;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.camunda.application.Profile;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.protocol.rest.PermissionTypeEnum;
 import io.camunda.client.protocol.rest.ResourceTypeEnum;
@@ -59,8 +58,7 @@ public class TasklistCompleteUserTaskAuthorizationIT {
   private TestStandaloneCamunda standaloneCamunda =
       new TestStandaloneCamunda()
           .withCamundaExporter()
-          .withSecurityConfig(c -> c.getAuthorizations().setEnabled(true))
-          .withAdditionalProfile(Profile.AUTH_BASIC);
+          .withSecurityConfig(c -> c.getAuthorizations().setEnabled(true));
 
   @BeforeEach
   public void beforeAll() {
@@ -157,7 +155,6 @@ public class TasklistCompleteUserTaskAuthorizationIT {
   public void shouldBeAuthorizedToCompleteUserTask() {
     // given
     adminAuthClient.createPermissions(
-        testUserKey,
         TEST_USER_NAME,
         new Permissions(
             ResourceTypeEnum.PROCESS_DEFINITION,
@@ -180,7 +177,6 @@ public class TasklistCompleteUserTaskAuthorizationIT {
   public void shouldBeAuthorizedToCompleteJobBasedUserTask() {
     // given
     adminAuthClient.createPermissions(
-        testUserKey,
         TEST_USER_NAME,
         new Permissions(
             ResourceTypeEnum.PROCESS_DEFINITION,
