@@ -46,7 +46,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @Execution(ExecutionMode.CONCURRENT)
-
 class UnavailableBrokersTest {
   static Gateway gateway;
   static AtomixCluster cluster;
