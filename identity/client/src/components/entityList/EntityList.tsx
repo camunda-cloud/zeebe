@@ -91,7 +91,7 @@ type MenuItem<D> = TextMenuItem<D> & {
 };
 
 type DefaultEntityListProps = {
-  title?: string;
+  title: string;
   isInsideModal?: false;
 };
 
