@@ -75,6 +75,7 @@ public final class LogStreamPartitionTransitionStep implements PartitionTransiti
         .withLogName("logStream-" + context.getRaftPartition().name())
         .withPartitionId(context.getPartitionId())
         .withMaxFragmentSize(context.getMaxFragmentSize())
+<<<<<<< HEAD
         .withClock(context.getStreamClock())
         .withRequestLimit(
             flowControlCfg.getRequest() != null
@@ -83,6 +84,11 @@ public final class LogStreamPartitionTransitionStep implements PartitionTransiti
         .withWriteRateLimit(
             flowControlCfg.getWrite() != null ? flowControlCfg.getWrite().buildLimit() : null)
         .build();
+=======
+        .withActorSchedulingService(context.getActorSchedulingService())
+        .withMeterRegistry(context.getPartitionTransitionMeterRegistry())
+        .buildAsync();
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
   }
 
   private boolean shouldInstallOnTransition(final Role newRole, final Role currentRole) {
