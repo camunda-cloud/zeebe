@@ -8,14 +8,17 @@
 package io.camunda.document.store.gcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.Storage;
 import io.camunda.document.api.DocumentContent;
 import io.camunda.document.api.DocumentCreationRequest;
@@ -39,6 +42,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -473,5 +477,34 @@ public class GcpDocumentStoreTest {
                 .metadata()
                 .processInstanceKey())
         .isEqualTo(123L);
+  }
+
+  @Test
+  void shouldHandleExceptionIfBucketDoesNotExist() {
+    // given
+    final var bucket = Mockito.mock(Bucket.class);
+    when(storage.get(BUCKET_NAME)).thenReturn(bucket);
+    when(bucket.exists()).thenReturn(false);
+
+    // when
+    assertThatNoException().isThrownBy(() -> gcpDocumentStore.validateSetup());
+
+    // then
+    verify(storage).get(BUCKET_NAME);
+    verifyNoMoreInteractions(storage);
+    verify(bucket).exists();
+  }
+
+  @Test
+  void shouldHandleExceptionIfUnknownExceptionIsThrown() {
+    // given
+    when(storage.get(BUCKET_NAME)).thenThrow(new RuntimeException());
+
+    // when
+    assertThatNoException().isThrownBy(() -> gcpDocumentStore.validateSetup());
+
+    // then
+    verify(storage).get(BUCKET_NAME);
+    verifyNoMoreInteractions(storage);
   }
 }
