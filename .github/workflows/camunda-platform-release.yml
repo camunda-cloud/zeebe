@@ -141,14 +141,17 @@ jobs:
             -Dtag=${RELEASE_VERSION} \
             -DreleaseVersion=${RELEASE_VERSION} \
             -DdevelopmentVersion=${DEVELOPMENT_VERSION} \
-            -DpushChanges=${PUSH_CHANGES} \
-            -DremoteTagging=${PUSH_CHANGES} \
+            -DpushChanges=false \
+            -DremoteTagging=false \
             -DcompletionGoals="spotless:apply" \
             -D skipOptimize \
             -P-autoFormat \
             -DpreparationGoals="" \
             -Darguments=''
-
+      - name: Push release branch and tag
+        run: |
+          git push origin ${RELEASE_BRANCH} --verbose
+          git push origin tag ${RELEASE_VERSION} --verbose
       - name: Maven Perform Release
         id: maven-perform-release
         env:
