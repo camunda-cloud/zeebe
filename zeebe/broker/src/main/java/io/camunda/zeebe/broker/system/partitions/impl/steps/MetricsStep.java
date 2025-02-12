@@ -11,7 +11,11 @@ import io.atomix.raft.RaftServer.Role;
 import io.camunda.zeebe.broker.system.partitions.PartitionTransitionContext;
 import io.camunda.zeebe.broker.system.partitions.PartitionTransitionStep;
 import io.camunda.zeebe.scheduler.future.ActorFuture;
+<<<<<<< HEAD
 import io.micrometer.core.instrument.Tags;
+=======
+import io.camunda.zeebe.util.micrometer.MicrometerUtil;
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 
 public final class MetricsStep implements PartitionTransitionStep {
@@ -19,6 +23,7 @@ public final class MetricsStep implements PartitionTransitionStep {
   @Override
   public ActorFuture<Void> prepareTransition(
       final PartitionTransitionContext context, final long term, final Role targetRole) {
+<<<<<<< HEAD
     final var partitionMeterRegistry = (CompositeMeterRegistry) context.getPartitionMeterRegistry();
     final var brokerMeterRegistry = context.getBrokerMeterRegistry();
     if (partitionMeterRegistry != null) {
@@ -32,6 +37,13 @@ public final class MetricsStep implements PartitionTransitionStep {
       partitionMeterRegistry.remove(brokerMeterRegistry);
       partitionMeterRegistry.close();
       context.setPartitionMeterRegistry(null);
+=======
+    final var transitionMeterRegistry =
+        (CompositeMeterRegistry) context.getPartitionTransitionMeterRegistry();
+    if (transitionMeterRegistry != null) {
+      MicrometerUtil.discard(transitionMeterRegistry);
+      context.setPartitionTransitionMeterRegistry(null);
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
     }
     return context.getConcurrencyControl().createCompletedFuture();
   }
@@ -39,6 +51,7 @@ public final class MetricsStep implements PartitionTransitionStep {
   @Override
   public ActorFuture<Void> transitionTo(
       final PartitionTransitionContext context, final long term, final Role targetRole) {
+<<<<<<< HEAD
     final var brokerRegistry = context.getBrokerMeterRegistry();
 
     // Create a new registry that already has the partition tag defined.
@@ -48,6 +61,10 @@ public final class MetricsStep implements PartitionTransitionStep {
         .commonTags(Tags.of("partition", Integer.toString(context.getPartitionId())));
     // Wrap over the broker registry so that all meters are forwarded to the broker registry.
     partitionRegistry.add(brokerRegistry);
+=======
+    final var startupMeterRegistry = context.getPartitionStartupMeterRegistry();
+    final var transitionRegistry = MicrometerUtil.wrap(startupMeterRegistry);
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
 
     context.setPartitionMeterRegistry(partitionRegistry);
     return context.getConcurrencyControl().createCompletedFuture();

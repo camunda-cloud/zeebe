@@ -19,6 +19,11 @@ import io.camunda.zeebe.dynamic.config.state.DynamicPartitionConfig;
 import io.camunda.zeebe.scheduler.ActorSchedulingService;
 import io.camunda.zeebe.scheduler.ConcurrencyControl;
 import io.camunda.zeebe.snapshots.impl.FileBasedSnapshotStore;
+<<<<<<< HEAD
+=======
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
 import java.nio.file.Path;
 
 public final class PartitionStartupContext {
@@ -36,6 +41,10 @@ public final class PartitionStartupContext {
 
   private Path partitionDirectory;
 
+<<<<<<< HEAD
+=======
+  private CompositeMeterRegistry partitionMeterRegistry;
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
   private FileBasedSnapshotStore snapshotStore;
   private RaftPartition raftPartition;
   private ZeebePartition zeebePartition;
@@ -146,7 +155,22 @@ public final class PartitionStartupContext {
     return this;
   }
 
+<<<<<<< HEAD
   public DynamicPartitionConfig initialPartitionConfig() {
     return initialPartitionConfig;
+=======
+  public PartitionStartupContext partitionMeterRegistry(
+      final CompositeMeterRegistry partitionMeterRegistry) {
+    this.partitionMeterRegistry = partitionMeterRegistry;
+    return this;
+  }
+
+  public CompositeMeterRegistry partitionMeterRegistry() {
+    return partitionMeterRegistry;
+  }
+
+  public MeterRegistry brokerMeterRegistry() {
+    return brokerMeterRegistry;
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
   }
 }

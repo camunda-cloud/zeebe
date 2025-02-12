@@ -44,6 +44,7 @@ import io.camunda.zeebe.stream.api.StreamClock.ControllableStreamClock;
 import io.camunda.zeebe.stream.impl.StreamProcessor;
 import io.camunda.zeebe.transport.impl.AtomixServerTransport;
 import io.camunda.zeebe.util.health.HealthMonitor;
+import io.camunda.zeebe.util.micrometer.MicrometerUtil.PartitionKeyNames;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -84,8 +85,13 @@ public class TestPartitionTransitionContext implements PartitionTransitionContex
   private MeterRegistry partitionMeterRegistry;
 
   public TestPartitionTransitionContext() {
+<<<<<<< HEAD
     partitionMeterRegistry = new SimpleMeterRegistry();
     partitionMeterRegistry.config().commonTags("partitionId", "1");
+=======
+    transitionMeterRegistry = new SimpleMeterRegistry();
+    transitionMeterRegistry.config().commonTags(PartitionKeyNames.PARTITION.asString(), "1");
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
 
     brokerMeterRegistry.add(partitionMeterRegistry);
   }
