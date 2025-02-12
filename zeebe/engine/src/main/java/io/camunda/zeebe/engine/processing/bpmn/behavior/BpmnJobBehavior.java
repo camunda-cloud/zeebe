@@ -9,7 +9,8 @@ package io.camunda.zeebe.engine.processing.bpmn.behavior;
 
 import com.google.common.base.Strings;
 import io.camunda.zeebe.el.Expression;
-import io.camunda.zeebe.engine.metrics.JobMetrics;
+import io.camunda.zeebe.engine.metrics.EngineMetricsDoc.JobAction;
+import io.camunda.zeebe.engine.metrics.JobProcessingMetrics;
 import io.camunda.zeebe.engine.processing.bpmn.BpmnElementContext;
 import io.camunda.zeebe.engine.processing.common.ExpressionProcessor;
 import io.camunda.zeebe.engine.processing.common.Failure;
@@ -63,7 +64,7 @@ public final class BpmnJobBehavior {
   private final ExpressionProcessor expressionBehavior;
   private final BpmnStateBehavior stateBehavior;
   private final BpmnIncidentBehavior incidentBehavior;
-  private final JobMetrics jobMetrics;
+  private final JobProcessingMetrics jobMetrics;
   private final BpmnJobActivationBehavior jobActivationBehavior;
   private final BpmnUserTaskBehavior userTaskBehavior;
 
@@ -75,7 +76,7 @@ public final class BpmnJobBehavior {
       final BpmnStateBehavior stateBehavior,
       final BpmnIncidentBehavior incidentBehavior,
       final BpmnJobActivationBehavior jobActivationBehavior,
-      final JobMetrics jobMetrics,
+      final JobProcessingMetrics jobMetrics,
       final BpmnUserTaskBehavior userTaskBehavior) {
     this.keyGenerator = keyGenerator;
     this.jobState = jobState;
@@ -158,6 +159,10 @@ public final class BpmnJobBehavior {
         JobKind.BPMN_ELEMENT,
         JobListenerEventType.UNSPECIFIED,
         element.getJobWorkerProperties().getTaskHeaders());
+<<<<<<< HEAD
+=======
+    jobMetrics.countJobEvent(JobAction.CREATED, jobProperties.getType());
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
   }
 
   public void createNewExecutionListenerJob(
@@ -168,6 +173,7 @@ public final class BpmnJobBehavior {
     final var jobListenerEventType =
         fromExecutionListenerEventType(executionListener.getEventType());
     writeJobCreatedEvent(
+<<<<<<< HEAD
         context,
         jobProperties,
         JobKind.EXECUTION_LISTENER,
@@ -257,6 +263,10 @@ public final class BpmnJobBehavior {
       default ->
           throw new IllegalStateException("Unexpected ZeebeTaskListenerEventType: " + eventType);
     };
+=======
+        context, element, jobProperties, JobKind.EXECUTION_LISTENER, Collections.emptyMap());
+    jobMetrics.countJobEvent(JobAction.CREATED, jobProperties.getType());
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
   }
 
   private Either<Failure, String> evalTypeExp(final Expression type, final long scopeKey) {
@@ -380,7 +390,11 @@ public final class BpmnJobBehavior {
       // Note that this logic is duplicated in JobCancelProcessor, if you change this please change
       // it there as well.
       stateWriter.appendFollowUpEvent(jobKey, JobIntent.CANCELED, job);
+<<<<<<< HEAD
       jobMetrics.jobCanceled(job.getType(), job.getJobKind());
+=======
+      jobMetrics.countJobEvent(JobAction.CANCELED, job.getType());
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
     }
   }
 

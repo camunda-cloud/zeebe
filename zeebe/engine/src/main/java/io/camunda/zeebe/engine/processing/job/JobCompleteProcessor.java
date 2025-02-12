@@ -7,8 +7,13 @@
  */
 package io.camunda.zeebe.engine.processing.job;
 
+<<<<<<< HEAD
 import io.camunda.zeebe.engine.metrics.JobMetrics;
 import io.camunda.zeebe.engine.processing.Rejection;
+=======
+import io.camunda.zeebe.engine.metrics.EngineMetricsDoc.JobAction;
+import io.camunda.zeebe.engine.metrics.JobProcessingMetrics;
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
 import io.camunda.zeebe.engine.processing.common.EventHandle;
 import io.camunda.zeebe.engine.processing.identity.AuthorizationCheckBehavior;
 import io.camunda.zeebe.engine.processing.streamprocessor.CommandProcessor;
@@ -51,15 +56,20 @@ public final class JobCompleteProcessor implements CommandProcessor<JobRecord> {
   private final UserTaskState userTaskState;
   private final ElementInstanceState elementInstanceState;
   private final DefaultJobCommandPreconditionGuard defaultProcessor;
-  private final JobMetrics jobMetrics;
+  private final JobProcessingMetrics jobMetrics;
   private final EventHandle eventHandle;
 
   public JobCompleteProcessor(
+<<<<<<< HEAD
       final ProcessingState state,
       final JobMetrics jobMetrics,
       final EventHandle eventHandle,
       final AuthorizationCheckBehavior authCheckBehavior) {
     userTaskState = state.getUserTaskState();
+=======
+      final ProcessingState state, final JobProcessingMetrics jobMetrics, final EventHandle eventHandle) {
+    jobState = state.getJobState();
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
     elementInstanceState = state.getElementInstanceState();
     defaultProcessor =
         new DefaultJobCommandPreconditionGuard(
@@ -224,6 +234,10 @@ public final class JobCompleteProcessor implements CommandProcessor<JobRecord> {
     job.setResult(command.getValue().getResult());
 
     commandControl.accept(JobIntent.COMPLETED, job);
+<<<<<<< HEAD
     jobMetrics.jobCompleted(job.getType(), job.getJobKind());
+=======
+    jobMetrics.countJobEvent(JobAction.COMPLETED, job.getType());
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
   }
 }

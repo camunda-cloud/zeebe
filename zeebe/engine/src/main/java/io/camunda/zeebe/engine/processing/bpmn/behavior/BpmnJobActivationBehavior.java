@@ -7,7 +7,8 @@
  */
 package io.camunda.zeebe.engine.processing.bpmn.behavior;
 
-import io.camunda.zeebe.engine.metrics.JobMetrics;
+import io.camunda.zeebe.engine.metrics.EngineMetricsDoc.JobAction;
+import io.camunda.zeebe.engine.metrics.JobProcessingMetrics;
 import io.camunda.zeebe.engine.processing.job.JobVariablesCollector;
 import io.camunda.zeebe.engine.processing.streamprocessor.JobStreamer;
 import io.camunda.zeebe.engine.processing.streamprocessor.JobStreamer.JobStream;
@@ -43,16 +44,24 @@ public class BpmnJobActivationBehavior {
   private final StateWriter stateWriter;
   private final SideEffectWriter sideEffectWriter;
   private final KeyGenerator keyGenerator;
+<<<<<<< HEAD
   private final JobMetrics jobMetrics;
   private final InstantSource clock;
+=======
+  private final JobProcessingMetrics jobMetrics;
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
 
   public BpmnJobActivationBehavior(
       final JobStreamer jobStreamer,
       final ProcessingState state,
       final Writers writers,
       final KeyGenerator keyGenerator,
+<<<<<<< HEAD
       final JobMetrics jobMetrics,
       final InstantSource clock) {
+=======
+      final JobProcessingMetrics jobMetrics) {
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
     this.jobStreamer = jobStreamer;
     this.keyGenerator = keyGenerator;
     this.jobMetrics = jobMetrics;
@@ -95,7 +104,11 @@ public class BpmnJobActivationBehavior {
       sideEffectWriter.appendSideEffect(
           () -> {
             jobStream.push(activatedJob);
+<<<<<<< HEAD
             jobMetrics.jobPush(jobType, jobKind);
+=======
+            jobMetrics.countJobEvent(JobAction.PUSHED, jobType);
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
             return true;
           });
     } else {
@@ -111,7 +124,11 @@ public class BpmnJobActivationBehavior {
     sideEffectWriter.appendSideEffect(
         () -> {
           jobStreamer.notifyWorkAvailable(jobType);
+<<<<<<< HEAD
           jobMetrics.jobNotification(jobType, jobKind);
+=======
+          jobMetrics.countJobEvent(JobAction.WORKERS_NOTIFIED, jobType);
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
           return true;
         });
   }

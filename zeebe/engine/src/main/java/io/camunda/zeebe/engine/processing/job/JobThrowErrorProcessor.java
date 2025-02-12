@@ -10,7 +10,8 @@ package io.camunda.zeebe.engine.processing.job;
 import static io.camunda.zeebe.engine.EngineConfiguration.DEFAULT_MAX_ERROR_MESSAGE_SIZE;
 import static io.camunda.zeebe.util.StringUtil.limitString;
 
-import io.camunda.zeebe.engine.metrics.JobMetrics;
+import io.camunda.zeebe.engine.metrics.EngineMetricsDoc.JobAction;
+import io.camunda.zeebe.engine.metrics.JobProcessingMetrics;
 import io.camunda.zeebe.engine.processing.bpmn.behavior.BpmnEventPublicationBehavior;
 import io.camunda.zeebe.engine.processing.common.ElementTreePathBuilder;
 import io.camunda.zeebe.engine.processing.common.Failure;
@@ -62,15 +63,23 @@ public class JobThrowErrorProcessor implements CommandProcessor<JobRecord> {
   private final KeyGenerator keyGenerator;
   private final EventScopeInstanceState eventScopeInstanceState;
   private final BpmnEventPublicationBehavior eventPublicationBehavior;
+<<<<<<< HEAD
   private final JobMetrics jobMetrics;
   private final ProcessState processState;
+=======
+  private final JobProcessingMetrics jobMetrics;
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
 
   public JobThrowErrorProcessor(
       final ProcessingState state,
       final BpmnEventPublicationBehavior eventPublicationBehavior,
       final KeyGenerator keyGenerator,
+<<<<<<< HEAD
       final JobMetrics jobMetrics,
       final AuthorizationCheckBehavior authCheckBehavior) {
+=======
+      final JobProcessingMetrics jobMetrics) {
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
     this.keyGenerator = keyGenerator;
     jobState = state.getJobState();
     elementInstanceState = state.getElementInstanceState();
@@ -99,7 +108,11 @@ public class JobThrowErrorProcessor implements CommandProcessor<JobRecord> {
       final long jobKey,
       final Intent intent,
       final JobRecord job) {
+<<<<<<< HEAD
     jobMetrics.jobErrorThrown(job.getType(), job.getJobKind());
+=======
+    jobMetrics.countJobEvent(JobAction.ERROR_THROWN, job.getType());
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
 
     if (NO_CATCH_EVENT_FOUND.equals(job.getElementId())) {
       raiseIncident(jobKey, job, stateWriter, foundCatchEvent.getLeft());
