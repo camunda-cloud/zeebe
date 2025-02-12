@@ -12,6 +12,7 @@ import io.camunda.db.rdbms.write.domain.UserTaskMigrationDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import java.time.OffsetDateTime;
 
 public class UserTaskWriter {
 
@@ -81,6 +82,11 @@ public class UserTaskWriter {
               "io.camunda.db.rdbms.sql.UserTaskMapper.insertCandidateGroups",
               userTaskDbModel));
     }
+  }
+
+  public void scheduleForHistoryCleanup(final Long userTaskKey,
+      final OffsetDateTime historyCleanupDateTime) {
+
   }
 
   public void migrateToProcess(final UserTaskMigrationDbModel model) {

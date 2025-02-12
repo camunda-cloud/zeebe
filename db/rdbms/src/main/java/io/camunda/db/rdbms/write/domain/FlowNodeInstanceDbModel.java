@@ -27,7 +27,8 @@ public record FlowNodeInstanceDbModel(
     Long incidentKey,
     Long numSubprocessIncidents,
     String tenantId,
-    int partitionId)
+    int partitionId,
+    OffsetDateTime historyCleanupDateTime)
     implements Copyable<FlowNodeInstanceDbModel> {
 
   @Override
@@ -50,7 +51,8 @@ public record FlowNodeInstanceDbModel(
                 .incidentKey(incidentKey)
                 .numSubprocessIncidents(numSubprocessIncidents)
                 .tenantId(tenantId)
-                .partitionId(partitionId))
+                .partitionId(partitionId)
+                .historyCleanupDateTime(historyCleanupDateTime))
         .build();
   }
 
@@ -71,9 +73,11 @@ public record FlowNodeInstanceDbModel(
     private Long numSubprocessIncidents = 0L;
     private String tenantId;
     private int partitionId;
+    private OffsetDateTime historyCleanupDateTime;
 
     // Public constructor to initialize the builder
-    public FlowNodeInstanceDbModelBuilder() {}
+    public FlowNodeInstanceDbModelBuilder() {
+    }
 
     // Builder methods for each field
     public FlowNodeInstanceDbModelBuilder flowNodeInstanceKey(final Long key) {
@@ -151,6 +155,11 @@ public record FlowNodeInstanceDbModel(
       return this;
     }
 
+    public FlowNodeInstanceDbModelBuilder historyCleanupDateTime(final OffsetDateTime value) {
+      historyCleanupDateTime = value;
+      return this;
+    }
+
     @Override
     public FlowNodeInstanceDbModel build() {
       return new FlowNodeInstanceDbModel(
@@ -167,7 +176,8 @@ public record FlowNodeInstanceDbModel(
           incidentKey,
           numSubprocessIncidents,
           tenantId,
-          partitionId);
+          partitionId,
+          historyCleanupDateTime);
     }
   }
 }

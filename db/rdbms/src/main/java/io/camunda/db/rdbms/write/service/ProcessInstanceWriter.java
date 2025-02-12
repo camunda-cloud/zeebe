@@ -59,6 +59,11 @@ public class ProcessInstanceWriter {
     }
   }
 
+  public void scheduleForHistoryCleanup(final Long processInstanceKey,
+      final OffsetDateTime historyCleanupDateTime) {
+
+  }
+
   public void createIncident(final long key) {
     final boolean wasMerged = mergeToQueue(key, b -> b.numIncidents(b.numIncidents() + 1));
 

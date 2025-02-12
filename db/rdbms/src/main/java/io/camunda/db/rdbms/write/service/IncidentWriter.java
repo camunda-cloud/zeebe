@@ -15,6 +15,7 @@ import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
 import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import io.camunda.search.entities.IncidentEntity.IncidentState;
+import java.time.OffsetDateTime;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +60,11 @@ public class IncidentWriter {
               "io.camunda.db.rdbms.sql.IncidentMapper.updateState",
               new IncidentMapper.IncidentStateDto(incidentKey, IncidentState.RESOLVED, null)));
     }
+  }
+
+  public void scheduleForHistoryCleanup(final Long incidentKey,
+      final OffsetDateTime historyCleanupDateTime) {
+
   }
 
   private boolean mergeToQueue(final long key, final Function<Builder, Builder> mergeFunction) {

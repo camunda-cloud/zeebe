@@ -65,6 +65,7 @@ public record DecisionInstanceDbModel(
     private int partitionId;
     private List<EvaluatedInput> evaluatedInputs;
     private List<EvaluatedOutput> evaluatedOutputs;
+    private OffsetDateTime historyCleanupDateTime;
 
     public Builder decisionInstanceId(final String value) {
       decisionInstanceId = value;
@@ -171,6 +172,11 @@ public record DecisionInstanceDbModel(
       return this;
     }
 
+    public Builder historyCleanupDateTime(final OffsetDateTime value) {
+      historyCleanupDateTime = value;
+      return this;
+    }
+
     @Override
     public DecisionInstanceDbModel build() {
       return new DecisionInstanceDbModel(
@@ -198,7 +204,9 @@ public record DecisionInstanceDbModel(
     }
   }
 
-  public record EvaluatedInput(String decisionInstanceId, String id, String name, String value) {}
+  public record EvaluatedInput(String decisionInstanceId, String id, String name, String value) {
+
+  }
 
   public record EvaluatedOutput(
       String decisionInstanceId,
@@ -206,5 +214,7 @@ public record DecisionInstanceDbModel(
       String name,
       String value,
       String ruleId,
-      Integer ruleIndex) {}
+      Integer ruleIndex) {
+
+  }
 }

@@ -62,7 +62,8 @@ public class UserTaskDbModel {
       final Integer processDefinitionVersion,
       final Map<String, String> customHeaders,
       final Integer priority,
-      final int partitionId) {
+      final int partitionId,
+      final OffsetDateTime historyCleanupDateTime) {
     this.userTaskKey = userTaskKey;
     this.elementId = elementId;
     this.processDefinitionId = processDefinitionId;
@@ -308,9 +309,11 @@ public class UserTaskDbModel {
     private Map<String, String> customHeaders;
     private Integer priority;
     private int partitionId;
+    private OffsetDateTime historyCleanupDateTime;
 
     // Public constructor to initialize the builder
-    public Builder() {}
+    public Builder() {
+    }
 
     public static UserTaskDbModel of(
         final Function<UserTaskDbModel.Builder, ObjectBuilder<UserTaskDbModel>> fn) {
@@ -423,6 +426,11 @@ public class UserTaskDbModel {
       return this;
     }
 
+    public Builder historyCleanupDateTime(final OffsetDateTime value) {
+      historyCleanupDateTime = value;
+      return this;
+    }
+
     // Build method to create the record
     @Override
     public UserTaskDbModel build() {
@@ -446,7 +454,8 @@ public class UserTaskDbModel {
               processDefinitionVersion,
               customHeaders,
               priority,
-              partitionId);
+              partitionId,
+              historyCleanupDateTime);
 
       model.candidateUsers(candidateUsers);
       model.candidateGroups(candidateGroups);

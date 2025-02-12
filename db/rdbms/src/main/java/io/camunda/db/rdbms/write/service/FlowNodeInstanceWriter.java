@@ -97,6 +97,11 @@ public class FlowNodeInstanceWriter {
     }
   }
 
+  public void scheduleForHistoryCleanup(final Long flowNodeInstanceKey,
+      final OffsetDateTime historyCleanupDateTime) {
+
+  }
+
   private void updateIncident(final long flowNodeInstanceKey, final Long incidentKey) {
     final boolean wasMerged = mergeToQueue(flowNodeInstanceKey, b -> b.incidentKey(incidentKey));
 

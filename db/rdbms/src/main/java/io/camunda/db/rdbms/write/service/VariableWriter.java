@@ -13,6 +13,7 @@ import io.camunda.db.rdbms.write.domain.VariableDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import java.time.OffsetDateTime;
 
 public class VariableWriter {
 
@@ -43,6 +44,11 @@ public class VariableWriter {
             variable.variableKey(),
             "io.camunda.db.rdbms.sql.VariableMapper.update",
             variable.truncateValue(vendorDatabaseProperties.variableValuePreviewSize())));
+  }
+
+  public void scheduleForHistoryCleanup(final Long variableKey,
+      final OffsetDateTime historyCleanupDateTime) {
+
   }
 
   public void migrateToProcess(final long variableKey, final String processDefinitionId) {

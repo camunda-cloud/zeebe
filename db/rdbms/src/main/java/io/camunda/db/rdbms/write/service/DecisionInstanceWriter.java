@@ -11,6 +11,7 @@ import io.camunda.db.rdbms.write.domain.DecisionInstanceDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import java.time.OffsetDateTime;
 
 public class DecisionInstanceWriter {
 
@@ -45,5 +46,10 @@ public class DecisionInstanceWriter {
               "io.camunda.db.rdbms.sql.DecisionInstanceMapper.insertOutput",
               decisionInstance));
     }
+  }
+
+  public void scheduleForHistoryCleanup(final Long decisionInstanceKey,
+      final OffsetDateTime historyCleanupDateTime) {
+
   }
 }
