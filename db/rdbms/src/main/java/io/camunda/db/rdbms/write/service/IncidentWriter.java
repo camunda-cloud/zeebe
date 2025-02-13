@@ -8,6 +8,7 @@
 package io.camunda.db.rdbms.write.service;
 
 import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper.CleanupHistoryDto;
 import io.camunda.db.rdbms.sql.IncidentMapper;
 import io.camunda.db.rdbms.write.domain.IncidentDbModel;
 import io.camunda.db.rdbms.write.domain.IncidentDbModel.Builder;
@@ -27,9 +28,11 @@ public class IncidentWriter {
   private static final Logger LOG = LoggerFactory.getLogger(IncidentWriter.class);
 
   private final ExecutionQueue executionQueue;
+  private final IncidentMapper mapper;
 
-  public IncidentWriter(final ExecutionQueue executionQueue) {
+  public IncidentWriter(final ExecutionQueue executionQueue, final IncidentMapper mapper) {
     this.executionQueue = executionQueue;
+    this.mapper = mapper;
   }
 
   public void create(final IncidentDbModel incident) {
@@ -84,5 +87,9 @@ public class IncidentWriter {
   private boolean mergeToQueue(final long key, final Function<Builder, Builder> mergeFunction) {
     return executionQueue.tryMergeWithExistingQueueItem(
         new UpsertMerger<>(ContextType.INCIDENT, key, IncidentDbModel.class, mergeFunction));
+  }
+
+  public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
+    mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }

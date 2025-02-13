@@ -8,8 +8,13 @@
 package io.camunda.db.rdbms.write;
 
 import io.camunda.db.rdbms.config.VendorDatabaseProperties;
+import io.camunda.db.rdbms.sql.DecisionInstanceMapper;
+import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper;
+import io.camunda.db.rdbms.sql.IncidentMapper;
 import io.camunda.db.rdbms.sql.ProcessInstanceMapper;
 import io.camunda.db.rdbms.sql.PurgeMapper;
+import io.camunda.db.rdbms.sql.UserTaskMapper;
+import io.camunda.db.rdbms.sql.VariableMapper;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.service.AuthorizationWriter;
 import io.camunda.db.rdbms.write.service.DecisionDefinitionWriter;
@@ -56,26 +61,31 @@ public class RdbmsWriter {
   public RdbmsWriter(
       final ExecutionQueue executionQueue,
       final ExporterPositionService exporterPositionService,
+      final DecisionInstanceMapper decisionInstanceMapper,
+      final FlowNodeInstanceMapper flowNodeInstanceMapper,
+      final IncidentMapper incidentMapper,
       final ProcessInstanceMapper processInstanceMapper,
       final PurgeMapper purgeMapper,
+      final UserTaskMapper userTaskMapper,
+      final VariableMapper variableMapper,
       final VendorDatabaseProperties vendorDatabaseProperties) {
     this.executionQueue = executionQueue;
     this.exporterPositionService = exporterPositionService;
     rdbmsPurger = new RdbmsPurger(purgeMapper);
     authorizationWriter = new AuthorizationWriter(executionQueue);
     decisionDefinitionWriter = new DecisionDefinitionWriter(executionQueue);
-    decisionInstanceWriter = new DecisionInstanceWriter(executionQueue);
+    decisionInstanceWriter = new DecisionInstanceWriter(decisionInstanceMapper, executionQueue);
     decisionRequirementsWriter = new DecisionRequirementsWriter(executionQueue);
-    flowNodeInstanceWriter = new FlowNodeInstanceWriter(executionQueue);
+    flowNodeInstanceWriter = new FlowNodeInstanceWriter(executionQueue, flowNodeInstanceMapper);
     groupWriter = new GroupWriter(executionQueue);
-    incidentWriter = new IncidentWriter(executionQueue);
+    incidentWriter = new IncidentWriter(executionQueue, incidentMapper);
     processDefinitionWriter = new ProcessDefinitionWriter(executionQueue);
     processInstanceWriter = new ProcessInstanceWriter(processInstanceMapper, executionQueue);
     tenantWriter = new TenantWriter(executionQueue);
-    variableWriter = new VariableWriter(executionQueue, vendorDatabaseProperties);
+    variableWriter = new VariableWriter(executionQueue, variableMapper, vendorDatabaseProperties);
     roleWriter = new RoleWriter(executionQueue);
     userWriter = new UserWriter(executionQueue);
-    userTaskWriter = new UserTaskWriter(executionQueue);
+    userTaskWriter = new UserTaskWriter(executionQueue, userTaskMapper);
     formWriter = new FormWriter(executionQueue);
     mappingWriter = new MappingWriter(executionQueue);
   }

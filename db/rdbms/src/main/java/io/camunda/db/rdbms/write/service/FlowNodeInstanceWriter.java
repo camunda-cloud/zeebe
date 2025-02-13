@@ -7,9 +7,11 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper;
 import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.EndFlowNodeDto;
 import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.UpdateIncidentDto;
 import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper.CleanupHistoryDto;
 import io.camunda.db.rdbms.write.domain.FlowNodeInstanceDbModel;
 import io.camunda.db.rdbms.write.domain.FlowNodeInstanceDbModel.FlowNodeInstanceDbModelBuilder;
 import io.camunda.db.rdbms.write.queue.ContextType;
@@ -24,9 +26,12 @@ import java.util.function.Function;
 public class FlowNodeInstanceWriter {
 
   private final ExecutionQueue executionQueue;
+  private final FlowNodeInstanceMapper mapper;
 
-  public FlowNodeInstanceWriter(final ExecutionQueue executionQueue) {
+  public FlowNodeInstanceWriter(
+      final ExecutionQueue executionQueue, final FlowNodeInstanceMapper mapper) {
     this.executionQueue = executionQueue;
+    this.mapper = mapper;
   }
 
   public void create(final FlowNodeInstanceDbModel flowNode) {
@@ -140,5 +145,9 @@ public class FlowNodeInstanceWriter {
     return executionQueue.tryMergeWithExistingQueueItem(
         new UpsertMerger<>(
             ContextType.FLOW_NODE, key, FlowNodeInstanceDbModel.class, mergeFunction));
+  }
+
+  public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
+    mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }

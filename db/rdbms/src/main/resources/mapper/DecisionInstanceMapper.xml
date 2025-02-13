@@ -280,7 +280,6 @@
     </constructor>
   </resultMap>
 
-
   <update
     flushCache="true"
     id="updateHistoryCleanupDate"
@@ -289,5 +288,36 @@
     SET HISTORY_CLEANUP_DATE = #{historyCleanupDate, jdbcType=TIMESTAMP}
     WHERE PROCESS_INSTANCE_KEY = #{processInstanceKey}
   </update>
+
+  <delete
+    flushCache="true"
+    id="cleanupInputMappingHistory"
+    statementType="PREPARED">
+    DELETE
+    FROM ${prefix}DECISION_INSTANCE_INPUT
+    WHERE (DECISION_INSTANCE_ID) IN (SELECT DECISION_INSTANCE_ID
+                                     FROM ${prefix}DECISION_INSTANCE
+                                     WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate})
+  </delete>
+
+  <delete
+    flushCache="true"
+    id="cleanupOutputMappingHistory"
+    statementType="PREPARED">
+    DELETE
+    FROM ${prefix}DECISION_INSTANCE_OUTPUT
+    WHERE (DECISION_INSTANCE_ID) IN (SELECT DECISION_INSTANCE_ID
+                                     FROM ${prefix}DECISION_INSTANCE
+                                     WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate})
+  </delete>
+
+  <delete
+    flushCache="true"
+    id="cleanupHistory"
+    statementType="PREPARED">
+    DELETE
+    FROM ${prefix}DECISION_INSTANCE
+    WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+  </delete>
 
 </mapper>

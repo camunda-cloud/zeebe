@@ -7,7 +7,9 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.DecisionInstanceMapper;
 import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper.CleanupHistoryDto;
 import io.camunda.db.rdbms.write.domain.DecisionInstanceDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
@@ -17,9 +19,12 @@ import java.time.OffsetDateTime;
 
 public class DecisionInstanceWriter {
 
+  private final DecisionInstanceMapper mapper;
   private final ExecutionQueue executionQueue;
 
-  public DecisionInstanceWriter(final ExecutionQueue executionQueue) {
+  public DecisionInstanceWriter(
+      final DecisionInstanceMapper mapper, final ExecutionQueue executionQueue) {
+    this.mapper = mapper;
     this.executionQueue = executionQueue;
   }
 
@@ -65,5 +70,11 @@ public class DecisionInstanceWriter {
                 .processInstanceKey(processInstanceKey)
                 .historyCleanupDate(historyCleanupDate)
                 .build()));
+  }
+
+  public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
+    mapper.cleanupInputMappingHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
+    mapper.cleanupOutputMappingHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
+    mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }

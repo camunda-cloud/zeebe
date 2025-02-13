@@ -28,6 +28,10 @@ public interface UserTaskMapper extends HistoryCleanupMapper {
 
   void migrateToProcess(UserTaskMigrationDbModel dto);
 
+  void cleanupCandidateUsersHistory(CleanupHistoryDto dto);
+
+  void cleanupCandidateGroupsHistory(CleanupHistoryDto dto);
+
   Long count(UserTaskDbQuery filter);
 
   List<UserTaskDbModel> search(UserTaskDbQuery filter);

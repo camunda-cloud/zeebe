@@ -8,6 +8,8 @@
 package io.camunda.db.rdbms.write.service;
 
 import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper.CleanupHistoryDto;
+import io.camunda.db.rdbms.sql.UserTaskMapper;
 import io.camunda.db.rdbms.write.domain.UserTaskDbModel;
 import io.camunda.db.rdbms.write.domain.UserTaskMigrationDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
@@ -19,9 +21,11 @@ import java.time.OffsetDateTime;
 public class UserTaskWriter {
 
   private final ExecutionQueue executionQueue;
+  private final UserTaskMapper mapper;
 
-  public UserTaskWriter(final ExecutionQueue executionQueue) {
+  public UserTaskWriter(final ExecutionQueue executionQueue, final UserTaskMapper mapper) {
     this.executionQueue = executionQueue;
+    this.mapper = mapper;
   }
 
   public void create(final UserTaskDbModel userTaskDbModel) {
@@ -116,5 +120,11 @@ public class UserTaskWriter {
             model.userTaskKey(),
             "io.camunda.db.rdbms.sql.UserTaskMapper.migrateToProcess",
             model));
+  }
+
+  public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
+    mapper.cleanupCandidateUsersHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
+    mapper.cleanupCandidateGroupsHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
+    mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }

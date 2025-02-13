@@ -9,6 +9,7 @@ package io.camunda.db.rdbms.write.service;
 
 import io.camunda.db.rdbms.config.VendorDatabaseProperties;
 import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper.CleanupHistoryDto;
 import io.camunda.db.rdbms.sql.VariableMapper;
 import io.camunda.db.rdbms.write.domain.VariableDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
@@ -20,12 +21,15 @@ import java.time.OffsetDateTime;
 public class VariableWriter {
 
   private final ExecutionQueue executionQueue;
+  private final VariableMapper mapper;
   private final VendorDatabaseProperties vendorDatabaseProperties;
 
   public VariableWriter(
       final ExecutionQueue executionQueue,
+      final VariableMapper mapper,
       final VendorDatabaseProperties vendorDatabaseProperties) {
     this.executionQueue = executionQueue;
+    this.mapper = mapper;
     this.vendorDatabaseProperties = vendorDatabaseProperties;
   }
 
@@ -74,5 +78,9 @@ public class VariableWriter {
             new VariableMapper.MigrateToProcessDto.Builder()
                 .variableKey(variableKey)
                 .processDefinitionId(processDefinitionId)));
+  }
+
+  public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
+    mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }
