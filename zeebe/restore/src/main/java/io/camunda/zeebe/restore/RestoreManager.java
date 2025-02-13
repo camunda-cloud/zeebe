@@ -19,6 +19,11 @@ import io.camunda.zeebe.broker.system.configuration.BrokerCfg;
 import io.camunda.zeebe.db.impl.rocksdb.ChecksumProviderRocksDBImpl;
 import io.camunda.zeebe.restore.PartitionRestoreService.BackupValidator;
 import io.camunda.zeebe.util.FileUtil;
+<<<<<<< HEAD
+=======
+import io.camunda.zeebe.util.micrometer.MicrometerUtil;
+import io.camunda.zeebe.util.micrometer.MicrometerUtil.PartitionKeyNames;
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
@@ -106,10 +111,18 @@ public class RestoreManager {
             configuration.getCluster().getNodeId(),
             new ChecksumProviderRocksDBImpl())
         .restore(backupId, validator)
+<<<<<<< HEAD
         .thenAccept(backup -> logSuccessfulRestore(backup, partition.id().id(), backupId));
   }
 
   private Set<RaftPartition> collectPartitions() {
+=======
+        .thenAccept(backup -> logSuccessfulRestore(backup, raftPartition.id().id(), backupId))
+        .whenComplete((ok, error) -> MicrometerUtil.discard(registry));
+  }
+
+  private Set<InstrumentedRaftPartition> collectPartitions() {
+>>>>>>> 212341e3 (refactor: create utility to close composite registry)
     final var localBrokerId = configuration.getCluster().getNodeId();
     final var localMember = MemberId.from(String.valueOf(localBrokerId));
     final var clusterTopology =
