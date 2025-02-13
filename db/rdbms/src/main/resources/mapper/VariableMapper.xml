@@ -153,7 +153,7 @@
     statementType="PREPARED">
     UPDATE ${prefix}VARIABLE SET
       HISTORY_CLEANUP_DATE = #{historyCleanupDate, jdbcType=TIMESTAMP}
-    WHERE VAR_KEY = #{variableKey}
+    WHERE PROCESS_INSTANCE_KEY = #{processInstanceKey}
   </update>
 
   <update
@@ -163,6 +163,6 @@
     flushCache="true">
       UPDATE ${prefix}VARIABLE
       SET PROCESS_DEFINITION_ID = #{processDefinitionId}
-      WHERE PROCESS_INSTANCE_KEY = #{processInstanceKey}
+      WHERE VAR_KEY = #{variableKey}
   </update>
 </mapper>

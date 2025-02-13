@@ -14,6 +14,7 @@ import io.camunda.db.rdbms.write.domain.VariableDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 import java.time.OffsetDateTime;
 
 public class VariableWriter {
@@ -33,6 +34,7 @@ public class VariableWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.VARIABLE,
+            StatementType.INSERT,
             variable.variableKey(),
             "io.camunda.db.rdbms.sql.VariableMapper.insert",
             variable.truncateValue(vendorDatabaseProperties.variableValuePreviewSize())));
@@ -42,6 +44,7 @@ public class VariableWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.VARIABLE,
+            StatementType.UPDATE,
             variable.variableKey(),
             "io.camunda.db.rdbms.sql.VariableMapper.update",
             variable.truncateValue(vendorDatabaseProperties.variableValuePreviewSize())));
@@ -52,6 +55,7 @@ public class VariableWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.VARIABLE,
+            StatementType.UPDATE,
             processInstanceKey,
             "io.camunda.db.rdbms.sql.VariableMapper.updateHistoryCleanupDate",
             new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
@@ -64,6 +68,7 @@ public class VariableWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.VARIABLE,
+            StatementType.UPDATE,
             variableKey,
             "io.camunda.db.rdbms.sql.VariableMapper.migrateToProcess",
             new VariableMapper.MigrateToProcessDto.Builder()

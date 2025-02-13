@@ -343,7 +343,7 @@
     statementType="PREPARED">
     UPDATE ${prefix}USER_TASK SET
     HISTORY_CLEANUP_DATE = #{historyCleanupDate, jdbcType=TIMESTAMP}
-    WHERE USER_TASK_KEY = #{userTaskKey}
+    WHERE PROCESS_INSTANCE_KEY = #{processInstanceKey}
   </update>
 
   <update

@@ -13,6 +13,7 @@ import io.camunda.db.rdbms.write.domain.UserTaskMigrationDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 import java.time.OffsetDateTime;
 
 public class UserTaskWriter {
@@ -27,6 +28,7 @@ public class UserTaskWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.USER_TASK,
+            StatementType.INSERT,
             userTaskDbModel.userTaskKey(),
             "io.camunda.db.rdbms.sql.UserTaskMapper.insert",
             userTaskDbModel));
@@ -34,6 +36,7 @@ public class UserTaskWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.USER_TASK,
+              StatementType.INSERT,
               userTaskDbModel.userTaskKey(),
               "io.camunda.db.rdbms.sql.UserTaskMapper.insertCandidateUsers",
               userTaskDbModel));
@@ -42,6 +45,7 @@ public class UserTaskWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.USER_TASK,
+              StatementType.INSERT,
               userTaskDbModel.userTaskKey(),
               "io.camunda.db.rdbms.sql.UserTaskMapper.insertCandidateGroups",
               userTaskDbModel));
@@ -52,12 +56,14 @@ public class UserTaskWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.USER_TASK,
+            StatementType.UPDATE,
             userTaskDbModel.userTaskKey(),
             "io.camunda.db.rdbms.sql.UserTaskMapper.update",
             userTaskDbModel));
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.USER_TASK,
+            StatementType.DELETE,
             userTaskDbModel.userTaskKey(),
             "io.camunda.db.rdbms.sql.UserTaskMapper.deleteCandidateUsers",
             userTaskDbModel.userTaskKey()));
@@ -65,6 +71,7 @@ public class UserTaskWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.USER_TASK,
+              StatementType.INSERT,
               userTaskDbModel.userTaskKey(),
               "io.camunda.db.rdbms.sql.UserTaskMapper.insertCandidateUsers",
               userTaskDbModel));
@@ -72,6 +79,7 @@ public class UserTaskWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.USER_TASK,
+            StatementType.DELETE,
             userTaskDbModel.userTaskKey(),
             "io.camunda.db.rdbms.sql.UserTaskMapper.deleteCandidateGroups",
             userTaskDbModel.userTaskKey()));
@@ -79,6 +87,7 @@ public class UserTaskWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.USER_TASK,
+              StatementType.INSERT,
               userTaskDbModel.userTaskKey(),
               "io.camunda.db.rdbms.sql.UserTaskMapper.insertCandidateGroups",
               userTaskDbModel));
@@ -90,6 +99,7 @@ public class UserTaskWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.USER_TASK,
+            StatementType.UPDATE,
             processInstanceKey,
             "io.camunda.db.rdbms.sql.UserTaskMapper.updateHistoryCleanupDate",
             new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
@@ -102,6 +112,7 @@ public class UserTaskWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.USER_TASK,
+            StatementType.UPDATE,
             model.userTaskKey(),
             "io.camunda.db.rdbms.sql.UserTaskMapper.migrateToProcess",
             model));

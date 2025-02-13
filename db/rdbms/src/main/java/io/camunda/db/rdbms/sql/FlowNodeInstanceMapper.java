@@ -28,11 +28,7 @@ public interface FlowNodeInstanceMapper extends HistoryCleanupMapper {
   record EndFlowNodeDto(
       long flowNodeInstanceKey,
       FlowNodeInstanceEntity.FlowNodeState state,
-      OffsetDateTime endDate) {
+      OffsetDateTime endDate) {}
 
-  }
-
-  record UpdateIncidentDto(long flowNodeInstanceKey, Long incidentKey) {
-
-  }
+  record UpdateIncidentDto(long flowNodeInstanceKey, Long incidentKey) {}
 }

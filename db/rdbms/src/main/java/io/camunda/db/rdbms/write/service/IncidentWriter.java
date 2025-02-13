@@ -14,6 +14,7 @@ import io.camunda.db.rdbms.write.domain.IncidentDbModel.Builder;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import io.camunda.search.entities.IncidentEntity.IncidentState;
 import java.time.OffsetDateTime;
@@ -35,6 +36,7 @@ public class IncidentWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.INCIDENT,
+            StatementType.INSERT,
             incident.incidentKey(),
             "io.camunda.db.rdbms.sql.IncidentMapper.insert",
             incident));
@@ -44,6 +46,7 @@ public class IncidentWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.INCIDENT,
+            StatementType.UPDATE,
             incident.incidentKey(),
             "io.camunda.db.rdbms.sql.IncidentMapper.update",
             incident));
@@ -57,6 +60,7 @@ public class IncidentWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.INCIDENT,
+              StatementType.UPDATE,
               incidentKey,
               "io.camunda.db.rdbms.sql.IncidentMapper.updateState",
               new IncidentMapper.IncidentStateDto(incidentKey, IncidentState.RESOLVED, null)));
@@ -68,6 +72,7 @@ public class IncidentWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.INCIDENT,
+            StatementType.UPDATE,
             processInstanceKey,
             "io.camunda.db.rdbms.sql.IncidentMapper.updateHistoryCleanupDate",
             new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()

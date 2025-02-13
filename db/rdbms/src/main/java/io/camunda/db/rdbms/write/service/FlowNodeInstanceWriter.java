@@ -15,6 +15,7 @@ import io.camunda.db.rdbms.write.domain.FlowNodeInstanceDbModel.FlowNodeInstance
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import io.camunda.search.entities.FlowNodeInstanceEntity.FlowNodeState;
 import java.time.OffsetDateTime;
@@ -32,6 +33,7 @@ public class FlowNodeInstanceWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.FLOW_NODE,
+            StatementType.INSERT,
             flowNode.flowNodeInstanceKey(),
             "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.insert",
             flowNode));
@@ -41,6 +43,7 @@ public class FlowNodeInstanceWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.FLOW_NODE,
+            StatementType.UPDATE,
             flowNode.flowNodeInstanceKey(),
             "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.update",
             flowNode));
@@ -54,6 +57,7 @@ public class FlowNodeInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.FLOW_NODE,
+              StatementType.UPDATE,
               key,
               "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateStateAndEndDate",
               dto));
@@ -77,6 +81,7 @@ public class FlowNodeInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.FLOW_NODE,
+              StatementType.UPDATE,
               flowNodeInstanceKey,
               "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.incrementSubprocessIncidentCount",
               flowNodeInstanceKey));
@@ -92,6 +97,7 @@ public class FlowNodeInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.FLOW_NODE,
+              StatementType.UPDATE,
               flowNodeInstanceKey,
               "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.decrementSubprocessIncidentCount",
               flowNodeInstanceKey));
@@ -103,6 +109,7 @@ public class FlowNodeInstanceWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.FLOW_NODE,
+            StatementType.UPDATE,
             processInstanceKey,
             "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateHistoryCleanupDate",
             new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
@@ -119,6 +126,7 @@ public class FlowNodeInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.FLOW_NODE,
+              StatementType.UPDATE,
               flowNodeInstanceKey,
               "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateIncident",
               dto));

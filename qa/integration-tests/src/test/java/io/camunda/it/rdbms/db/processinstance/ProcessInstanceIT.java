@@ -304,11 +304,11 @@ public class ProcessInstanceIT {
                             p ->
                                 p.size(5)
                                     .searchAfter(
-                                        new Object[]{
-                                            instanceAfter.processDefinitionName(),
-                                            instanceAfter.processDefinitionVersion(),
-                                            instanceAfter.startDate(),
-                                            instanceAfter.processInstanceKey()
+                                        new Object[] {
+                                          instanceAfter.processDefinitionName(),
+                                          instanceAfter.processDefinitionVersion(),
+                                          instanceAfter.startDate(),
+                                          instanceAfter.processInstanceKey()
                                         }))));
 
     assertThat(nextPage.total()).isEqualTo(20);
@@ -317,8 +317,7 @@ public class ProcessInstanceIT {
   }
 
   @TestTemplate
-  public void shouldCleanup(
-      final CamundaRdbmsTestApplication testApplication) {
+  public void shouldCleanup(final CamundaRdbmsTestApplication testApplication) {
     final RdbmsService rdbmsService = testApplication.getRdbmsService();
     final RdbmsWriter rdbmsWriter = rdbmsService.createWriter(PARTITION_ID);
     final ProcessInstanceReader processInstanceReader = rdbmsService.getProcessInstanceReader();
@@ -327,16 +326,20 @@ public class ProcessInstanceIT {
 
     final var processDefinition =
         ProcessDefinitionFixtures.createAndSaveProcessDefinition(rdbmsWriter, b -> b);
-    final var pi1 = createAndSaveRandomProcessInstance(rdbmsWriter,
-        b -> b.processDefinitionKey(processDefinition.processDefinitionKey()));
-    final var pi2 = createAndSaveRandomProcessInstance(rdbmsWriter,
-        b -> b.processDefinitionKey(processDefinition.processDefinitionKey()));
-    final var pi3 = createAndSaveRandomProcessInstance(rdbmsWriter,
-        b -> b.processDefinitionKey(processDefinition.processDefinitionKey()));
+    final var pi1 =
+        createAndSaveRandomProcessInstance(
+            rdbmsWriter, b -> b.processDefinitionKey(processDefinition.processDefinitionKey()));
+    final var pi2 =
+        createAndSaveRandomProcessInstance(
+            rdbmsWriter, b -> b.processDefinitionKey(processDefinition.processDefinitionKey()));
+    final var pi3 =
+        createAndSaveRandomProcessInstance(
+            rdbmsWriter, b -> b.processDefinitionKey(processDefinition.processDefinitionKey()));
 
     // set cleanup dates
     rdbmsWriter.getProcessInstanceWriter().scheduleForHistoryCleanup(pi1.processInstanceKey(), NOW);
-    rdbmsWriter.getProcessInstanceWriter()
+    rdbmsWriter
+        .getProcessInstanceWriter()
         .scheduleForHistoryCleanup(pi2.processInstanceKey(), NOW.minusDays(2));
     rdbmsWriter.flush();
 

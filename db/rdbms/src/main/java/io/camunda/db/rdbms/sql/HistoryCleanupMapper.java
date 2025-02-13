@@ -18,8 +18,8 @@ public interface HistoryCleanupMapper {
 
   record UpdateHistoryCleanupDateDto(long processInstanceKey, OffsetDateTime historyCleanupDate) {
 
-    public static class Builder implements
-        ObjectBuilder<ProcessInstanceMapper.UpdateHistoryCleanupDateDto> {
+    public static class Builder
+        implements ObjectBuilder<ProcessInstanceMapper.UpdateHistoryCleanupDateDto> {
 
       private long processInstanceKey;
       private OffsetDateTime historyCleanupDate;
@@ -29,8 +29,7 @@ public interface HistoryCleanupMapper {
         return this;
       }
 
-      public Builder historyCleanupDate(
-          final OffsetDateTime historyCleanupDate) {
+      public Builder historyCleanupDate(final OffsetDateTime historyCleanupDate) {
         this.historyCleanupDate = historyCleanupDate;
         return this;
       }
@@ -42,11 +41,5 @@ public interface HistoryCleanupMapper {
     }
   }
 
-  record CleanupHistoryDto(
-      OffsetDateTime cleanupDate,
-      int limit
-  ) {
-
-  }
-
+  record CleanupHistoryDto(OffsetDateTime cleanupDate, int limit) {}
 }

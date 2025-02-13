@@ -7,6 +7,7 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
 import io.camunda.db.rdbms.sql.HistoryCleanupMapper.CleanupHistoryDto;
 import io.camunda.db.rdbms.sql.ProcessInstanceMapper;
 import io.camunda.db.rdbms.sql.ProcessInstanceMapper.EndProcessInstanceDto;
@@ -15,6 +16,7 @@ import io.camunda.db.rdbms.write.domain.ProcessInstanceDbModel.ProcessInstanceDb
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import io.camunda.search.entities.ProcessInstanceEntity.ProcessInstanceState;
 import java.time.OffsetDateTime;
@@ -25,8 +27,8 @@ public class ProcessInstanceWriter {
   private final ProcessInstanceMapper mapper;
   private final ExecutionQueue executionQueue;
 
-  public ProcessInstanceWriter(final ProcessInstanceMapper mapper,
-      final ExecutionQueue executionQueue) {
+  public ProcessInstanceWriter(
+      final ProcessInstanceMapper mapper, final ExecutionQueue executionQueue) {
     this.mapper = mapper;
     this.executionQueue = executionQueue;
   }
@@ -35,6 +37,7 @@ public class ProcessInstanceWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.PROCESS_INSTANCE,
+            StatementType.INSERT,
             processInstance.processInstanceKey(),
             "io.camunda.db.rdbms.sql.ProcessInstanceMapper.insert",
             processInstance));
@@ -44,6 +47,7 @@ public class ProcessInstanceWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.PROCESS_INSTANCE,
+            StatementType.UPDATE,
             processInstance.processInstanceKey(),
             "io.camunda.db.rdbms.sql.ProcessInstanceMapper.update",
             processInstance));
@@ -58,6 +62,7 @@ public class ProcessInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.PROCESS_INSTANCE,
+              StatementType.UPDATE,
               key,
               "io.camunda.db.rdbms.sql.ProcessInstanceMapper.updateStateAndEndDate",
               dto));
@@ -71,6 +76,7 @@ public class ProcessInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.PROCESS_INSTANCE,
+              StatementType.UPDATE,
               key,
               "io.camunda.db.rdbms.sql.ProcessInstanceMapper.incrementIncidentCount",
               key));
@@ -84,6 +90,7 @@ public class ProcessInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.PROCESS_INSTANCE,
+              StatementType.UPDATE,
               key,
               "io.camunda.db.rdbms.sql.ProcessInstanceMapper.decrementIncidentCount",
               key));
@@ -107,16 +114,17 @@ public class ProcessInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.PROCESS_INSTANCE,
+              StatementType.UPDATE,
               processInstanceKey,
               "io.camunda.db.rdbms.sql.ProcessInstanceMapper.updateHistoryCleanupDate",
-              new ProcessInstanceMapper.UpdateHistoryCleanupDateDto.Builder()
+              new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
                   .processInstanceKey(processInstanceKey)
                   .historyCleanupDate(historyCleanupDate)
                   .build()));
     }
   }
 
-  public void cleanupHistory(OffsetDateTime cleanupDate, int rowsToRemove) {
+  public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
     mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }

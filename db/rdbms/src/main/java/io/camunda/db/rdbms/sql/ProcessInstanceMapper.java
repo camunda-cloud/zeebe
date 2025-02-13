@@ -32,7 +32,5 @@ public interface ProcessInstanceMapper extends HistoryCleanupMapper {
   record EndProcessInstanceDto(
       long processInstanceKey,
       ProcessInstanceEntity.ProcessInstanceState state,
-      OffsetDateTime endDate) {
-
-  }
+      OffsetDateTime endDate) {}
 }
