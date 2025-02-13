@@ -18,6 +18,7 @@ import io.camunda.db.rdbms.write.service.ExporterPositionService;
 import io.camunda.db.rdbms.write.service.FlowNodeInstanceWriter;
 import io.camunda.db.rdbms.write.service.FormWriter;
 import io.camunda.db.rdbms.write.service.GroupWriter;
+import io.camunda.db.rdbms.write.service.HistoryCleanupService;
 import io.camunda.db.rdbms.write.service.IncidentWriter;
 import io.camunda.db.rdbms.write.service.MappingWriter;
 import io.camunda.db.rdbms.write.service.ProcessDefinitionWriter;
@@ -147,6 +148,17 @@ public class RdbmsWriter {
 
   public RdbmsPurger getRdbmsPurger() {
     return rdbmsPurger;
+  }
+
+  public HistoryCleanupService getHistoryCleanupService() {
+    return new HistoryCleanupService(
+        processInstanceWriter,
+        incidentWriter,
+        flowNodeInstanceWriter,
+        userTaskWriter,
+        variableWriter,
+        decisionInstanceWriter
+    );
   }
 
   public ExecutionQueue getExecutionQueue() {
