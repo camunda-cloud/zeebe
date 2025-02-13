@@ -7,6 +7,7 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
 import io.camunda.db.rdbms.sql.IncidentMapper;
 import io.camunda.db.rdbms.write.domain.IncidentDbModel;
 import io.camunda.db.rdbms.write.domain.IncidentDbModel.Builder;
@@ -63,21 +64,16 @@ public class IncidentWriter {
   }
 
   public void scheduleForHistoryCleanup(
-      final Long incidentKey, final OffsetDateTime historyCleanupDate) {
-    final boolean wasMerged =
-        mergeToQueue(incidentKey, b -> b.historyCleanupDate(historyCleanupDate));
-
-    if (!wasMerged) {
-      executionQueue.executeInQueue(
-          new QueueItem(
-              ContextType.INCIDENT,
-              incidentKey,
-              "io.camunda.db.rdbms.sql.IncidentMapper.updateHistoryCleanupDate",
-              new IncidentMapper.UpdateHistoryCleanupDateDto.Builder()
-                  .incidentKey(incidentKey)
-                  .historyCleanupDate(historyCleanupDate)
-                  .build()));
-    }
+      final Long processInstanceKey, final OffsetDateTime historyCleanupDate) {
+    executionQueue.executeInQueue(
+        new QueueItem(
+            ContextType.INCIDENT,
+            processInstanceKey,
+            "io.camunda.db.rdbms.sql.IncidentMapper.updateHistoryCleanupDate",
+            new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
+                .processInstanceKey(processInstanceKey)
+                .historyCleanupDate(historyCleanupDate)
+                .build()));
   }
 
   private boolean mergeToQueue(final long key, final Function<Builder, Builder> mergeFunction) {

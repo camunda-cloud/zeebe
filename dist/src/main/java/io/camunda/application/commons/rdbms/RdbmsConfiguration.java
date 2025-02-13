@@ -157,10 +157,12 @@ public class RdbmsConfiguration {
       final SqlSessionFactory sqlSessionFactory,
       final ExporterPositionMapper exporterPositionMapper,
       final VendorDatabaseProperties vendorDatabaseProperties,
+      final ProcessInstanceMapper processInstanceMapper,
       final PurgeMapper purgeMapper,
       final RdbmsWriterMetrics metrics) {
     return new RdbmsWriterFactory(
-        sqlSessionFactory, exporterPositionMapper, vendorDatabaseProperties, purgeMapper, metrics);
+        sqlSessionFactory, exporterPositionMapper, vendorDatabaseProperties, processInstanceMapper,
+        purgeMapper, metrics);
   }
 
   @Bean

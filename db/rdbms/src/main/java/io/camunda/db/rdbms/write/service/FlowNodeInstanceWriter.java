@@ -7,9 +7,9 @@
  */
 package io.camunda.db.rdbms.write.service;
 
-import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper;
 import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.EndFlowNodeDto;
 import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.UpdateIncidentDto;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
 import io.camunda.db.rdbms.write.domain.FlowNodeInstanceDbModel;
 import io.camunda.db.rdbms.write.domain.FlowNodeInstanceDbModel.FlowNodeInstanceDbModelBuilder;
 import io.camunda.db.rdbms.write.queue.ContextType;
@@ -99,21 +99,16 @@ public class FlowNodeInstanceWriter {
   }
 
   public void scheduleForHistoryCleanup(
-      final Long flowNodeInstanceKey, final OffsetDateTime historyCleanupDate) {
-    final boolean wasMerged =
-        mergeToQueue(flowNodeInstanceKey, b -> b.historyCleanupDate(historyCleanupDate));
-
-    if (!wasMerged) {
-      executionQueue.executeInQueue(
-          new QueueItem(
-              ContextType.FLOW_NODE,
-              flowNodeInstanceKey,
-              "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateHistoryCleanupDate",
-              new FlowNodeInstanceMapper.UpdateHistoryCleanupDateDto.Builder()
-                  .flowNodeInstanceKey(flowNodeInstanceKey)
-                  .historyCleanupDate(historyCleanupDate)
-                  .build()));
-    }
+      final Long processInstanceKey, final OffsetDateTime historyCleanupDate) {
+    executionQueue.executeInQueue(
+        new QueueItem(
+            ContextType.FLOW_NODE,
+            processInstanceKey,
+            "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateHistoryCleanupDate",
+            new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
+                .processInstanceKey(processInstanceKey)
+                .historyCleanupDate(historyCleanupDate)
+                .build()));
   }
 
   private void updateIncident(final long flowNodeInstanceKey, final Long incidentKey) {

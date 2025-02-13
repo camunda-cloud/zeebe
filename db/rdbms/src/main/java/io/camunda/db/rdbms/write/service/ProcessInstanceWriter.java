@@ -7,6 +7,7 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper.CleanupHistoryDto;
 import io.camunda.db.rdbms.sql.ProcessInstanceMapper;
 import io.camunda.db.rdbms.sql.ProcessInstanceMapper.EndProcessInstanceDto;
 import io.camunda.db.rdbms.write.domain.ProcessInstanceDbModel;
@@ -21,9 +22,12 @@ import java.util.function.Function;
 
 public class ProcessInstanceWriter {
 
+  private final ProcessInstanceMapper mapper;
   private final ExecutionQueue executionQueue;
 
-  public ProcessInstanceWriter(final ExecutionQueue executionQueue) {
+  public ProcessInstanceWriter(final ProcessInstanceMapper mapper,
+      final ExecutionQueue executionQueue) {
+    this.mapper = mapper;
     this.executionQueue = executionQueue;
   }
 
@@ -60,24 +64,6 @@ public class ProcessInstanceWriter {
     }
   }
 
-  public void scheduleForHistoryCleanup(
-      final Long processInstanceKey, final OffsetDateTime historyCleanupDate) {
-    final boolean wasMerged =
-        mergeToQueue(processInstanceKey, b -> b.historyCleanupDate(historyCleanupDate));
-
-    if (!wasMerged) {
-      executionQueue.executeInQueue(
-          new QueueItem(
-              ContextType.PROCESS_INSTANCE,
-              processInstanceKey,
-              "io.camunda.db.rdbms.sql.ProcessInstanceMapper.updateHistoryCleanupDate",
-              new ProcessInstanceMapper.UpdateHistoryCleanupDateDto.Builder()
-                  .processInstanceKey(processInstanceKey)
-                  .historyCleanupDate(historyCleanupDate)
-                  .build()));
-    }
-  }
-
   public void createIncident(final long key) {
     final boolean wasMerged = mergeToQueue(key, b -> b.numIncidents(b.numIncidents() + 1));
 
@@ -110,5 +96,27 @@ public class ProcessInstanceWriter {
     return executionQueue.tryMergeWithExistingQueueItem(
         new UpsertMerger<>(
             ContextType.PROCESS_INSTANCE, key, ProcessInstanceDbModel.class, mergeFunction));
+  }
+
+  public void scheduleForHistoryCleanup(
+      final Long processInstanceKey, final OffsetDateTime historyCleanupDate) {
+    final boolean wasMerged =
+        mergeToQueue(processInstanceKey, b -> b.historyCleanupDate(historyCleanupDate));
+
+    if (!wasMerged) {
+      executionQueue.executeInQueue(
+          new QueueItem(
+              ContextType.PROCESS_INSTANCE,
+              processInstanceKey,
+              "io.camunda.db.rdbms.sql.ProcessInstanceMapper.updateHistoryCleanupDate",
+              new ProcessInstanceMapper.UpdateHistoryCleanupDateDto.Builder()
+                  .processInstanceKey(processInstanceKey)
+                  .historyCleanupDate(historyCleanupDate)
+                  .build()));
+    }
+  }
+
+  public void cleanupHistory(OffsetDateTime cleanupDate, int rowsToRemove) {
+    mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }

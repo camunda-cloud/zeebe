@@ -178,7 +178,7 @@
     statementType="PREPARED">
     UPDATE ${prefix}INCIDENT SET
       HISTORY_CLEANUP_DATE = #{historyCleanupDate, jdbcType=TIMESTAMP}
-    WHERE INCIDENT_KEY = #{incidentKey}
+    WHERE PROCESS_INSTANCE_KEY = #{processInstanceKey}
   </update>
 
 </mapper>

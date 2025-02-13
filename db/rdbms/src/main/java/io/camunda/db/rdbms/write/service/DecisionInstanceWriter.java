@@ -7,16 +7,12 @@
  */
 package io.camunda.db.rdbms.write.service;
 
-import io.camunda.db.rdbms.sql.DecisionInstanceMapper;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
 import io.camunda.db.rdbms.write.domain.DecisionInstanceDbModel;
-import io.camunda.db.rdbms.write.domain.ProcessInstanceDbModel;
-import io.camunda.db.rdbms.write.domain.ProcessInstanceDbModel.ProcessInstanceDbModelBuilder;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
-import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import java.time.OffsetDateTime;
-import java.util.function.Function;
 
 public class DecisionInstanceWriter {
 
@@ -54,28 +50,15 @@ public class DecisionInstanceWriter {
   }
 
   public void scheduleForHistoryCleanup(
-      final Long decisionInstanceKey, final OffsetDateTime historyCleanupDate) {
-    final boolean wasMerged =
-        mergeToQueue(decisionInstanceKey, b -> b.historyCleanupDate(historyCleanupDate));
-
-    if (!wasMerged) {
-      executionQueue.executeInQueue(
-          new QueueItem(
-              ContextType.DECISION_INSTANCE,
-              decisionInstanceKey,
-              "io.camunda.db.rdbms.sql.DecisionInstanceMapper.updateHistoryCleanupDate",
-              new DecisionInstanceMapper.UpdateHistoryCleanupDateDto.Builder()
-                  .decisionInstanceKey(decisionInstanceKey)
-                  .historyCleanupDate(historyCleanupDate)
-                  .build()));
-    }
-  }
-
-  private boolean mergeToQueue(
-      final long key,
-      final Function<ProcessInstanceDbModelBuilder, ProcessInstanceDbModelBuilder> mergeFunction) {
-    return executionQueue.tryMergeWithExistingQueueItem(
-        new UpsertMerger<>(
-            ContextType.PROCESS_INSTANCE, key, ProcessInstanceDbModel.class, mergeFunction));
+      final Long processInstanceKey, final OffsetDateTime historyCleanupDate) {
+    executionQueue.executeInQueue(
+        new QueueItem(
+            ContextType.DECISION_INSTANCE,
+            processInstanceKey,
+            "io.camunda.db.rdbms.sql.DecisionInstanceMapper.updateHistoryCleanupDate",
+            new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
+                .processInstanceKey(processInstanceKey)
+                .historyCleanupDate(historyCleanupDate)
+                .build()));
   }
 }

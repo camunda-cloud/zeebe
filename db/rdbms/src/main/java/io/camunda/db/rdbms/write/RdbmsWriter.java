@@ -8,6 +8,7 @@
 package io.camunda.db.rdbms.write;
 
 import io.camunda.db.rdbms.config.VendorDatabaseProperties;
+import io.camunda.db.rdbms.sql.ProcessInstanceMapper;
 import io.camunda.db.rdbms.sql.PurgeMapper;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.service.AuthorizationWriter;
@@ -55,6 +56,7 @@ public class RdbmsWriter {
   public RdbmsWriter(
       final ExecutionQueue executionQueue,
       final ExporterPositionService exporterPositionService,
+      final ProcessInstanceMapper processInstanceMapper,
       final PurgeMapper purgeMapper,
       final VendorDatabaseProperties vendorDatabaseProperties) {
     this.executionQueue = executionQueue;
@@ -68,7 +70,7 @@ public class RdbmsWriter {
     groupWriter = new GroupWriter(executionQueue);
     incidentWriter = new IncidentWriter(executionQueue);
     processDefinitionWriter = new ProcessDefinitionWriter(executionQueue);
-    processInstanceWriter = new ProcessInstanceWriter(executionQueue);
+    processInstanceWriter = new ProcessInstanceWriter(processInstanceMapper, executionQueue);
     tenantWriter = new TenantWriter(executionQueue);
     variableWriter = new VariableWriter(executionQueue, vendorDatabaseProperties);
     roleWriter = new RoleWriter(executionQueue);

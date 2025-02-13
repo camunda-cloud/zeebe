@@ -193,7 +193,7 @@
     statementType="PREPARED">
     UPDATE ${prefix}FLOW_NODE_INSTANCE SET
       HISTORY_CLEANUP_DATE = #{historyCleanupDate, jdbcType=TIMESTAMP}
-    WHERE FLOW_NODE_INSTANCE_KEY = #{flowNodeInstanceKey}
+    WHERE PROCESS_INSTANCE_KEY = #{processInstanceKey}
   </update>
 
 </mapper>

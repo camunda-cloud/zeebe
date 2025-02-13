@@ -256,4 +256,13 @@
     WHERE PROCESS_INSTANCE_KEY = #{processInstanceKey}
   </update>
 
+  <delete
+    flushCache="true"
+    id="cleanupHistory"
+    statementType="PREPARED">
+    DELETE
+    FROM ${prefix}PROCESS_INSTANCE
+    WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+  </delete>
+
 </mapper>

@@ -8,15 +8,13 @@
 package io.camunda.db.rdbms.write.service;
 
 import io.camunda.db.rdbms.config.VendorDatabaseProperties;
+import io.camunda.db.rdbms.sql.HistoryCleanupMapper;
 import io.camunda.db.rdbms.sql.VariableMapper;
 import io.camunda.db.rdbms.write.domain.VariableDbModel;
-import io.camunda.db.rdbms.write.domain.VariableDbModel.VariableDbModelBuilder;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
-import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import java.time.OffsetDateTime;
-import java.util.function.Function;
 
 public class VariableWriter {
 
@@ -50,21 +48,16 @@ public class VariableWriter {
   }
 
   public void scheduleForHistoryCleanup(
-      final Long variableKey, final OffsetDateTime historyCleanupDate) {
-    final boolean wasMerged =
-        mergeToQueue(variableKey, b -> b.historyCleanupDate(historyCleanupDate));
-
-    if (!wasMerged) {
-      executionQueue.executeInQueue(
-          new QueueItem(
-              ContextType.VARIABLE,
-              variableKey,
-              "io.camunda.db.rdbms.sql.VariableMapper.updateHistoryCleanupDate",
-              new VariableMapper.UpdateHistoryCleanupDateDto.Builder()
-                  .variableKey(variableKey)
-                  .historyCleanupDate(historyCleanupDate)
-                  .build()));
-    }
+      final Long processInstanceKey, final OffsetDateTime historyCleanupDate) {
+    executionQueue.executeInQueue(
+        new QueueItem(
+            ContextType.VARIABLE,
+            processInstanceKey,
+            "io.camunda.db.rdbms.sql.VariableMapper.updateHistoryCleanupDate",
+            new HistoryCleanupMapper.UpdateHistoryCleanupDateDto.Builder()
+                .processInstanceKey(processInstanceKey)
+                .historyCleanupDate(historyCleanupDate)
+                .build()));
   }
 
   public void migrateToProcess(final long variableKey, final String processDefinitionId) {
@@ -76,12 +69,5 @@ public class VariableWriter {
             new VariableMapper.MigrateToProcessDto.Builder()
                 .variableKey(variableKey)
                 .processDefinitionId(processDefinitionId)));
-  }
-
-  private boolean mergeToQueue(
-      final long key,
-      final Function<VariableDbModelBuilder, VariableDbModelBuilder> mergeFunction) {
-    return executionQueue.tryMergeWithExistingQueueItem(
-        new UpsertMerger<>(ContextType.VARIABLE, key, VariableDbModel.class, mergeFunction));
   }
 }
