@@ -29,8 +29,7 @@ public class ProcessInstanceExportHandler
 
   public ProcessInstanceExportHandler(
       final ProcessInstanceWriter processInstanceWriter,
-      final HistoryCleanupService historyCleanupService
-  ) {
+      final HistoryCleanupService historyCleanupService) {
     this.processInstanceWriter = processInstanceWriter;
     this.historyCleanupService = historyCleanupService;
   }
@@ -49,17 +48,13 @@ public class ProcessInstanceExportHandler
     } else if (record.getIntent().equals(ProcessInstanceIntent.ELEMENT_COMPLETED)) {
       final OffsetDateTime endDate = DateUtil.toOffsetDateTime(record.getTimestamp());
       processInstanceWriter.finish(
-          value.getProcessInstanceKey(),
-          ProcessInstanceState.COMPLETED,
-          endDate);
+          value.getProcessInstanceKey(), ProcessInstanceState.COMPLETED, endDate);
       historyCleanupService.scheduleProcessForHistoryCleanup(
           value.getProcessInstanceKey(), endDate);
     } else if (record.getIntent().equals(ProcessInstanceIntent.ELEMENT_TERMINATED)) {
       final OffsetDateTime endDate = DateUtil.toOffsetDateTime(record.getTimestamp());
       processInstanceWriter.finish(
-          value.getProcessInstanceKey(),
-          ProcessInstanceState.CANCELED,
-          endDate);
+          value.getProcessInstanceKey(), ProcessInstanceState.CANCELED, endDate);
       historyCleanupService.scheduleProcessForHistoryCleanup(
           value.getProcessInstanceKey(), endDate);
     } else if (record.getIntent().equals(ProcessInstanceIntent.ELEMENT_MIGRATED)) {

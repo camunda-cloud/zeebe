@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 public class HistoryCleanupService {
 
-  protected final static String DEFAULT_HISTORY_TIME_TO_LIVE = "P30D";
+  protected static final String DEFAULT_HISTORY_TIME_TO_LIVE = "P30D";
   private static final Logger LOG = LoggerFactory.getLogger(HistoryCleanupService.class);
   private final ProcessInstanceWriter processInstanceWriter;
   private final IncidentWriter incidentWriter;
@@ -23,7 +23,8 @@ public class HistoryCleanupService {
   private final VariableWriter variableInstanceWriter;
   private final DecisionInstanceWriter decisionInstanceWriter;
 
-  public HistoryCleanupService(final ProcessInstanceWriter processInstanceWriter,
+  public HistoryCleanupService(
+      final ProcessInstanceWriter processInstanceWriter,
       final IncidentWriter incidentWriter,
       final FlowNodeInstanceWriter flowNodeInstanceWriter,
       final UserTaskWriter userTaskWriter,
@@ -37,11 +38,14 @@ public class HistoryCleanupService {
     this.decisionInstanceWriter = decisionInstanceWriter;
   }
 
-  public void scheduleProcessForHistoryCleanup(final Long processInstanceKey, final OffsetDateTime endDate) {
-    final OffsetDateTime historyCleanupDate = OffsetDateTimeUtil.addDuration(endDate,
-        DEFAULT_HISTORY_TIME_TO_LIVE);
+  public void scheduleProcessForHistoryCleanup(
+      final Long processInstanceKey, final OffsetDateTime endDate) {
+    final OffsetDateTime historyCleanupDate =
+        OffsetDateTimeUtil.addDuration(endDate, DEFAULT_HISTORY_TIME_TO_LIVE);
 
-    LOG.debug("Scheduling process instance cleanup for key {} at {}", processInstanceKey,
+    LOG.debug(
+        "Scheduling process instance cleanup for key {} at {}",
+        processInstanceKey,
         historyCleanupDate);
     processInstanceWriter.scheduleForHistoryCleanup(processInstanceKey, historyCleanupDate);
     flowNodeInstanceWriter.scheduleForHistoryCleanup(processInstanceKey, historyCleanupDate);

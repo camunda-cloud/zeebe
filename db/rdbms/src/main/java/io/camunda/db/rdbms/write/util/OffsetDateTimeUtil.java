@@ -22,15 +22,15 @@ public class OffsetDateTimeUtil {
    * @return
    */
   public static OffsetDateTime addDuration(final OffsetDateTime dateTime, final String duration) {
-    if(NumberUtils.isCreatable(duration)) {
+    if (NumberUtils.isCreatable(duration)) {
       return dateTime.plusDays(NumberUtils.toInt(duration));
     }
 
     try {
       return dateTime.plus(Duration.parse(duration));
     } catch (final DateTimeParseException e) {
-      throw new IllegalArgumentException("Invalid duration string (Must be ISO-8601 or just a number of days): " + duration, e);
+      throw new IllegalArgumentException(
+          "Invalid duration string (Must be ISO-8601 or just a number of days): " + duration, e);
     }
   }
-
 }

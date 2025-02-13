@@ -159,8 +159,7 @@ public class RdbmsWriter {
         flowNodeInstanceWriter,
         userTaskWriter,
         variableWriter,
-        decisionInstanceWriter
-    );
+        decisionInstanceWriter);
   }
 
   public ExecutionQueue getExecutionQueue() {
