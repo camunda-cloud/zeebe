@@ -35,7 +35,8 @@ public record DecisionInstanceDbModel(
     String tenantId,
     int partitionId,
     List<EvaluatedInput> evaluatedInputs,
-    List<EvaluatedOutput> evaluatedOutputs) {
+    List<EvaluatedOutput> evaluatedOutputs,
+    OffsetDateTime historyCleanupDate) {
 
   public static DecisionInstanceDbModel of(
       final Function<Builder, ObjectBuilder<DecisionInstanceDbModel>> fn) {
@@ -65,7 +66,7 @@ public record DecisionInstanceDbModel(
     private int partitionId;
     private List<EvaluatedInput> evaluatedInputs;
     private List<EvaluatedOutput> evaluatedOutputs;
-    private OffsetDateTime historyCleanupDateTime;
+    private OffsetDateTime historyCleanupDate;
 
     public Builder decisionInstanceId(final String value) {
       decisionInstanceId = value;
@@ -172,8 +173,8 @@ public record DecisionInstanceDbModel(
       return this;
     }
 
-    public Builder historyCleanupDateTime(final OffsetDateTime value) {
-      historyCleanupDateTime = value;
+    public Builder historyCleanupDate(final OffsetDateTime value) {
+      historyCleanupDate = value;
       return this;
     }
 
@@ -200,13 +201,12 @@ public record DecisionInstanceDbModel(
           tenantId,
           partitionId,
           evaluatedInputs,
-          evaluatedOutputs);
+          evaluatedOutputs,
+          historyCleanupDate);
     }
   }
 
-  public record EvaluatedInput(String decisionInstanceId, String id, String name, String value) {
-
-  }
+  public record EvaluatedInput(String decisionInstanceId, String id, String name, String value) {}
 
   public record EvaluatedOutput(
       String decisionInstanceId,
@@ -214,7 +214,5 @@ public record DecisionInstanceDbModel(
       String name,
       String value,
       String ruleId,
-      Integer ruleIndex) {
-
-  }
+      Integer ruleIndex) {}
 }

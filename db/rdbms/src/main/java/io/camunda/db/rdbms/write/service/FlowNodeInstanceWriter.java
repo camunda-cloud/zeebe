@@ -7,6 +7,7 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper;
 import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.EndFlowNodeDto;
 import io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.UpdateIncidentDto;
 import io.camunda.db.rdbms.write.domain.FlowNodeInstanceDbModel;
@@ -97,9 +98,22 @@ public class FlowNodeInstanceWriter {
     }
   }
 
-  public void scheduleForHistoryCleanup(final Long flowNodeInstanceKey,
-      final OffsetDateTime historyCleanupDateTime) {
+  public void scheduleForHistoryCleanup(
+      final Long flowNodeInstanceKey, final OffsetDateTime historyCleanupDate) {
+    final boolean wasMerged =
+        mergeToQueue(flowNodeInstanceKey, b -> b.historyCleanupDate(historyCleanupDate));
 
+    if (!wasMerged) {
+      executionQueue.executeInQueue(
+          new QueueItem(
+              ContextType.FLOW_NODE,
+              flowNodeInstanceKey,
+              "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateHistoryCleanupDate",
+              new FlowNodeInstanceMapper.UpdateHistoryCleanupDateDto.Builder()
+                  .flowNodeInstanceKey(flowNodeInstanceKey)
+                  .historyCleanupDate(historyCleanupDate)
+                  .build()));
+    }
   }
 
   private void updateIncident(final long flowNodeInstanceKey, final Long incidentKey) {

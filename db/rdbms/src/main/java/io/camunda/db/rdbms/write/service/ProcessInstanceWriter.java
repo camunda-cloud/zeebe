@@ -7,6 +7,7 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.ProcessInstanceMapper;
 import io.camunda.db.rdbms.sql.ProcessInstanceMapper.EndProcessInstanceDto;
 import io.camunda.db.rdbms.write.domain.ProcessInstanceDbModel;
 import io.camunda.db.rdbms.write.domain.ProcessInstanceDbModel.ProcessInstanceDbModelBuilder;
@@ -59,9 +60,22 @@ public class ProcessInstanceWriter {
     }
   }
 
-  public void scheduleForHistoryCleanup(final Long processInstanceKey,
-      final OffsetDateTime historyCleanupDateTime) {
+  public void scheduleForHistoryCleanup(
+      final Long processInstanceKey, final OffsetDateTime historyCleanupDate) {
+    final boolean wasMerged =
+        mergeToQueue(processInstanceKey, b -> b.historyCleanupDate(historyCleanupDate));
 
+    if (!wasMerged) {
+      executionQueue.executeInQueue(
+          new QueueItem(
+              ContextType.PROCESS_INSTANCE,
+              processInstanceKey,
+              "io.camunda.db.rdbms.sql.ProcessInstanceMapper.updateHistoryCleanupDate",
+              new ProcessInstanceMapper.UpdateHistoryCleanupDateDto.Builder()
+                  .processInstanceKey(processInstanceKey)
+                  .historyCleanupDate(historyCleanupDate)
+                  .build()));
+    }
   }
 
   public void createIncident(final long key) {

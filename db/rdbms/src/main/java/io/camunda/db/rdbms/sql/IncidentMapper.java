@@ -10,6 +10,8 @@ package io.camunda.db.rdbms.sql;
 import io.camunda.db.rdbms.read.domain.IncidentDbQuery;
 import io.camunda.db.rdbms.write.domain.IncidentDbModel;
 import io.camunda.search.entities.IncidentEntity;
+import io.camunda.util.ObjectBuilder;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface IncidentMapper {
@@ -26,4 +28,29 @@ public interface IncidentMapper {
 
   record IncidentStateDto(
       Long incidentKey, IncidentEntity.IncidentState state, String errorMessage) {}
+
+  record UpdateHistoryCleanupDateDto(long incidentKey, OffsetDateTime historyCleanupDate) {
+
+    public static class Builder implements ObjectBuilder<UpdateHistoryCleanupDateDto> {
+
+      private long incidentKey;
+      private OffsetDateTime historyCleanupDate;
+
+      public UpdateHistoryCleanupDateDto.Builder incidentKey(final long incidentKey) {
+        this.incidentKey = incidentKey;
+        return this;
+      }
+
+      public UpdateHistoryCleanupDateDto.Builder historyCleanupDate(
+          final OffsetDateTime historyCleanupDate) {
+        this.historyCleanupDate = historyCleanupDate;
+        return this;
+      }
+
+      @Override
+      public UpdateHistoryCleanupDateDto build() {
+        return new UpdateHistoryCleanupDateDto(incidentKey, historyCleanupDate);
+      }
+    }
+  }
 }

@@ -31,8 +31,10 @@ public record VariableDbModel(
     String processDefinitionId,
     String tenantId,
     int partitionId,
-    OffsetDateTime historyCleanupDateTime) {
+    OffsetDateTime historyCleanupDate)
+    implements Copyable<VariableDbModel> {
 
+  @Override
   public VariableDbModel copy(
       final Function<ObjectBuilder<VariableDbModel>, ObjectBuilder<VariableDbModel>>
           builderFunction) {
@@ -46,7 +48,8 @@ public record VariableDbModel(
                 .processInstanceKey(processInstanceKey)
                 .processDefinitionId(processDefinitionId)
                 .tenantId(tenantId)
-                .partitionId(partitionId))
+                .partitionId(partitionId)
+                .historyCleanupDate(historyCleanupDate))
         .build();
   }
 
@@ -66,7 +69,7 @@ public record VariableDbModel(
           processDefinitionId,
           tenantId,
           partitionId,
-          historyCleanupDateTime);
+          historyCleanupDate);
     } else {
       return this;
     }
@@ -82,7 +85,7 @@ public record VariableDbModel(
     private String processDefinitionId;
     private String tenantId;
     private int partitionId;
-    private OffsetDateTime historyCleanupDateTime;
+    private OffsetDateTime historyCleanupDate;
 
     public VariableDbModelBuilder() {
     }
@@ -127,8 +130,8 @@ public record VariableDbModel(
       return this;
     }
 
-    public VariableDbModelBuilder historyCleanupDateTime(final OffsetDateTime value) {
-      historyCleanupDateTime = value;
+    public VariableDbModelBuilder historyCleanupDate(final OffsetDateTime value) {
+      historyCleanupDate = value;
       return this;
     }
 
@@ -159,7 +162,7 @@ public record VariableDbModel(
           processDefinitionId,
           tenantId,
           partitionId,
-          historyCleanupDateTime);
+          historyCleanupDate);
     }
 
     private VariableDbModel getLongModel() {
@@ -177,7 +180,7 @@ public record VariableDbModel(
           processDefinitionId,
           tenantId,
           partitionId,
-          historyCleanupDateTime);
+          historyCleanupDate);
     }
 
     private VariableDbModel getDoubleModel() {
@@ -195,7 +198,7 @@ public record VariableDbModel(
           processDefinitionId,
           tenantId,
           partitionId,
-          historyCleanupDateTime);
+          historyCleanupDate);
     }
   }
 }

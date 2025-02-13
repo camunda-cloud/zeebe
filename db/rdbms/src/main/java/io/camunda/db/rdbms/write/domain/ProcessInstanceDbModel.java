@@ -26,7 +26,7 @@ public record ProcessInstanceDbModel(
     String elementId,
     int version,
     int partitionId,
-    OffsetDateTime historyCleanupDateTime)
+    OffsetDateTime historyCleanupDate)
     implements DbModel<ProcessInstanceDbModel> {
 
   @Override
@@ -49,7 +49,7 @@ public record ProcessInstanceDbModel(
                 .tenantId(tenantId)
                 .version(version)
                 .partitionId(partitionId)
-                .historyCleanupDateTime(historyCleanupDateTime))
+                .historyCleanupDate(historyCleanupDate))
         .build();
   }
 
@@ -69,7 +69,7 @@ public record ProcessInstanceDbModel(
     private int numIncidents = 0;
     private int version;
     private int partitionId;
-    private OffsetDateTime historyCleanupDateTime;
+    private OffsetDateTime historyCleanupDate;
 
     // Public constructor to initialize the builder
     public ProcessInstanceDbModelBuilder() {
@@ -147,8 +147,8 @@ public record ProcessInstanceDbModel(
       return this;
     }
 
-    public ProcessInstanceDbModelBuilder historyCleanupDateTime(final OffsetDateTime value) {
-      historyCleanupDateTime = value;
+    public ProcessInstanceDbModelBuilder historyCleanupDate(final OffsetDateTime value) {
+      historyCleanupDate = value;
       return this;
     }
 
@@ -168,7 +168,7 @@ public record ProcessInstanceDbModel(
           elementId,
           version,
           partitionId,
-          historyCleanupDateTime);
+          historyCleanupDate);
     }
   }
 }

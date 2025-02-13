@@ -7,12 +7,15 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.sql.UserTaskMapper;
 import io.camunda.db.rdbms.write.domain.UserTaskDbModel;
 import io.camunda.db.rdbms.write.domain.UserTaskMigrationDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import java.time.OffsetDateTime;
+import java.util.function.Function;
 
 public class UserTaskWriter {
 
@@ -84,9 +87,22 @@ public class UserTaskWriter {
     }
   }
 
-  public void scheduleForHistoryCleanup(final Long userTaskKey,
-      final OffsetDateTime historyCleanupDateTime) {
+  public void scheduleForHistoryCleanup(
+      final Long userTaskKey, final OffsetDateTime historyCleanupDate) {
+    final boolean wasMerged =
+        mergeToQueue(userTaskKey, b -> b.historyCleanupDate(historyCleanupDate));
 
+    if (!wasMerged) {
+      executionQueue.executeInQueue(
+          new QueueItem(
+              ContextType.USER_TASK,
+              userTaskKey,
+              "io.camunda.db.rdbms.sql.UserTaskMapper.updateHistoryCleanupDate",
+              new UserTaskMapper.UpdateHistoryCleanupDateDto.Builder()
+                  .userTaskKey(userTaskKey)
+                  .historyCleanupDate(historyCleanupDate)
+                  .build()));
+    }
   }
 
   public void migrateToProcess(final UserTaskMigrationDbModel model) {
@@ -96,5 +112,12 @@ public class UserTaskWriter {
             model.userTaskKey(),
             "io.camunda.db.rdbms.sql.UserTaskMapper.migrateToProcess",
             model));
+  }
+
+  private boolean mergeToQueue(
+      final long key,
+      final Function<UserTaskDbModel.Builder, UserTaskDbModel.Builder> mergeFunction) {
+    return executionQueue.tryMergeWithExistingQueueItem(
+        new UpsertMerger<>(ContextType.USER_TASK, key, UserTaskDbModel.class, mergeFunction));
   }
 }

@@ -62,9 +62,22 @@ public class IncidentWriter {
     }
   }
 
-  public void scheduleForHistoryCleanup(final Long incidentKey,
-      final OffsetDateTime historyCleanupDateTime) {
+  public void scheduleForHistoryCleanup(
+      final Long incidentKey, final OffsetDateTime historyCleanupDate) {
+    final boolean wasMerged =
+        mergeToQueue(incidentKey, b -> b.historyCleanupDate(historyCleanupDate));
 
+    if (!wasMerged) {
+      executionQueue.executeInQueue(
+          new QueueItem(
+              ContextType.INCIDENT,
+              incidentKey,
+              "io.camunda.db.rdbms.sql.IncidentMapper.updateHistoryCleanupDate",
+              new IncidentMapper.UpdateHistoryCleanupDateDto.Builder()
+                  .incidentKey(incidentKey)
+                  .historyCleanupDate(historyCleanupDate)
+                  .build()));
+    }
   }
 
   private boolean mergeToQueue(final long key, final Function<Builder, Builder> mergeFunction) {

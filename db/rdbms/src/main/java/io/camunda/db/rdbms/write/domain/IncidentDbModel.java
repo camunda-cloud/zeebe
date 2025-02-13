@@ -28,7 +28,7 @@ public record IncidentDbModel(
     String treePath,
     String tenantId,
     int partitionId,
-    OffsetDateTime historyCleanupDateTime)
+    OffsetDateTime historyCleanupDate)
     implements DbModel<IncidentDbModel> {
 
   @Override
@@ -52,7 +52,7 @@ public record IncidentDbModel(
                 .treePath(treePath)
                 .tenantId(tenantId)
                 .partitionId(partitionId)
-                .historyCleanupDateTime(historyCleanupDateTime))
+                .historyCleanupDate(historyCleanupDate))
         .build();
   }
 
@@ -72,7 +72,7 @@ public record IncidentDbModel(
     private String treePath;
     private String tenantId;
     private int partitionId;
-    private OffsetDateTime historyCleanupDateTime;
+    private OffsetDateTime historyCleanupDate;
 
     public Builder incidentKey(final Long incidentKey) {
       this.incidentKey = incidentKey;
@@ -144,8 +144,8 @@ public record IncidentDbModel(
       return this;
     }
 
-    public Builder historyCleanupDateTime(final OffsetDateTime value) {
-      historyCleanupDateTime = value;
+    public Builder historyCleanupDate(final OffsetDateTime value) {
+      historyCleanupDate = value;
       return this;
     }
 
@@ -166,7 +166,7 @@ public record IncidentDbModel(
           treePath,
           tenantId,
           partitionId,
-          historyCleanupDateTime);
+          historyCleanupDate);
     }
   }
 }
