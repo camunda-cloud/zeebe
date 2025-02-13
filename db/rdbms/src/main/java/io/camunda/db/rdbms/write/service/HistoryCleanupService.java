@@ -40,8 +40,7 @@ public class HistoryCleanupService {
 
   public void scheduleProcessForHistoryCleanup(
       final Long processInstanceKey, final OffsetDateTime endDate) {
-    final OffsetDateTime historyCleanupDate =
-        OffsetDateTimeUtil.addDuration(endDate, DEFAULT_HISTORY_TIME_TO_LIVE);
+    final OffsetDateTime historyCleanupDate = calculateHistoryCleanupDate(endDate);
 
     LOG.debug(
         "Scheduling process instance cleanup for key {} at {}",
@@ -53,5 +52,9 @@ public class HistoryCleanupService {
     userTaskWriter.scheduleForHistoryCleanup(processInstanceKey, historyCleanupDate);
     variableInstanceWriter.scheduleForHistoryCleanup(processInstanceKey, historyCleanupDate);
     decisionInstanceWriter.scheduleForHistoryCleanup(processInstanceKey, historyCleanupDate);
+  }
+
+  public OffsetDateTime calculateHistoryCleanupDate(OffsetDateTime endDate) {
+    return OffsetDateTimeUtil.addDuration(endDate, DEFAULT_HISTORY_TIME_TO_LIVE);
   }
 }
