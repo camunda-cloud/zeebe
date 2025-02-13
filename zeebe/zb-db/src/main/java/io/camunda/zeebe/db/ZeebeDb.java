@@ -63,4 +63,8 @@ public interface ZeebeDb<ColumnFamilyType extends Enum<? extends EnumValue> & En
    * @return {@code true} if the column is empty, otherwise {@code false}
    */
   boolean isEmpty(ColumnFamilyType column, TransactionContext context);
+
+  StatefulMeterRegistry getMeterRegistry();
+
+  default void exportMetrics() {}
 }
