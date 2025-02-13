@@ -11,7 +11,7 @@ import static io.camunda.zeebe.protocol.record.intent.DeploymentIntent.CREATE;
 
 import io.camunda.zeebe.dmn.DecisionEngineFactory;
 import io.camunda.zeebe.engine.EngineConfiguration;
-import io.camunda.zeebe.engine.metrics.JobMetrics;
+import io.camunda.zeebe.engine.metrics.JobProcessingMetrics;
 import io.camunda.zeebe.engine.metrics.ProcessEngineMetrics;
 import io.camunda.zeebe.engine.processing.bpmn.behavior.BpmnBehaviors;
 import io.camunda.zeebe.engine.processing.bpmn.behavior.BpmnBehaviorsImpl;
@@ -99,8 +99,11 @@ public final class EngineProcessors {
 
     typedRecordProcessors.withListener(processingState);
 
+<<<<<<< HEAD
     final var clock = typedRecordProcessorContext.getClock();
     final int partitionId = typedRecordProcessorContext.getPartitionId();
+=======
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
     final var config = typedRecordProcessorContext.getConfig();
     final var securityConfig = typedRecordProcessorContext.getSecurityConfig();
 
@@ -108,7 +111,7 @@ public final class EngineProcessors {
         new DueDateTimerChecker(
             scheduledTaskStateFactory.get().getTimerState(), featureFlags, clock);
 
-    final var jobMetrics = new JobMetrics(partitionId);
+    final var jobMetrics = new JobProcessingMetrics(typedRecordProcessorContext.getMeterRegistry());
     final var processEngineMetrics =
         new ProcessEngineMetrics(typedRecordProcessorContext.getMeterRegistry());
 
@@ -330,7 +333,7 @@ public final class EngineProcessors {
       final RoutingInfo routingInfo,
       final DueDateTimerChecker timerChecker,
       final JobStreamer jobStreamer,
-      final JobMetrics jobMetrics,
+      final JobProcessingMetrics jobMetrics,
       final DecisionBehavior decisionBehavior,
       final InstantSource clock,
       final AuthorizationCheckBehavior authCheckBehavior,

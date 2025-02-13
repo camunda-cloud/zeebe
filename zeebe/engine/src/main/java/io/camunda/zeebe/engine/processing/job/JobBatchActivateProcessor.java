@@ -9,11 +9,16 @@ package io.camunda.zeebe.engine.processing.job;
 
 import static io.camunda.zeebe.util.buffer.BufferUtil.wrapString;
 
+<<<<<<< HEAD
 import io.camunda.zeebe.engine.metrics.JobMetrics;
 import io.camunda.zeebe.engine.processing.ExcludeAuthorizationCheck;
 import io.camunda.zeebe.engine.processing.Rejection;
 import io.camunda.zeebe.engine.processing.common.ElementTreePathBuilder;
 import io.camunda.zeebe.engine.processing.identity.AuthorizationCheckBehavior;
+=======
+import io.camunda.zeebe.engine.metrics.EngineMetricsDoc.JobAction;
+import io.camunda.zeebe.engine.metrics.JobProcessingMetrics;
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
 import io.camunda.zeebe.engine.processing.job.JobBatchCollector.TooLargeJob;
 import io.camunda.zeebe.engine.processing.streamprocessor.TypedRecordProcessor;
 import io.camunda.zeebe.engine.processing.streamprocessor.writers.StateWriter;
@@ -47,17 +52,25 @@ public final class JobBatchActivateProcessor implements TypedRecordProcessor<Job
   private final TypedResponseWriter responseWriter;
   private final JobBatchCollector jobBatchCollector;
   private final KeyGenerator keyGenerator;
+<<<<<<< HEAD
   private final JobMetrics jobMetrics;
   private final ElementInstanceState elementInstanceState;
   private final ProcessState processState;
   private final AuthorizationCheckBehavior authorizationCheckBehavior;
+=======
+  private final JobProcessingMetrics jobMetrics;
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
 
   public JobBatchActivateProcessor(
       final Writers writers,
       final ProcessingState state,
       final KeyGenerator keyGenerator,
+<<<<<<< HEAD
       final JobMetrics jobMetrics,
       final AuthorizationCheckBehavior authCheckBehavior) {
+=======
+      final JobProcessingMetrics jobMetrics) {
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
 
     stateWriter = writers.state();
     rejectionWriter = writers.rejection();
@@ -143,8 +156,13 @@ public final class JobBatchActivateProcessor implements TypedRecordProcessor<Job
       final Map<JobKind, Integer> activatedJobsCountPerJobKind) {
     stateWriter.appendFollowUpEvent(jobBatchKey, JobBatchIntent.ACTIVATED, value);
     responseWriter.writeEventOnCommand(jobBatchKey, JobBatchIntent.ACTIVATED, value, record);
+<<<<<<< HEAD
     activatedJobsCountPerJobKind.forEach(
         (jobKind, count) -> jobMetrics.jobActivated(value.getType(), jobKind, count));
+=======
+    final String type = value.getType();
+    jobMetrics.countJobEvent(JobAction.ACTIVATED, type, activatedCount);
+>>>>>>> cce1a9b6 (refactor: migrate job metrics to micrometer)
   }
 
   private void raiseIncidentJobTooLargeForMessageSize(
