@@ -73,7 +73,11 @@ public final class PartitionManagerImpl
   private final BrokerCfg brokerCfg;
   private final ZeebePartitionFactory zeebePartitionFactory;
   private final RaftPartitionFactory raftPartitionFactory;
+<<<<<<< HEAD
   private final ClusterConfigurationService clusterConfigurationService;
+=======
+  private final MeterRegistry brokerMeterRegistry;
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
 
   public PartitionManagerImpl(
       final ConcurrencyControl concurrencyControl,
@@ -89,10 +93,15 @@ public final class PartitionManagerImpl
       final ExporterRepository exporterRepository,
       final AtomixServerTransport gatewayBrokerTransport,
       final JobStreamer jobStreamer,
+<<<<<<< HEAD
       final ClusterConfigurationService clusterConfigurationService,
       final MeterRegistry meterRegistry,
       final BrokerClient brokerClient,
       final SecurityConfiguration securityConfig) {
+=======
+      final PartitionDistribution partitionDistribution,
+      final MeterRegistry brokerMeterRegistry) {
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
     this.brokerCfg = brokerCfg;
     this.concurrencyControl = concurrencyControl;
     this.actorSchedulingService = actorSchedulingService;
@@ -100,7 +109,12 @@ public final class PartitionManagerImpl
     this.diskSpaceUsageMonitor = diskSpaceUsageMonitor;
     this.brokerClient = brokerClient;
     final var featureFlags = brokerCfg.getExperimental().getFeatures().toFeatureFlags();
+<<<<<<< HEAD
     this.clusterConfigurationService = clusterConfigurationService;
+=======
+    this.partitionDistribution = partitionDistribution;
+    this.brokerMeterRegistry = brokerMeterRegistry;
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
     // TODO: Do this as a separate step before starting the partition manager
     topologyManager = new TopologyManagerImpl(clusterServices.getMembershipService(), localBroker);
 
@@ -121,13 +135,17 @@ public final class PartitionManagerImpl
             listeners,
             partitionRaftListeners,
             topologyManager,
+<<<<<<< HEAD
             featureFlags,
             meterRegistry,
             securityConfig);
+=======
+            featureFlags);
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
     managementService =
         new DefaultPartitionManagementService(
             clusterServices.getMembershipService(), clusterServices.getCommunicationService());
-    raftPartitionFactory = new RaftPartitionFactory(brokerCfg, meterRegistry);
+    raftPartitionFactory = new RaftPartitionFactory(brokerCfg);
   }
 
   public void start() {
@@ -168,7 +186,11 @@ public final class PartitionManagerImpl
             raftPartitionFactory,
             zeebePartitionFactory,
             brokerCfg,
+<<<<<<< HEAD
             initialPartitionConfig);
+=======
+            brokerMeterRegistry);
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
     final var partition = Partition.bootstrapping(context);
     partitions.put(id, partition);
 
@@ -194,7 +216,11 @@ public final class PartitionManagerImpl
             raftPartitionFactory,
             zeebePartitionFactory,
             brokerCfg,
+<<<<<<< HEAD
             initialPartitionConfig);
+=======
+            brokerMeterRegistry);
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
     final var partition = Partition.joining(context);
     final var previousPartition = partitions.putIfAbsent(id, partition);
     if (previousPartition != null) {

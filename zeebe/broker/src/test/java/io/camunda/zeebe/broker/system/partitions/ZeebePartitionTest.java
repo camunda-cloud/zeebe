@@ -82,11 +82,15 @@ public class ZeebePartitionTest {
     when(ctx.getPartitionContext()).thenReturn(ctx);
     when(ctx.getComponentHealthMonitor()).thenReturn(healthMonitor);
     when(ctx.createTransitionContext()).thenReturn(ctx);
+<<<<<<< HEAD
     final BrokerHealthCheckService brokerCheckMock = mock();
     when(brokerCheckMock.componentName()).thenReturn("Broker-0");
     when(ctx.brokerHealthCheckService()).thenReturn(brokerCheckMock);
     when(ctx.getComponentTreeListener()).thenReturn(ComponentTreeListener.noop());
     when(ctx.getBrokerMeterRegistry()).thenReturn(new SimpleMeterRegistry());
+=======
+    when(ctx.getPartitionStartupMeterRegistry()).thenReturn(new SimpleMeterRegistry());
+>>>>>>> 65da3585 (refactor: distinguish partition startup and transition meter registries)
 
     partition = new ZeebePartition(ctx, transition, List.of(new NoopStartupStep()));
   }
