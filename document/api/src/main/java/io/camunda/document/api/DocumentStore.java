@@ -24,4 +24,6 @@ public interface DocumentStore {
 
   CompletableFuture<Either<DocumentError, Void>> verifyContentHash(
       String documentId, String contentHash);
+
+  default void validateSetup() {}
 }
