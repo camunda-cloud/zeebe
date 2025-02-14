@@ -15,6 +15,7 @@
  */
 package io.camunda.zeebe.client.impl;
 
+import static io.camunda.client.impl.util.ClientPropertiesValidationUtils.checkIfUriIsAbsolute;
 import static io.camunda.zeebe.client.ClientProperties.APPLY_ENVIRONMENT_VARIABLES_OVERRIDES;
 import static io.camunda.zeebe.client.ClientProperties.CA_CERTIFICATE_PATH;
 import static io.camunda.zeebe.client.ClientProperties.DEFAULT_JOB_POLL_INTERVAL;
@@ -370,12 +371,14 @@ public final class ZeebeClientBuilderImpl implements ZeebeClientBuilder, ZeebeCl
 
   @Override
   public ZeebeClientBuilder restAddress(final URI restAddress) {
+    checkIfUriIsAbsolute(restAddress, "restAddress");
     this.restAddress = restAddress;
     return this;
   }
 
   @Override
   public ZeebeClientBuilder grpcAddress(final URI grpcAddress) {
+    checkIfUriIsAbsolute(grpcAddress, "grpcAddress");
     this.grpcAddress = grpcAddress;
     grpcAddressUsed = true;
     return this;

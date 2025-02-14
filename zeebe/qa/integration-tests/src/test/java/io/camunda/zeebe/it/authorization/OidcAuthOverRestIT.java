@@ -11,10 +11,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import io.camunda.application.Profile;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.api.command.ProblemException;
 import io.camunda.client.impl.oauth.OAuthCredentialsProviderBuilder;
+import io.camunda.client.protocol.rest.OwnerTypeEnum;
 import io.camunda.client.protocol.rest.PermissionTypeEnum;
 import io.camunda.client.protocol.rest.ResourceTypeEnum;
 import io.camunda.security.configuration.ConfiguredMapping;
@@ -43,7 +43,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @ZeebeIntegration
-@Disabled("https://github.com/camunda/camunda/issues/27289")
+@Disabled("https://github.com/camunda/camunda/issues/26799")
 public class OidcAuthOverRestIT {
 
   private static final String DEFAULT_USER_ID = UUID.randomUUID().toString();
@@ -64,22 +64,22 @@ public class OidcAuthOverRestIT {
   @TestZeebe(awaitCompleteTopology = false)
   private final TestStandaloneBroker broker =
       new TestStandaloneBroker()
+          .withAuthenticationMethod(AuthenticationMethod.OIDC)
           .withSecurityConfig(
               c -> {
                 c.getAuthorizations().setEnabled(true);
-                c.getAuthentication().setMethod(AuthenticationMethod.OIDC);
+
+                final var oidcConfig = c.getAuthentication().getOidc();
+                oidcConfig.setIssuerUri(KEYCLOAK.getAuthServerUrl() + "/realms/" + KEYCLOAK_REALM);
+                // The following two properties are only needed for the webapp login flow which we
+                // don't test here.
+                oidcConfig.setClientId("example");
+                oidcConfig.setRedirectUri("example.com");
+
                 c.getInitialization()
                     .setMappings(
                         List.of(new ConfiguredMapping(USER_ID_CLAIM_NAME, DEFAULT_USER_ID)));
-              })
-          .withAdditionalProfile(Profile.AUTH_OIDC)
-          .withProperty(
-              "camunda.security.authentication.oidc.issuer-uri",
-              KEYCLOAK.getAuthServerUrl() + "/realms/" + KEYCLOAK_REALM)
-          // The following two properties are only needed for the webapp login flow which we don't
-          // test here.
-          .withProperty("camunda.security.authentication.oidc.client-id", "example")
-          .withProperty("camunda.security.authentication.oidc.redirect-uri", "example.com");
+              });
 
   @BeforeAll
   static void setupKeycloak() {
@@ -224,10 +224,12 @@ public class OidcAuthOverRestIT {
             .send()
             .join();
     defaultMappingClient
-        .newAddPermissionsCommand(mapping.getMappingKey())
+        .newCreateAuthorizationCommand()
+        .ownerId(String.valueOf(mapping.getMappingKey()))
+        .ownerType(OwnerTypeEnum.MAPPING)
+        .resourceId("*")
         .resourceType(ResourceTypeEnum.RESOURCE)
-        .permission(PermissionTypeEnum.CREATE)
-        .resourceIds(List.of("*"))
+        .permissionTypes(PermissionTypeEnum.CREATE)
         .send()
         .join();
 

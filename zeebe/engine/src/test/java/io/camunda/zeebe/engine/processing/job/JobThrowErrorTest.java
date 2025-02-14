@@ -66,13 +66,13 @@ public final class JobThrowErrorTest {
 
     ENGINE
         .authorization()
-        .permission()
-        .withPermission(PermissionType.UPDATE_PROCESS_INSTANCE, PROCESS_ID)
+        .newAuthorization()
+        .withPermissions(PermissionType.UPDATE_PROCESS_INSTANCE)
         .withResourceType(AuthorizationResourceType.PROCESS_DEFINITION)
-        .withOwnerKey(user.getUserKey())
+        .withResourceId(PROCESS_ID)
         .withOwnerId(user.getUsername())
         .withOwnerType(AuthorizationOwnerType.USER)
-        .add();
+        .create();
   }
 
   @Before

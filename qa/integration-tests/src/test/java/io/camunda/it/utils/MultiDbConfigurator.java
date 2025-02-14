@@ -13,6 +13,7 @@ import io.camunda.operate.property.OperateProperties;
 import io.camunda.search.connect.configuration.DatabaseType;
 import io.camunda.tasklist.property.TasklistOpenSearchProperties;
 import io.camunda.tasklist.property.TasklistProperties;
+import io.camunda.zeebe.exporter.ElasticsearchExporter;
 import io.camunda.zeebe.qa.util.cluster.TestStandaloneApplication;
 import java.util.Map;
 import java.util.UUID;
@@ -43,9 +44,11 @@ public class MultiDbConfigurator {
     operateProperties.getElasticsearch().setUrl(elasticsearchUrl);
     operateProperties.getElasticsearch().setIndexPrefix(indexPrefix);
     operateProperties.getZeebeElasticsearch().setUrl(elasticsearchUrl);
+    operateProperties.getZeebeElasticsearch().setPrefix(indexPrefix);
     tasklistProperties.getElasticsearch().setUrl(elasticsearchUrl);
     tasklistProperties.getElasticsearch().setIndexPrefix(indexPrefix);
     tasklistProperties.getZeebeElasticsearch().setUrl(elasticsearchUrl);
+    tasklistProperties.getZeebeElasticsearch().setPrefix(indexPrefix);
     testApplication.withExporter(
         "CamundaExporter",
         cfg -> {
@@ -65,6 +68,18 @@ public class MultiDbConfigurator {
                   "bulk",
                   Map.of("size", 1)));
         });
+
+    testApplication.withExporter(
+        "ElasticsearchExporter",
+        cfg -> {
+          cfg.setClassName(ElasticsearchExporter.class.getName());
+          cfg.setArgs(
+              Map.of(
+                  "url", elasticsearchUrl,
+                  "index", Map.of("prefix", indexPrefix),
+                  "bulk", Map.of("size", 1)));
+        });
+
     testApplication.withProperty(
         "camunda.database.type",
         io.camunda.search.connect.configuration.DatabaseType.ELASTICSEARCH);
@@ -82,13 +97,26 @@ public class MultiDbConfigurator {
     operateOpensearch.setIndexPrefix(indexPrefix);
     operateOpensearch.setPassword(userPassword);
     operateOpensearch.setUsername(userName);
-    tasklistProperties.setDatabase("opensearch");
 
+    final var zeebeOS = operateProperties.getZeebeOpensearch();
+    zeebeOS.setUrl(opensearchUrl);
+    zeebeOS.setPassword(userPassword);
+    zeebeOS.setUsername(userName);
+    zeebeOS.setPrefix(indexPrefix);
+
+    tasklistProperties.setDatabase("opensearch");
     final TasklistOpenSearchProperties tasklistOpensearch = tasklistProperties.getOpenSearch();
     tasklistOpensearch.setUrl(opensearchUrl);
     tasklistOpensearch.setIndexPrefix(indexPrefix);
     tasklistOpensearch.setPassword(userPassword);
     tasklistOpensearch.setUsername(userName);
+
+    final var zeebeTasklistOS = tasklistProperties.getZeebeOpenSearch();
+    zeebeTasklistOS.setUrl(opensearchUrl);
+    zeebeTasklistOS.setPassword(userPassword);
+    zeebeTasklistOS.setUsername(userName);
+    zeebeTasklistOS.setPrefix(indexPrefix);
+
     testApplication.withExporter(
         "CamundaExporter",
         cfg -> {
@@ -138,5 +166,13 @@ public class MultiDbConfigurator {
           cfg.setClassName("-");
           cfg.setArgs(Map.of("flushInterval", "0"));
         });
+  }
+
+  public OperateProperties getOperateProperties() {
+    return operateProperties;
+  }
+
+  public TasklistProperties getTasklistProperties() {
+    return tasklistProperties;
   }
 }

@@ -29,9 +29,11 @@ class AssignMappingToTenantTest {
   private static final String CLAIM_NAME = "claimName";
   private static final String CLAIM_VALUE = "claimValue";
   private static final String NAME = "name";
+  private static final String ID = "id";
 
   @TestZeebe
-  private final TestStandaloneBroker zeebe = new TestStandaloneBroker().withRecordingExporter(true);
+  private final TestStandaloneBroker zeebe =
+      new TestStandaloneBroker().withRecordingExporter(true).withUnauthenticatedAccess();
 
   @AutoClose private CamundaClient client;
 
@@ -59,6 +61,7 @@ class AssignMappingToTenantTest {
             .claimName(CLAIM_NAME)
             .claimValue(CLAIM_VALUE)
             .name(NAME)
+            .id(ID)
             .send()
             .join()
             .getMappingKey();

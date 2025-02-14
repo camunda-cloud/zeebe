@@ -9,12 +9,12 @@ package io.camunda.it.tasklist.compatibility;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.camunda.application.Profile;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.protocol.rest.PermissionTypeEnum;
 import io.camunda.client.protocol.rest.ResourceTypeEnum;
 import io.camunda.qa.util.cluster.TestRestTasklistClient;
 import io.camunda.qa.util.cluster.TestStandaloneCamunda;
+import io.camunda.security.entity.AuthenticationMethod;
 import io.camunda.zeebe.it.util.AuthorizationsUtil;
 import io.camunda.zeebe.it.util.AuthorizationsUtil.Permissions;
 import io.camunda.zeebe.it.util.SearchClientsUtil;
@@ -25,11 +25,9 @@ import java.util.List;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @ZeebeIntegration
-@Disabled("https://github.com/camunda/camunda/issues/27289")
 public class CompatibilityTasklistCreateProcessInstanceAuthorizationIT {
 
   private static final String PROCESS_ID = "foo";
@@ -51,7 +49,7 @@ public class CompatibilityTasklistCreateProcessInstanceAuthorizationIT {
           .withCamundaExporter()
           .withSecurityConfig(c -> c.getAuthorizations().setEnabled(true))
           .withProperty("camunda.tasklist.zeebe.compatibility.enabled", true)
-          .withAdditionalProfile(Profile.AUTH_BASIC);
+          .withAuthenticationMethod(AuthenticationMethod.BASIC);
 
   @BeforeEach
   public void beforeAll() {

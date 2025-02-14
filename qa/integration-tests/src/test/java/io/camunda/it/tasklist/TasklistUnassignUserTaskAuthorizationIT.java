@@ -9,13 +9,13 @@ package io.camunda.it.tasklist;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.camunda.application.Profile;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.protocol.rest.PermissionTypeEnum;
 import io.camunda.client.protocol.rest.ResourceTypeEnum;
 import io.camunda.qa.util.cluster.TestRestTasklistClient;
 import io.camunda.qa.util.cluster.TestStandaloneCamunda;
 import io.camunda.search.clients.query.SearchQueryBuilders;
+import io.camunda.security.entity.AuthenticationMethod;
 import io.camunda.webapps.schema.descriptors.tasklist.template.TaskTemplate;
 import io.camunda.webapps.schema.entities.tasklist.TaskJoinRelationship.TaskJoinRelationshipType;
 import io.camunda.zeebe.it.util.AuthorizationsUtil;
@@ -29,10 +29,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("https://github.com/camunda/camunda/issues/27289")
 @ZeebeIntegration
 public class TasklistUnassignUserTaskAuthorizationIT {
 
@@ -59,7 +57,7 @@ public class TasklistUnassignUserTaskAuthorizationIT {
       new TestStandaloneCamunda()
           .withCamundaExporter()
           .withSecurityConfig(c -> c.getAuthorizations().setEnabled(true))
-          .withAdditionalProfile(Profile.AUTH_BASIC);
+          .withAuthenticationMethod(AuthenticationMethod.BASIC);
 
   @BeforeEach
   public void beforeAll() {
@@ -77,6 +75,7 @@ public class TasklistUnassignUserTaskAuthorizationIT {
           ADMIN_USER_NAME,
           ADMIN_USER_PASSWORD,
           new Permissions(ResourceTypeEnum.RESOURCE, PermissionTypeEnum.CREATE, List.of("*")),
+          new Permissions(ResourceTypeEnum.AUTHORIZATION, PermissionTypeEnum.CREATE, List.of("*")),
           new Permissions(
               ResourceTypeEnum.PROCESS_DEFINITION,
               PermissionTypeEnum.READ_PROCESS_DEFINITION,
@@ -156,7 +155,6 @@ public class TasklistUnassignUserTaskAuthorizationIT {
   public void shouldBeAuthorizedToUnassignUserTask() {
     // given
     adminAuthClient.createPermissions(
-        testUserKey,
         TEST_USER_NAME,
         new Permissions(
             ResourceTypeEnum.PROCESS_DEFINITION,
@@ -179,7 +177,6 @@ public class TasklistUnassignUserTaskAuthorizationIT {
   public void shouldBeAuthorizedToUnassignJobBasedUserTask() {
     // given
     adminAuthClient.createPermissions(
-        testUserKey,
         TEST_USER_NAME,
         new Permissions(
             ResourceTypeEnum.PROCESS_DEFINITION,

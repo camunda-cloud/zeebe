@@ -16,7 +16,6 @@
 package io.camunda.client;
 
 import io.camunda.client.api.ExperimentalApi;
-import io.camunda.client.api.command.AddPermissionsCommandStep1;
 import io.camunda.client.api.command.AssignGroupToTenantCommandStep1;
 import io.camunda.client.api.command.AssignMappingToTenantCommandStep1;
 import io.camunda.client.api.command.AssignUserTaskCommandStep1;
@@ -49,7 +48,6 @@ import io.camunda.client.api.command.EvaluateDecisionCommandStep1;
 import io.camunda.client.api.command.MigrateProcessInstanceCommandStep1;
 import io.camunda.client.api.command.ModifyProcessInstanceCommandStep1;
 import io.camunda.client.api.command.PublishMessageCommandStep1;
-import io.camunda.client.api.command.RemovePermissionsCommandStep1;
 import io.camunda.client.api.command.RemoveUserFromTenantCommandStep1;
 import io.camunda.client.api.command.ResolveIncidentCommandStep1;
 import io.camunda.client.api.command.SetVariablesCommandStep1;
@@ -57,6 +55,7 @@ import io.camunda.client.api.command.TopologyRequestStep1;
 import io.camunda.client.api.command.UnassignGroupFromTenantCommandStep1;
 import io.camunda.client.api.command.UnassignUserFromGroupCommandStep1;
 import io.camunda.client.api.command.UnassignUserTaskCommandStep1;
+import io.camunda.client.api.command.UpdateAuthorizationCommandStep1;
 import io.camunda.client.api.command.UpdateGroupCommandStep1;
 import io.camunda.client.api.command.UpdateJobCommandStep1;
 import io.camunda.client.api.command.UpdateRetriesJobCommandStep1;
@@ -1131,52 +1130,6 @@ public interface CamundaClient extends AutoCloseable, JobClient {
   CreateUserCommandStep1 newUserCreateCommand();
 
   /**
-   * Command to add permissions to an owner.
-   *
-   * <pre>
-   * camundaClient
-   *  .newAddPermissionsCommand(ownerKey)
-   *  .resourceType(resourceType)
-   *  .permission(permissionType)
-   *  .resourceIds(resourceIds)
-   *  .permission(permissionType)
-   *  .resourceId(resourceId)
-   *  .resourceId(resourceId)
-   *  .send();
-   * </pre>
-   *
-   * <p>This command is only sent via REST over HTTP, not via gRPC <br>
-   * <br>
-   *
-   * @param ownerKey the key of the owner
-   * @return a builder for the command
-   */
-  AddPermissionsCommandStep1 newAddPermissionsCommand(long ownerKey);
-
-  /**
-   * Command to remove permissions from an owner.
-   *
-   * <pre>
-   * camundaClient
-   *  .newRemovePermissionsCommand(ownerKey)
-   *  .resourceType(resourceType)
-   *  .permission(permissionType)
-   *  .resourceIds(resourceIds)
-   *  .permission(permissionType)
-   *  .resourceId(resourceId)
-   *  .resourceId(resourceId)
-   *  .send();
-   * </pre>
-   *
-   * <p>This command is only sent via REST over HTTP, not via gRPC <br>
-   * <br>
-   *
-   * @param ownerKey the key of the owner
-   * @return a builder for the command
-   */
-  RemovePermissionsCommandStep1 newRemovePermissionsCommand(long ownerKey);
-
-  /**
    * Command to create a mapping rule.
    *
    * <pre>
@@ -1597,18 +1550,18 @@ public interface CamundaClient extends AutoCloseable, JobClient {
    *
    * <pre>
    * camundaClient
-   *   .newRemoveUserFromTenantCommand(tenantKey)
-   *   .userKey(userKey)
+   *   .newRemoveUserFromTenantCommand(tenantId)
+   *   .username(username)
    *   .send();
    * </pre>
    *
    * <p>This command sends an HTTP DELETE request to remove the specified user from the given
    * tenant.
    *
-   * @param tenantKey the unique identifier of the tenant
+   * @param tenantId the unique identifier of the tenant
    * @return a builder for the remove user from tenant command
    */
-  RemoveUserFromTenantCommandStep1 newRemoveUserFromTenantCommand(long tenantKey);
+  RemoveUserFromTenantCommandStep1 newRemoveUserFromTenantCommand(String tenantId);
 
   /**
    * Command to assign a group to a tenant.
@@ -1679,4 +1632,25 @@ public interface CamundaClient extends AutoCloseable, JobClient {
    * @return a builder to configure and send the delete authorization command
    */
   DeleteAuthorizationCommandStep1 newDeleteAuthorizationCommand(long authorizationKey);
+
+  /**
+   * Command to update an authorization
+   *
+   * <p>Example usage:
+   *
+   * <pre>
+   * camundaClient
+   *   .newUpdateAuthorizationCommand(authorizationKey)
+   *   .ownerId(ownerId)
+   *   .ownerType(ownerType)
+   *   .resourceId(resourceId)
+   *   .resourceType(resourceType)
+   *   .permissionTypes(Set.of(PermissionType.READ))
+   *   .send();
+   * </pre>
+   *
+   * @param authorizationKey the key of the authorization to update
+   * @return a builder to configure and send the update authorization command
+   */
+  UpdateAuthorizationCommandStep1 newUpdateAuthorizationCommand(long authorizationKey);
 }

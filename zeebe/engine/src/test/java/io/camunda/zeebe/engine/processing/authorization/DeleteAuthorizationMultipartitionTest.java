@@ -44,8 +44,6 @@ public class DeleteAuthorizationMultipartitionTest {
         engine
             .authorization()
             .newAuthorization()
-            // TODO: remove with https://github.com/camunda/camunda/issues/26883
-            .withOwnerKey(1L)
             .withOwnerId("ownerId")
             .withOwnerType(AuthorizationOwnerType.USER)
             .withResourceId("resourceId")
@@ -101,7 +99,7 @@ public class DeleteAuthorizationMultipartitionTest {
       assertThat(
               RecordingExporter.records()
                   .withPartitionId(partitionId)
-                  .limitByCount(r -> r.getIntent().equals(AuthorizationIntent.CREATED), 2)
+                  .limit(r -> r.getIntent().equals(AuthorizationIntent.DELETED))
                   .collect(Collectors.toList()))
           .extracting(Record::getIntent)
           .endsWith(AuthorizationIntent.DELETE, AuthorizationIntent.DELETED);
@@ -115,8 +113,6 @@ public class DeleteAuthorizationMultipartitionTest {
         engine
             .authorization()
             .newAuthorization()
-            // TODO: remove with https://github.com/camunda/camunda/issues/26883
-            .withOwnerKey(1L)
             .withOwnerId("ownerId")
             .withOwnerType(AuthorizationOwnerType.USER)
             .withResourceId("resourceId")
@@ -147,8 +143,6 @@ public class DeleteAuthorizationMultipartitionTest {
         engine
             .authorization()
             .newAuthorization()
-            // TODO: remove with https://github.com/camunda/camunda/issues/26883
-            .withOwnerKey(1L)
             .withOwnerId("ownerId")
             .withOwnerType(AuthorizationOwnerType.USER)
             .withResourceId("resourceId")

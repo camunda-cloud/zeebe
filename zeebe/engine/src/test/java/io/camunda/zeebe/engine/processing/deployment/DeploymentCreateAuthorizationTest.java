@@ -126,12 +126,12 @@ public class DeploymentCreateAuthorizationTest {
       final PermissionType permissionType) {
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(user.getUserKey())
+        .newAuthorization()
+        .withPermissions(permissionType)
         .withOwnerId(user.getUsername())
         .withOwnerType(AuthorizationOwnerType.USER)
         .withResourceType(authorization)
-        .withPermission(permissionType, "*")
-        .add(DEFAULT_USER.getUsername());
+        .withResourceId("*")
+        .create(DEFAULT_USER.getUsername());
   }
 }

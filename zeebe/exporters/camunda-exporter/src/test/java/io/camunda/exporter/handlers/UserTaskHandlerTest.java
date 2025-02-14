@@ -17,6 +17,7 @@ import io.camunda.exporter.cache.TestFormCache;
 import io.camunda.exporter.cache.form.CachedFormEntity;
 import io.camunda.exporter.store.BatchRequest;
 import io.camunda.exporter.utils.ExporterUtil;
+import io.camunda.exporter.utils.TestObjectMapper;
 import io.camunda.webapps.schema.descriptors.tasklist.template.TaskTemplate;
 import io.camunda.webapps.schema.entities.tasklist.TaskEntity;
 import io.camunda.webapps.schema.entities.tasklist.TaskEntity.TaskImplementation;
@@ -53,7 +54,8 @@ public class UserTaskHandlerTest {
   private final ProtocolFactory factory = new ProtocolFactory();
   private final String indexName = "test-tasklist-task";
   private final TestFormCache formCache = new TestFormCache();
-  private final ExporterMetadata exporterMetadata = new ExporterMetadata();
+  private final ExporterMetadata exporterMetadata =
+      new ExporterMetadata(TestObjectMapper.objectMapper());
   private final UserTaskHandler underTest =
       new UserTaskHandler(indexName, formCache, exporterMetadata);
 
@@ -634,11 +636,12 @@ public class UserTaskHandlerTest {
             ValueType.USER_TASK,
             r ->
                 r.withIntent(UserTaskIntent.MIGRATED)
+                    .withKey(111)
                     .withValue(taskRecordValue)
                     .withTimestamp(System.currentTimeMillis()));
 
     // when
-    final TaskEntity taskEntity = new TaskEntity().setId(String.valueOf(123L));
+    final TaskEntity taskEntity = new TaskEntity().setId(String.valueOf(111L));
     underTest.updateEntity(taskRecord, taskEntity);
 
     final BatchRequest mockRequest = mock(BatchRequest.class);
@@ -658,11 +661,7 @@ public class UserTaskHandlerTest {
     assertThat(taskEntity.getBpmnProcessId()).isEqualTo(taskRecordValue.getBpmnProcessId());
     verify(mockRequest, times(1))
         .upsertWithRouting(
-            indexName,
-            taskEntity.getId(),
-            taskEntity,
-            expectedUpdates,
-            taskEntity.getProcessInstanceId());
+            indexName, taskEntity.getId(), taskEntity, expectedUpdates, taskEntity.getId());
   }
 
   @Test
@@ -680,6 +679,7 @@ public class UserTaskHandlerTest {
             ValueType.USER_TASK,
             r ->
                 r.withIntent(UserTaskIntent.ASSIGNED)
+                    .withKey(123)
                     .withValue(taskRecordValue)
                     .withTimestamp(System.currentTimeMillis()));
 
@@ -720,6 +720,7 @@ public class UserTaskHandlerTest {
             ValueType.USER_TASK,
             r ->
                 r.withIntent(UserTaskIntent.ASSIGNED)
+                    .withKey(123)
                     .withValue(taskRecordValue)
                     .withTimestamp(System.currentTimeMillis()));
 
@@ -868,6 +869,7 @@ public class UserTaskHandlerTest {
             ValueType.USER_TASK,
             r ->
                 r.withIntent(UserTaskIntent.UPDATED)
+                    .withKey(111)
                     .withValue(taskRecordValue)
                     .withTimestamp(System.currentTimeMillis()));
 
@@ -883,11 +885,12 @@ public class UserTaskHandlerTest {
             ValueType.USER_TASK,
             r ->
                 r.withIntent(UserTaskIntent.ASSIGNED)
+                    .withKey(111)
                     .withValue(assignTaskRecordValue)
                     .withTimestamp(System.currentTimeMillis()));
 
     // when
-    final TaskEntity taskEntity = underTest.createNewEntity(String.valueOf(123));
+    final TaskEntity taskEntity = underTest.createNewEntity(String.valueOf(111));
     underTest.updateEntity(taskRecord, taskEntity);
     underTest.updateEntity(assignTaskRecord, taskEntity);
 
@@ -904,10 +907,6 @@ public class UserTaskHandlerTest {
     assertThat(taskEntity.getAssignee()).isEqualTo(assignTaskRecordValue.getAssignee());
     verify(mockRequest, times(1))
         .upsertWithRouting(
-            indexName,
-            taskEntity.getId(),
-            taskEntity,
-            expectedUpdates,
-            taskEntity.getProcessInstanceId());
+            indexName, taskEntity.getId(), taskEntity, expectedUpdates, taskEntity.getId());
   }
 }

@@ -32,6 +32,7 @@ import io.camunda.zeebe.test.util.record.RecordingExporterTestWatcher;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class AuthorizationCheckBehaviorTest {
     // when
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     assertThat(authorized.isRight()).isTrue();
@@ -410,7 +411,7 @@ public class AuthorizationCheckBehaviorTest {
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType, anotherTenantId)
             .addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     assertThat(authorized.isRight()).isFalse();
@@ -425,7 +426,8 @@ public class AuthorizationCheckBehaviorTest {
     final var command = mockCommand(user.getUsername());
 
     // when
-    final var authorizedTenantIds = authorizationCheckBehavior.getAuthorizedTenantIds(command);
+    final var authorizedTenantIds =
+        runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command));
 
     // then
     assertThat(authorizedTenantIds.getAuthorizedTenantIds())
@@ -449,7 +451,8 @@ public class AuthorizationCheckBehaviorTest {
     final var command = mockCommandWithMapping(claimName, claimValue);
 
     // when
-    final var authorizedTenantIds = authorizationCheckBehavior.getAuthorizedTenantIds(command);
+    final var authorizedTenantIds =
+        runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command));
 
     // then
     assertThat(authorizedTenantIds.getAuthorizedTenantIds())
@@ -472,7 +475,8 @@ public class AuthorizationCheckBehaviorTest {
     final var command = mockCommand(user.getUsername());
 
     // when
-    final var authorizedTenantIds = authorizationCheckBehavior.getAuthorizedTenantIds(command);
+    final var authorizedTenantIds =
+        runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command));
 
     // then
     assertThat(authorizedTenantIds.getAuthorizedTenantIds())
@@ -497,7 +501,8 @@ public class AuthorizationCheckBehaviorTest {
     final var command = mockCommandWithMapping(claimName, claimValue);
 
     // when
-    final var authorizedTenantIds = authorizationCheckBehavior.getAuthorizedTenantIds(command);
+    final var authorizedTenantIds =
+        runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command));
 
     // then
     assertThat(authorizedTenantIds.getAuthorizedTenantIds())
@@ -517,7 +522,11 @@ public class AuthorizationCheckBehaviorTest {
 
     // when
     final var authorizedTenantIds =
-        authorizationCheckBehavior.getAuthorizedTenantIds(command).getAuthorizedTenantIds();
+        runTaskInActor(
+            () ->
+                authorizationCheckBehavior
+                    .getAuthorizedTenantIds(command)
+                    .getAuthorizedTenantIds());
 
     // then
     assertThat(authorizedTenantIds).containsOnly(TenantOwned.DEFAULT_TENANT_IDENTIFIER);
@@ -529,7 +538,8 @@ public class AuthorizationCheckBehaviorTest {
     final var command = mockCommand("not-exists");
 
     // when
-    final var authorizedTenantIds = authorizationCheckBehavior.getAuthorizedTenantIds(command);
+    final var authorizedTenantIds =
+        runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command));
 
     // then
     assertThat(authorizedTenantIds.getAuthorizedTenantIds())
@@ -562,7 +572,7 @@ public class AuthorizationCheckBehaviorTest {
     // when
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     assertThat(authorized.isRight()).isTrue();
@@ -574,7 +584,8 @@ public class AuthorizationCheckBehaviorTest {
     final var command = mockCommandWithAnonymousUser();
 
     // when
-    final var authorizedTenants = authorizationCheckBehavior.getAuthorizedTenantIds(command);
+    final var authorizedTenants =
+        runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command));
 
     assertThat(authorizedTenants).isEqualTo(AuthorizedTenants.ANONYMOUS);
   }
@@ -603,7 +614,7 @@ public class AuthorizationCheckBehaviorTest {
     // when
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     EitherAssert.assertThat(authorized).isRight();
@@ -642,7 +653,7 @@ public class AuthorizationCheckBehaviorTest {
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType, tenantId)
             .addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     EitherAssert.assertThat(authorized).isRight();
@@ -681,7 +692,7 @@ public class AuthorizationCheckBehaviorTest {
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType, "anotherTenantId")
             .addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     EitherAssert.assertThat(authorized).isLeft();
@@ -706,19 +717,19 @@ public class AuthorizationCheckBehaviorTest {
     final var resourceId = UUID.randomUUID().toString();
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(groupKey)
+        .newAuthorization()
+        .withPermissions(permissionType)
         .withOwnerId(String.valueOf(groupKey))
         .withOwnerType(AuthorizationOwnerType.GROUP)
         .withResourceType(resourceType)
-        .withPermission(permissionType, resourceId)
-        .add();
+        .withResourceId(resourceId)
+        .create();
     final var command = mockCommandWithMapping(claimName, claimValue);
 
     // when
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     EitherAssert.assertThat(authorized).isRight();
@@ -743,19 +754,19 @@ public class AuthorizationCheckBehaviorTest {
     final var resourceId = UUID.randomUUID().toString();
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(roleKey)
+        .newAuthorization()
         .withOwnerId(String.valueOf(roleKey))
-        .withOwnerType(AuthorizationOwnerType.GROUP)
+        .withOwnerType(AuthorizationOwnerType.ROLE)
         .withResourceType(resourceType)
-        .withPermission(permissionType, resourceId)
-        .add();
+        .withResourceId(resourceId)
+        .withPermissions(permissionType)
+        .create();
     final var command = mockCommandWithMapping(claimName, claimValue);
 
     // when
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     EitherAssert.assertThat(authorized).isRight();
@@ -773,7 +784,7 @@ public class AuthorizationCheckBehaviorTest {
     final var request =
         new AuthorizationRequest(command, AuthorizationResourceType.RESOURCE, PermissionType.DELETE)
             .addResourceId(UUID.randomUUID().toString());
-    final var authorized = authorizationCheckBehavior.isAuthorized(request);
+    final var authorized = runTaskInActor(() -> authorizationCheckBehavior.isAuthorized(request));
 
     // then
     EitherAssert.assertThat(authorized).isLeft();
@@ -789,6 +800,7 @@ public class AuthorizationCheckBehaviorTest {
             .mapping()
             .newMapping(firstClaimName)
             .withClaimValue(firstClaimValue)
+            .withId(UUID.randomUUID().toString())
             .create()
             .getKey();
     final var secondClaimName = UUID.randomUUID().toString();
@@ -798,6 +810,7 @@ public class AuthorizationCheckBehaviorTest {
             .mapping()
             .newMapping(secondClaimName)
             .withClaimValue(secondClaimValue)
+            .withId(UUID.randomUUID().toString())
             .create()
             .getKey();
 
@@ -807,22 +820,22 @@ public class AuthorizationCheckBehaviorTest {
     final var secondResourceId = UUID.randomUUID().toString();
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(firstMappingKey)
+        .newAuthorization()
         .withOwnerId(String.valueOf(firstMappingKey))
         .withOwnerType(AuthorizationOwnerType.MAPPING)
         .withResourceType(resourceType)
-        .withPermission(permissionType, firstResourceId)
-        .add();
+        .withPermissions(permissionType)
+        .withResourceId(firstResourceId)
+        .create();
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(secondMappingKey)
+        .newAuthorization()
         .withOwnerId(String.valueOf(secondMappingKey))
         .withOwnerType(AuthorizationOwnerType.MAPPING)
         .withResourceType(resourceType)
-        .withPermission(permissionType, secondResourceId)
-        .add();
+        .withPermissions(permissionType)
+        .withResourceId(secondResourceId)
+        .create();
 
     // when
     final var command = mock(TypedRecord.class);
@@ -837,14 +850,18 @@ public class AuthorizationCheckBehaviorTest {
 
     // then
     EitherAssert.assertThat(
-            authorizationCheckBehavior.isAuthorized(
-                new AuthorizationRequest(command, resourceType, permissionType)
-                    .addResourceId(firstResourceId)))
+            runTaskInActor(
+                () ->
+                    authorizationCheckBehavior.isAuthorized(
+                        new AuthorizationRequest(command, resourceType, permissionType)
+                            .addResourceId(firstResourceId))))
         .isRight();
     EitherAssert.assertThat(
-            authorizationCheckBehavior.isAuthorized(
-                new AuthorizationRequest(command, resourceType, permissionType)
-                    .addResourceId(secondResourceId)))
+            runTaskInActor(
+                () ->
+                    authorizationCheckBehavior.isAuthorized(
+                        new AuthorizationRequest(command, resourceType, permissionType)
+                            .addResourceId(secondResourceId))))
         .isRight();
   }
 
@@ -854,10 +871,22 @@ public class AuthorizationCheckBehaviorTest {
     final var claimName = UUID.randomUUID().toString();
     final var firstClaimValue = UUID.randomUUID().toString();
     final var firstMappingKey =
-        engine.mapping().newMapping(claimName).withClaimValue(firstClaimValue).create().getKey();
+        engine
+            .mapping()
+            .newMapping(claimName)
+            .withClaimValue(firstClaimValue)
+            .withId(UUID.randomUUID().toString())
+            .create()
+            .getKey();
     final var secondClaimValue = UUID.randomUUID().toString();
     final var secondMappingKey =
-        engine.mapping().newMapping(claimName).withClaimValue(secondClaimValue).create().getKey();
+        engine
+            .mapping()
+            .newMapping(claimName)
+            .withClaimValue(secondClaimValue)
+            .withId(UUID.randomUUID().toString())
+            .create()
+            .getKey();
 
     final var resourceType = AuthorizationResourceType.RESOURCE;
     final var permissionType = PermissionType.CREATE;
@@ -865,22 +894,22 @@ public class AuthorizationCheckBehaviorTest {
     final var secondResourceId = UUID.randomUUID().toString();
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(firstMappingKey)
+        .newAuthorization()
         .withOwnerId(String.valueOf(firstMappingKey))
         .withOwnerType(AuthorizationOwnerType.MAPPING)
         .withResourceType(resourceType)
-        .withPermission(permissionType, firstResourceId)
-        .add();
+        .withPermissions(permissionType)
+        .withResourceId(firstResourceId)
+        .create();
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(secondMappingKey)
+        .newAuthorization()
         .withOwnerId(String.valueOf(secondMappingKey))
         .withOwnerType(AuthorizationOwnerType.MAPPING)
         .withResourceType(resourceType)
-        .withPermission(permissionType, secondResourceId)
-        .add();
+        .withPermissions(permissionType)
+        .withResourceId(secondResourceId)
+        .create();
 
     // when
     final var command = mock(TypedRecord.class);
@@ -892,14 +921,18 @@ public class AuthorizationCheckBehaviorTest {
 
     // then
     EitherAssert.assertThat(
-            authorizationCheckBehavior.isAuthorized(
-                new AuthorizationRequest(command, resourceType, permissionType)
-                    .addResourceId(firstResourceId)))
+            runTaskInActor(
+                () ->
+                    authorizationCheckBehavior.isAuthorized(
+                        new AuthorizationRequest(command, resourceType, permissionType)
+                            .addResourceId(firstResourceId))))
         .isRight();
     EitherAssert.assertThat(
-            authorizationCheckBehavior.isAuthorized(
-                new AuthorizationRequest(command, resourceType, permissionType)
-                    .addResourceId(secondResourceId)))
+            runTaskInActor(
+                () ->
+                    authorizationCheckBehavior.isAuthorized(
+                        new AuthorizationRequest(command, resourceType, permissionType)
+                            .addResourceId(secondResourceId))))
         .isRight();
   }
 
@@ -928,7 +961,8 @@ public class AuthorizationCheckBehaviorTest {
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
     final var authorizations =
-        authorizationCheckBehavior.getAllAuthorizedResourceIdentifiers(request);
+        runTaskInActor(
+            () -> authorizationCheckBehavior.getAllAuthorizedResourceIdentifiers(request));
 
     // then
     assertThat(authorizations).containsExactlyInAnyOrder(resourceId);
@@ -961,7 +995,8 @@ public class AuthorizationCheckBehaviorTest {
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
     final var authorizations =
-        authorizationCheckBehavior.getAllAuthorizedResourceIdentifiers(request);
+        runTaskInActor(
+            () -> authorizationCheckBehavior.getAllAuthorizedResourceIdentifiers(request));
 
     // then
     assertThat(authorizations).containsExactlyInAnyOrder(resourceId);
@@ -994,7 +1029,8 @@ public class AuthorizationCheckBehaviorTest {
     final var request =
         new AuthorizationRequest(command, resourceType, permissionType).addResourceId(resourceId);
     final var authorizations =
-        authorizationCheckBehavior.getAllAuthorizedResourceIdentifiers(request);
+        runTaskInActor(
+            () -> authorizationCheckBehavior.getAllAuthorizedResourceIdentifiers(request));
 
     // then
     assertThat(authorizations).containsExactlyInAnyOrder(resourceId);
@@ -1021,7 +1057,9 @@ public class AuthorizationCheckBehaviorTest {
         .add();
 
     // then
-    assertThat(authorizationCheckBehavior.getAuthorizedTenantIds(command).getAuthorizedTenantIds())
+    assertThat(
+            runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command))
+                .getAuthorizedTenantIds())
         .singleElement()
         .isEqualTo(tenantId);
   }
@@ -1036,7 +1074,9 @@ public class AuthorizationCheckBehaviorTest {
 
     // when
     // then
-    assertThat(authorizationCheckBehavior.getAuthorizedTenantIds(command).getAuthorizedTenantIds())
+    assertThat(
+            runTaskInActor(() -> authorizationCheckBehavior.getAuthorizedTenantIds(command))
+                .getAuthorizedTenantIds())
         .singleElement()
         .isEqualTo(TenantOwned.DEFAULT_TENANT_IDENTIFIER);
   }
@@ -1083,20 +1123,17 @@ public class AuthorizationCheckBehaviorTest {
       final AuthorizationResourceType resourceType,
       final PermissionType permissionType,
       final String... resourceIds) {
-    final var client =
-        engine
-            .authorization()
-            .permission()
-            .withOwnerKey(ownerKey)
-            .withOwnerId(ownerId)
-            .withOwnerType(ownerType)
-            .withResourceType(resourceType);
-
     for (final String resourceId : resourceIds) {
-      client.withPermission(permissionType, resourceId);
+      engine
+          .authorization()
+          .newAuthorization()
+          .withPermissions(permissionType)
+          .withOwnerId(ownerId)
+          .withOwnerType(ownerType)
+          .withResourceType(resourceType)
+          .withResourceId(resourceId)
+          .create();
     }
-
-    client.add();
   }
 
   private String createAndAssignTenant(final long entityKey, final EntityType entityType) {
@@ -1125,5 +1162,9 @@ public class AuthorizationCheckBehaviorTest {
     when(command.getAuthorizations()).thenReturn(Map.of(AUTHORIZED_ANONYMOUS_USER, true));
     when(command.hasRequestMetadata()).thenReturn(true);
     return command;
+  }
+
+  private <A> A runTaskInActor(final Supplier<A> supplier) {
+    return engine.getStreamProcessor(1).call(supplier::get).join();
   }
 }

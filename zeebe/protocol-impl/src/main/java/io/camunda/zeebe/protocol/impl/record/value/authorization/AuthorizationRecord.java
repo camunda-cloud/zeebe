@@ -20,16 +20,14 @@ import io.camunda.zeebe.protocol.record.value.AuthorizationRecordValue;
 import io.camunda.zeebe.protocol.record.value.AuthorizationResourceType;
 import io.camunda.zeebe.protocol.record.value.PermissionType;
 import io.camunda.zeebe.util.buffer.BufferUtil;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class AuthorizationRecord extends UnifiedRecordValue
     implements AuthorizationRecordValue {
+
   private final LongProperty authorizationKeyProp = new LongProperty("authorizationKey", -1L);
   private final StringProperty ownerIdProp = new StringProperty("ownerId", "");
-  // TODO: remove in: https://github.com/camunda/camunda/issues/26883
-  private final LongProperty ownerKeyProp = new LongProperty("ownerKey", -1L);
   private final EnumProperty<AuthorizationOwnerType> ownerTypeProp =
       new EnumProperty<>(
           "ownerType", AuthorizationOwnerType.class, AuthorizationOwnerType.UNSPECIFIED);
@@ -37,23 +35,17 @@ public final class AuthorizationRecord extends UnifiedRecordValue
   private final EnumProperty<AuthorizationResourceType> resourceTypeProp =
       new EnumProperty<>(
           "resourceType", AuthorizationResourceType.class, AuthorizationResourceType.UNSPECIFIED);
-  // TODO: remove in: https://github.com/camunda/camunda/issues/26883
-  private final ArrayProperty<Permission> permissionsProp =
-      new ArrayProperty<>("permissions", Permission::new);
-  // TODO: rename in: https://github.com/camunda/camunda/issues/26883
-  private final ArrayProperty<StringValue> authorizationPermissionsProp =
-      new ArrayProperty<>("authorizationPermissions", StringValue::new);
+  private final ArrayProperty<StringValue> permissionTypesProp =
+      new ArrayProperty<>("permissionTypes", StringValue::new);
 
   public AuthorizationRecord() {
-    super(8);
+    super(6);
     declareProperty(authorizationKeyProp)
         .declareProperty(ownerIdProp)
         .declareProperty(ownerTypeProp)
-        .declareProperty(ownerKeyProp)
         .declareProperty(resourceIdProp)
         .declareProperty(resourceTypeProp)
-        .declareProperty(permissionsProp)
-        .declareProperty(authorizationPermissionsProp);
+        .declareProperty(permissionTypesProp);
   }
 
   @Override
@@ -73,16 +65,6 @@ public final class AuthorizationRecord extends UnifiedRecordValue
 
   public AuthorizationRecord setOwnerId(final String ownerId) {
     ownerIdProp.setValue(ownerId);
-    return this;
-  }
-
-  @Override
-  public Long getOwnerKey() {
-    return ownerKeyProp.getValue();
-  }
-
-  public AuthorizationRecord setOwnerKey(final Long ownerKey) {
-    ownerKeyProp.setValue(ownerKey);
     return this;
   }
 
@@ -107,30 +89,18 @@ public final class AuthorizationRecord extends UnifiedRecordValue
   }
 
   @Override
-  public List<PermissionValue> getPermissions() {
-    return permissionsProp.stream()
-        .map(
-            permission -> {
-              final var copy = new Permission().copy(permission);
-              return (PermissionValue) copy;
-            })
-        .toList();
-  }
-
-  @Override
-  public Set<PermissionType> getAuthorizationPermissions() {
-    return authorizationPermissionsProp.stream()
+  public Set<PermissionType> getPermissionTypes() {
+    return permissionTypesProp.stream()
         .map(StringValue::getValue)
         .map(BufferUtil::bufferAsString)
         .map(PermissionType::valueOf)
         .collect(Collectors.toSet());
   }
 
-  public AuthorizationRecord setAuthorizationPermissions(final Set<PermissionType> permissions) {
-    authorizationPermissionsProp.reset();
+  public AuthorizationRecord setPermissionTypes(final Set<PermissionType> permissions) {
+    permissionTypesProp.reset();
     permissions.forEach(
-        permission ->
-            authorizationPermissionsProp.add().wrap(BufferUtil.wrapString(permission.name())));
+        permission -> permissionTypesProp.add().wrap(BufferUtil.wrapString(permission.name())));
     return this;
   }
 
@@ -141,11 +111,6 @@ public final class AuthorizationRecord extends UnifiedRecordValue
 
   public AuthorizationRecord setOwnerType(final AuthorizationOwnerType ownerType) {
     ownerTypeProp.setValue(ownerType);
-    return this;
-  }
-
-  public AuthorizationRecord addPermission(final PermissionValue permission) {
-    permissionsProp.add().copy(permission);
     return this;
   }
 }

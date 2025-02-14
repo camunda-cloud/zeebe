@@ -118,6 +118,7 @@ public class UserTaskUpdateAuthorizationTest {
         engine
             .userTask()
             .ofInstance(processInstanceKey)
+            .expectRejection()
             .update(new UserTaskRecord(), user.getUsername());
 
     // then
@@ -143,16 +144,16 @@ public class UserTaskUpdateAuthorizationTest {
       final UserRecordValue user,
       final AuthorizationResourceType authorization,
       final PermissionType permissionType,
-      final String... resourceIds) {
+      final String resourceId) {
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(user.getUserKey())
+        .newAuthorization()
+        .withPermissions(permissionType)
         .withOwnerId(user.getUsername())
         .withOwnerType(AuthorizationOwnerType.USER)
         .withResourceType(authorization)
-        .withPermission(permissionType, resourceIds)
-        .add(DEFAULT_USER.getUsername());
+        .withResourceId(resourceId)
+        .create(DEFAULT_USER.getUsername());
   }
 
   private long createProcessInstance() {

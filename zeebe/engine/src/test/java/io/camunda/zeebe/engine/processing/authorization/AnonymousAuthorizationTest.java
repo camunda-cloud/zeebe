@@ -73,13 +73,13 @@ public class AnonymousAuthorizationTest {
 
     engine
         .authorization()
-        .permission()
-        .withPermission(PermissionType.CREATE, "*")
+        .newAuthorization()
+        .withPermissions(PermissionType.CREATE)
         .withResourceType(AuthorizationResourceType.RESOURCE)
-        .withOwnerKey(user.getUserKey())
+        .withResourceId("*")
         .withOwnerId(user.getUsername())
         .withOwnerType(AuthorizationOwnerType.USER)
-        .add();
+        .create();
 
     engine.deployment().withXmlResource(PROCESS).deploy(username);
   }

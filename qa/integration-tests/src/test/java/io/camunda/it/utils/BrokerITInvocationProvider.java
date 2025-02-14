@@ -12,11 +12,13 @@ import static java.util.Arrays.asList;
 import io.camunda.application.Profile;
 import io.camunda.application.commons.configuration.BrokerBasedConfiguration.BrokerBasedProperties;
 import io.camunda.application.commons.security.CamundaSecurityConfiguration.CamundaSecurityProperties;
+import io.camunda.authentication.config.AuthenticationProperties;
 import io.camunda.client.CamundaClient;
 import io.camunda.it.utils.CamundaClientTestFactory.Authenticated;
 import io.camunda.it.utils.CamundaClientTestFactory.User;
 import io.camunda.security.configuration.ConfiguredUser;
 import io.camunda.security.configuration.InitializationConfiguration;
+import io.camunda.security.entity.AuthenticationMethod;
 import io.camunda.zeebe.qa.util.cluster.TestGateway;
 import io.camunda.zeebe.qa.util.cluster.TestStandaloneBroker;
 import io.camunda.zeebe.test.util.testcontainers.TestSearchContainers;
@@ -112,6 +114,12 @@ public class BrokerITInvocationProvider
   public BrokerITInvocationProvider withAdditionalSecurityConfig(
       final Consumer<CamundaSecurityProperties> modifier) {
     additionalSecurityConfig = additionalSecurityConfig.andThen(modifier);
+    return this;
+  }
+
+  public BrokerITInvocationProvider withBasicAuth() {
+    withAdditionalProperty(AuthenticationProperties.METHOD, AuthenticationMethod.BASIC.name());
+    withAdditionalProfiles(Profile.CONSOLIDATED_AUTH);
     return this;
   }
 

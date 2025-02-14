@@ -12,6 +12,7 @@ import io.camunda.zeebe.engine.processing.streamprocessor.TypedRecordProcessorCo
 import io.camunda.zeebe.engine.processing.streamprocessor.TypedRecordProcessorFactory;
 import io.camunda.zeebe.engine.processing.streamprocessor.TypedRecordProcessors;
 import io.camunda.zeebe.engine.state.mutable.MutableProcessingState;
+import io.camunda.zeebe.engine.util.TestStreams.FluentLogWriter;
 import io.camunda.zeebe.engine.util.client.CommandWriter;
 import io.camunda.zeebe.logstreams.log.LogStreamWriter;
 import io.camunda.zeebe.logstreams.log.WriteContext;
@@ -28,11 +29,13 @@ import io.camunda.zeebe.stream.api.StreamClock;
 import io.camunda.zeebe.stream.impl.StreamProcessor;
 import io.camunda.zeebe.stream.impl.StreamProcessorBuilder;
 import io.camunda.zeebe.stream.impl.StreamProcessorListener;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 public class StreamProcessingComposite implements CommandWriter {
 
@@ -142,6 +145,10 @@ public class StreamProcessingComposite implements CommandWriter {
 
   public StreamClock getStreamClock(final int partitionId) {
     return streams.getStreamClock(getLogName(partitionId));
+  }
+
+  public MeterRegistry getMeterRegistry(final int partitionId) {
+    return streams.getMeterRegistry(getLogName(partitionId));
   }
 
   public MutableProcessingState getProcessingState() {
@@ -339,6 +346,14 @@ public class StreamProcessingComposite implements CommandWriter {
             .intent(intent)
             .authorizationsWithUsername(username, TenantOwned.DEFAULT_TENANT_IDENTIFIER)
             .event(value);
+    return writeActor.submit(writer::write).join();
+  }
+
+  @Override
+  public long writeCommandOnPartition(
+      final int partitionId, final UnaryOperator<FluentLogWriter> builder) {
+    final var writer =
+        builder.apply(streams.newRecord(getLogName(partitionId)).recordType(RecordType.COMMAND));
     return writeActor.submit(writer::write).join();
   }
 

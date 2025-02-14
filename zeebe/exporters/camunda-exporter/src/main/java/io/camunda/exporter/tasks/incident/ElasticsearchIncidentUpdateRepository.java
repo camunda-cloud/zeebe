@@ -56,6 +56,7 @@ public final class ElasticsearchIncidentUpdateRepository extends ElasticsearchRe
   private final String pendingUpdateAlias;
   private final String incidentAlias;
   private final String listViewAlias;
+  private final String listViewFullQualifiedName;
   private final String flowNodeAlias;
   private final String operationAlias;
 
@@ -64,6 +65,7 @@ public final class ElasticsearchIncidentUpdateRepository extends ElasticsearchRe
       final String pendingUpdateAlias,
       final String incidentAlias,
       final String listViewAlias,
+      final String listViewFullQualifiedName,
       final String flowNodeAlias,
       final String operationAlias,
       @WillCloseWhenClosed final ElasticsearchAsyncClient client,
@@ -74,13 +76,9 @@ public final class ElasticsearchIncidentUpdateRepository extends ElasticsearchRe
     this.pendingUpdateAlias = pendingUpdateAlias;
     this.incidentAlias = incidentAlias;
     this.listViewAlias = listViewAlias;
+    this.listViewFullQualifiedName = listViewFullQualifiedName;
     this.flowNodeAlias = flowNodeAlias;
     this.operationAlias = operationAlias;
-  }
-
-  @Override
-  public void close() throws Exception {
-    client._transport().close();
   }
 
   @Override
@@ -197,7 +195,7 @@ public final class ElasticsearchIncidentUpdateRepository extends ElasticsearchRe
     final var request =
         new AnalyzeRequest.Builder()
             .field(ListViewTemplate.TREE_PATH)
-            .index(listViewAlias)
+            .index(listViewFullQualifiedName)
             .text(treePath)
             .build();
 

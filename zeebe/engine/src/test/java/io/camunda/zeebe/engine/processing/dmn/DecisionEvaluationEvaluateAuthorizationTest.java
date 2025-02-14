@@ -122,12 +122,12 @@ public class DecisionEvaluationEvaluateAuthorizationTest {
       final PermissionType permissionType) {
     engine
         .authorization()
-        .permission()
-        .withOwnerKey(user.getUserKey())
+        .newAuthorization()
         .withOwnerId(user.getUsername())
         .withOwnerType(AuthorizationOwnerType.USER)
         .withResourceType(authorization)
-        .withPermission(permissionType, "*")
-        .add(DEFAULT_USER.getUsername());
+        .withPermissions(permissionType)
+        .withResourceId("*")
+        .create(DEFAULT_USER.getUsername());
   }
 }

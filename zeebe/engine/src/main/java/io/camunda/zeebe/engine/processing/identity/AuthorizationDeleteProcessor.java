@@ -7,12 +7,15 @@
  */
 package io.camunda.zeebe.engine.processing.identity;
 
+import static io.camunda.zeebe.engine.processing.identity.PermissionsBehavior.AUTHORIZATION_DOES_NOT_EXIST_ERROR_MESSAGE_DELETION;
+
 import io.camunda.zeebe.engine.processing.distribution.CommandDistributionBehavior;
 import io.camunda.zeebe.engine.processing.streamprocessor.DistributedTypedRecordProcessor;
 import io.camunda.zeebe.engine.processing.streamprocessor.writers.StateWriter;
 import io.camunda.zeebe.engine.processing.streamprocessor.writers.TypedRejectionWriter;
 import io.camunda.zeebe.engine.processing.streamprocessor.writers.TypedResponseWriter;
 import io.camunda.zeebe.engine.processing.streamprocessor.writers.Writers;
+import io.camunda.zeebe.engine.state.authorization.PersistedAuthorization;
 import io.camunda.zeebe.engine.state.distribution.DistributionQueue;
 import io.camunda.zeebe.engine.state.mutable.MutableProcessingState;
 import io.camunda.zeebe.protocol.impl.record.value.authorization.AuthorizationRecord;
@@ -49,9 +52,13 @@ public class AuthorizationDeleteProcessor
   public void processNewCommand(final TypedRecord<AuthorizationRecord> command) {
     permissionsBehavior
         .isAuthorized(command, PermissionType.DELETE)
-        .flatMap(permissionsBehavior::authorizationExist)
+        .flatMap(
+            authorizationRecord ->
+                permissionsBehavior.authorizationExists(
+                    authorizationRecord, AUTHORIZATION_DOES_NOT_EXIST_ERROR_MESSAGE_DELETION))
+        .map(PersistedAuthorization::getAuthorizationKey)
         .ifRightOrLeft(
-            authorizationRecord -> writeEventAndDistribute(command, authorizationRecord),
+            authorizationKey -> writeEventAndDistribute(command, authorizationKey),
             (rejection) -> {
               rejectionWriter.appendRejection(command, rejection.type(), rejection.reason());
               responseWriter.writeRejectionOnCommand(command, rejection.type(), rejection.reason());
@@ -61,11 +68,14 @@ public class AuthorizationDeleteProcessor
   @Override
   public void processDistributedCommand(final TypedRecord<AuthorizationRecord> command) {
     permissionsBehavior
-        .permissionDoesNotExist(command.getValue())
+        .authorizationExists(
+            command.getValue(), AUTHORIZATION_DOES_NOT_EXIST_ERROR_MESSAGE_DELETION)
         .ifRightOrLeft(
             ignored ->
                 stateWriter.appendFollowUpEvent(
-                    command.getKey(), AuthorizationIntent.DELETED, command.getValue()),
+                    command.getValue().getAuthorizationKey(),
+                    AuthorizationIntent.DELETED,
+                    command.getValue()),
             rejection ->
                 rejectionWriter.appendRejection(command, rejection.type(), rejection.reason()));
 
@@ -75,12 +85,14 @@ public class AuthorizationDeleteProcessor
   private void writeEventAndDistribute(
       final TypedRecord<AuthorizationRecord> command, final long authorizationKey) {
     final long key = keyGenerator.nextKey();
-    final var record = new AuthorizationRecord().setAuthorizationKey(authorizationKey);
-    stateWriter.appendFollowUpEvent(key, AuthorizationIntent.DELETED, record);
+    command.getValue().setAuthorizationKey(authorizationKey);
+    stateWriter.appendFollowUpEvent(
+        authorizationKey, AuthorizationIntent.DELETED, command.getValue());
     distributionBehavior
         .withKey(key)
         .inQueue(DistributionQueue.IDENTITY.getQueueId())
         .distribute(command);
-    responseWriter.writeEventOnCommand(key, AuthorizationIntent.DELETED, record, command);
+    responseWriter.writeEventOnCommand(
+        authorizationKey, AuthorizationIntent.DELETED, command.getValue(), command);
   }
 }

@@ -29,7 +29,7 @@ public class RdbmsExporter {
   private final Map<ValueType, List<RdbmsExportHandler>> registeredHandlers;
   private Controller controller;
 
-  private final long partitionId;
+  private final int partitionId;
   private final RdbmsWriter rdbmsWriter;
 
   // configuration
@@ -101,6 +101,7 @@ public class RdbmsExporter {
         record.getValueType(),
         record.getIntent());
 
+    boolean exported = false;
     if (registeredHandlers.containsKey(record.getValueType())) {
       for (final var handler : registeredHandlers.get(record.getValueType())) {
         if (handler.canExport(record)) {
@@ -109,6 +110,7 @@ public class RdbmsExporter {
               record.getValue(),
               handler.getClass());
           handler.export(record);
+          exported = true;
         } else {
           LOG.trace(
               "[RDBMS Exporter] Handler {} can not export record {}",
@@ -124,6 +126,10 @@ public class RdbmsExporter {
       }
     } else {
       LOG.trace("[RDBMS Exporter] No registered handler found for {}", record.getValueType());
+    }
+
+    if (!exported) {
+      LOG.trace("[RDBMS Exporter] Record could not be exported {}", record);
     }
   }
 

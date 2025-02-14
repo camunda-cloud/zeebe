@@ -16,7 +16,6 @@ import static io.camunda.client.protocol.rest.ResourceTypeEnum.RESOURCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import io.camunda.application.Profile;
 import io.camunda.client.CamundaClient;
 import io.camunda.client.api.command.ProblemException;
 import io.camunda.it.utils.BrokerITInvocationProvider;
@@ -27,7 +26,6 @@ import java.time.Duration;
 import java.util.List;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.TestTemplate;
@@ -35,7 +33,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.function.Executable;
 
 @TestInstance(Lifecycle.PER_CLASS)
-@Disabled("https://github.com/camunda/camunda/issues/27289")
 class ProcessInstanceAuthorizationIT {
   private static final String PROCESS_ID_1 = "incident_process_v1";
   private static final String PROCESS_ID_2 = "service_tasks_v1";
@@ -68,7 +65,7 @@ class ProcessInstanceAuthorizationIT {
   static final BrokerITInvocationProvider PROVIDER =
       new BrokerITInvocationProvider()
           .withoutRdbmsExporter()
-          .withAdditionalProfiles(Profile.AUTH_BASIC)
+          .withBasicAuth()
           .withAuthorizationsEnabled()
           .withUsers(ADMIN_USER, USER1_USER, USER2_USER);
 

@@ -9,20 +9,18 @@ package io.camunda.it.utils;
 
 import io.camunda.client.CamundaClient;
 import io.camunda.qa.util.cluster.TestSimpleCamundaApplication;
+import io.camunda.webapps.schema.descriptors.IndexDescriptors;
 import io.camunda.zeebe.qa.util.cluster.TestStandaloneApplication;
+import io.camunda.zeebe.qa.util.cluster.TestStandaloneBroker;
 import io.camunda.zeebe.test.util.record.RecordingExporter;
 import io.camunda.zeebe.test.util.testcontainers.TestSearchContainers;
-import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import org.agrona.CloseHelper;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -84,23 +82,24 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
  */
 public class CamundaMultiDBExtension
     implements AfterAllCallback, BeforeAllCallback, ParameterResolver {
-
   public static final String PROP_CAMUNDA_IT_DATABASE_TYPE =
       "test.integration.camunda.database.type";
   public static final String DEFAULT_ES_URL = "http://localhost:9200";
   public static final String DEFAULT_OS_URL = "http://localhost:9200";
   public static final String DEFAULT_OS_ADMIN_USER = "admin";
   public static final String DEFAULT_OS_ADMIN_PW = "yourStrongPassword123!";
-
+  public static final Duration TIMEOUT_DATABASE_EXPORTER_READINESS = Duration.ofMinutes(1);
+  public static final Duration TIMEOUT_DATABASE_READINESS = Duration.ofMinutes(1);
   private static final Logger LOGGER = LoggerFactory.getLogger(CamundaMultiDBExtension.class);
   private final DatabaseType databaseType;
   private final List<AutoCloseable> closeables = new ArrayList<>();
   private final TestStandaloneApplication<?> testApplication;
   private String testPrefix;
   private final MultiDbConfigurator multiDbConfigurator;
+  private MultiDbSetupHelper setupHelper = new NoopDBSetupHelper();
 
   public CamundaMultiDBExtension() {
-    this(new TestSimpleCamundaApplication());
+    this(new TestStandaloneBroker());
     closeables.add(testApplication);
     testApplication
         .withBrokerConfig(cfg -> cfg.getGateway().setEnable(true))
@@ -127,21 +126,39 @@ public class CamundaMultiDBExtension
       case LOCAL -> {
         final ElasticsearchContainer elasticsearchContainer = setupElasticsearch();
         final String elasticSearchUrl = "http://" + elasticsearchContainer.getHttpHostAddress();
-        validateESConnection(elasticSearchUrl);
         multiDbConfigurator.configureElasticsearchSupport(elasticSearchUrl, testPrefix);
+        final var expectedDescriptors = new IndexDescriptors(testPrefix, true).all();
+        setupHelper = new ElasticOpenSearchSetupHelper(elasticSearchUrl, expectedDescriptors);
       }
       case ES -> {
-        validateESConnection(DEFAULT_ES_URL);
         multiDbConfigurator.configureElasticsearchSupport(DEFAULT_ES_URL, testPrefix);
+        final var expectedDescriptors = new IndexDescriptors(testPrefix, true).all();
+        setupHelper = new ElasticOpenSearchSetupHelper(DEFAULT_ES_URL, expectedDescriptors);
       }
-      case OS ->
-          multiDbConfigurator.configureOpenSearchSupport(
-              DEFAULT_OS_URL, testPrefix, DEFAULT_OS_ADMIN_USER, DEFAULT_OS_ADMIN_PW);
+      case OS -> {
+        multiDbConfigurator.configureOpenSearchSupport(
+            DEFAULT_OS_URL, testPrefix, DEFAULT_OS_ADMIN_USER, DEFAULT_OS_ADMIN_PW);
+        final var expectedDescriptors = new IndexDescriptors(testPrefix, true).all();
+        setupHelper = new ElasticOpenSearchSetupHelper(DEFAULT_OS_URL, expectedDescriptors);
+      }
       case RDBMS -> multiDbConfigurator.configureRDBMSSupport();
       default -> throw new RuntimeException("Unknown exporter type");
     }
+    // we need to close the test application before cleaning up
+    closeables.add(() -> setupHelper.cleanup(testPrefix));
+    closeables.add(setupHelper);
+
+    Awaitility.await("Await secondary storage connection")
+        .timeout(TIMEOUT_DATABASE_READINESS)
+        .until(setupHelper::validateConnection);
+
     testApplication.start();
     testApplication.awaitCompleteTopology();
+
+    Awaitility.await("Await exporter readiness")
+        .timeout(TIMEOUT_DATABASE_EXPORTER_READINESS)
+        .pollInterval(Duration.ofMillis(200))
+        .until(() -> setupHelper.validateSchemaCreation(testPrefix));
 
     injectFields(testClass, null, ModifierSupport::isStatic);
   }
@@ -152,25 +169,6 @@ public class CamundaMultiDBExtension
     elasticsearchContainer.start();
     closeables.add(elasticsearchContainer);
     return elasticsearchContainer;
-  }
-
-  private static void validateESConnection(final String url) {
-    final HttpRequest httpRequest =
-        HttpRequest.newBuilder().GET().uri(URI.create(String.format("%s/", url))).build();
-    try (final HttpClient httpClient = HttpClient.newHttpClient()) {
-      final HttpResponse<String> response = httpClient.send(httpRequest, BodyHandlers.ofString());
-      final int statusCode = response.statusCode();
-      assert statusCode / 100 == 2
-          : "Expected to have a running ES service available under: " + url;
-    } catch (final IOException | InterruptedException e) {
-      assert false
-          : "Expected no exception on validating connection under: "
-              + url
-              + ", failed with: "
-              + e
-              + ": "
-              + e.getMessage();
-    }
   }
 
   private void injectFields(
@@ -190,22 +188,6 @@ public class CamundaMultiDBExtension
 
   @Override
   public void afterAll(final ExtensionContext context) {
-    if (databaseType == DatabaseType.ES || databaseType == DatabaseType.OS) {
-      final URI deleteEndpoint = URI.create(String.format("%s/%s*", DEFAULT_ES_URL, testPrefix));
-      final HttpRequest httpRequest = HttpRequest.newBuilder().DELETE().uri(deleteEndpoint).build();
-      try (final HttpClient httpClient = HttpClient.newHttpClient()) {
-        final HttpResponse<String> response = httpClient.send(httpRequest, BodyHandlers.ofString());
-        final int statusCode = response.statusCode();
-        if (statusCode / 100 == 2) {
-          LOGGER.info("Test data deleted.");
-        } else {
-          LOGGER.warn("Failure on deleting test data. Status code: {}", statusCode);
-        }
-      } catch (final IOException | InterruptedException e) {
-        LOGGER.warn("Failure on deleting test data.", e);
-      }
-    }
-
     CloseHelper.quietCloseAll(closeables);
   }
 
@@ -227,6 +209,24 @@ public class CamundaMultiDBExtension
     final CamundaClient camundaClient = testApplication.newClientBuilder().build();
     closeables.add(camundaClient);
     return camundaClient;
+  }
+
+  private static final class NoopDBSetupHelper implements MultiDbSetupHelper {
+    @Override
+    public boolean validateConnection() {
+      return true;
+    }
+
+    @Override
+    public boolean validateSchemaCreation(final String prefix) {
+      return true;
+    }
+
+    @Override
+    public void cleanup(final String prefix) {}
+
+    @Override
+    public void close() throws Exception {}
   }
 
   public enum DatabaseType {

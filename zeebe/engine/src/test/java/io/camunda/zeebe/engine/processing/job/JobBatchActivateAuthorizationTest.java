@@ -149,15 +149,17 @@ public class JobBatchActivateAuthorizationTest {
       final AuthorizationResourceType authorization,
       final PermissionType permissionType,
       final String... resourceIds) {
-    engine
-        .authorization()
-        .permission()
-        .withOwnerKey(user.getUserKey())
-        .withOwnerId(user.getUsername())
-        .withOwnerType(AuthorizationOwnerType.USER)
-        .withResourceType(authorization)
-        .withPermission(permissionType, resourceIds)
-        .add(DEFAULT_USER.getUsername());
+    for (final String resourceId : resourceIds) {
+      engine
+          .authorization()
+          .newAuthorization()
+          .withPermissions(permissionType)
+          .withOwnerId(user.getUsername())
+          .withOwnerType(AuthorizationOwnerType.USER)
+          .withResourceType(authorization)
+          .withResourceId(resourceId)
+          .create(DEFAULT_USER.getUsername());
+    }
   }
 
   private void createJobs(final String... processIds) {

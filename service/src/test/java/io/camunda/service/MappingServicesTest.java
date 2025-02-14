@@ -52,7 +52,7 @@ public class MappingServicesTest {
 
   @BeforeEach
   public void before() {
-    authentication = Authentication.of(builder -> builder.user(1234L));
+    authentication = Authentication.of(builder -> builder.user("foo"));
     stubbedBrokerClient = new StubbedBrokerClient();
     client = mock(MappingSearchClient.class);
     when(client.withSecurityContext(any())).thenReturn(client);
@@ -65,7 +65,8 @@ public class MappingServicesTest {
   @Test
   public void shouldCreateMapping() {
     // given
-    final var mappingDTO = new MappingDTO("newClaimName", "newClaimValue", "mappingRuleName");
+    final var mappingDTO =
+        new MappingDTO("newClaimName", "newClaimValue", "mappingRuleName", "mappingRuleId");
 
     // when
     services.createMapping(mappingDTO);

@@ -19,13 +19,17 @@ import io.camunda.zeebe.qa.util.junit.ZeebeIntegration.TestZeebe;
 import java.time.Duration;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled(
+    "Disabled while groups are not fully supported yet: https://github.com/camunda/camunda/issues/26961 ")
 @ZeebeIntegration
 class UnassignGroupFromTenantTest {
 
   @TestZeebe
-  private final TestStandaloneBroker zeebe = new TestStandaloneBroker().withRecordingExporter(true);
+  private final TestStandaloneBroker zeebe =
+      new TestStandaloneBroker().withRecordingExporter(true).withUnauthenticatedAccess();
 
   @AutoClose private CamundaClient client;
 
