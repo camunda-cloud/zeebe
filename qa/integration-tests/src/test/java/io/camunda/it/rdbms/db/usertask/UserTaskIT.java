@@ -43,7 +43,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(CamundaRdbmsInvocationContextProviderExtension.class)
 public class UserTaskIT {
 
-  public static final Long PARTITION_ID = 0L;
+  public static final int PARTITION_ID = 0;
   public static final OffsetDateTime NOW = OffsetDateTime.now();
 
   @TestTemplate
@@ -626,10 +626,10 @@ public class UserTaskIT {
                             p ->
                                 p.size(5)
                                     .searchAfter(
-                                        new Object[] {
-                                          instanceAfter.priority(),
-                                          instanceAfter.completionDate(),
-                                          instanceAfter.userTaskKey()
+                                        new Object[]{
+                                            instanceAfter.priority(),
+                                            instanceAfter.completionDate(),
+                                            instanceAfter.userTaskKey()
                                         }))));
 
     assertThat(nextPage.total()).isEqualTo(20);
@@ -703,7 +703,7 @@ public class UserTaskIT {
     rdbmsWriter.flush();
 
     // cleanup
-    rdbmsWriter.getUserTaskWriter().cleanupHistory(cleanupDate, 10);
+    rdbmsWriter.getUserTaskWriter().cleanupHistory(PARTITION_ID, cleanupDate, 10);
 
     final var searchResult =
         reader.search(

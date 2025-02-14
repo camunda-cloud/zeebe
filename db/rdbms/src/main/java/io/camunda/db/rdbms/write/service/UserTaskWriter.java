@@ -122,7 +122,12 @@ public class UserTaskWriter {
             model));
   }
 
-  public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
-    mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
+  public void cleanupHistory(final int partitionId, final OffsetDateTime cleanupDate,
+      final int rowsToRemove) {
+    mapper.cleanupHistory(new CleanupHistoryDto.Builder()
+        .partitionId(partitionId)
+        .cleanupDate(cleanupDate)
+        .limit(rowsToRemove)
+        .build());
   }
 }

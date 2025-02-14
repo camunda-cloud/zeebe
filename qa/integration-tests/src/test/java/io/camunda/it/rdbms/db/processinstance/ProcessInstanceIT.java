@@ -36,7 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(CamundaRdbmsInvocationContextProviderExtension.class)
 public class ProcessInstanceIT {
 
-  public static final Long PARTITION_ID = 0L;
+  public static final int PARTITION_ID = 0;
   public static final OffsetDateTime NOW = OffsetDateTime.now();
 
   @TestTemplate
@@ -304,11 +304,11 @@ public class ProcessInstanceIT {
                             p ->
                                 p.size(5)
                                     .searchAfter(
-                                        new Object[] {
-                                          instanceAfter.processDefinitionName(),
-                                          instanceAfter.processDefinitionVersion(),
-                                          instanceAfter.startDate(),
-                                          instanceAfter.processInstanceKey()
+                                        new Object[]{
+                                            instanceAfter.processDefinitionName(),
+                                            instanceAfter.processDefinitionVersion(),
+                                            instanceAfter.startDate(),
+                                            instanceAfter.processInstanceKey()
                                         }))));
 
     assertThat(nextPage.total()).isEqualTo(20);
@@ -344,7 +344,7 @@ public class ProcessInstanceIT {
     rdbmsWriter.flush();
 
     // cleanup
-    rdbmsWriter.getProcessInstanceWriter().cleanupHistory(cleanupDate, 10);
+    rdbmsWriter.getProcessInstanceWriter().cleanupHistory(PARTITION_ID, cleanupDate, 10);
 
     final var searchResult =
         processInstanceReader.search(

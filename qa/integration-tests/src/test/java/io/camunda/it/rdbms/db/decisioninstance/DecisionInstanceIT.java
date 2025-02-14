@@ -36,7 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(CamundaRdbmsInvocationContextProviderExtension.class)
 public class DecisionInstanceIT {
 
-  public static final Long PARTITION_ID = 0L;
+  public static final int PARTITION_ID = 0;
   public static final OffsetDateTime NOW = OffsetDateTime.now();
 
   @TestTemplate
@@ -196,11 +196,11 @@ public class DecisionInstanceIT {
                             p ->
                                 p.size(5)
                                     .searchAfter(
-                                        new Object[] {
-                                          instanceAfter.decisionDefinitionName(),
-                                          instanceAfter.decisionDefinitionVersion(),
-                                          instanceAfter.evaluationDate(),
-                                          instanceAfter.decisionInstanceId()
+                                        new Object[]{
+                                            instanceAfter.decisionDefinitionName(),
+                                            instanceAfter.decisionDefinitionVersion(),
+                                            instanceAfter.evaluationDate(),
+                                            instanceAfter.decisionInstanceId()
                                         }))));
 
     assertThat(nextPage.total()).isEqualTo(20);
@@ -238,7 +238,7 @@ public class DecisionInstanceIT {
     rdbmsWriter.flush();
 
     // cleanup
-    rdbmsWriter.getDecisionInstanceWriter().cleanupHistory(cleanupDate, 10);
+    rdbmsWriter.getDecisionInstanceWriter().cleanupHistory(PARTITION_ID, cleanupDate, 10);
 
     final var searchResult =
         reader.search(

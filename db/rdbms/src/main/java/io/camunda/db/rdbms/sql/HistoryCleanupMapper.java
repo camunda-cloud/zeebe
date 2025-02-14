@@ -41,5 +41,33 @@ public interface HistoryCleanupMapper {
     }
   }
 
-  record CleanupHistoryDto(OffsetDateTime cleanupDate, int limit) {}
+  record CleanupHistoryDto(int partitionId, OffsetDateTime cleanupDate, int limit) {
+
+    public static class Builder implements ObjectBuilder<CleanupHistoryDto> {
+
+      private int partitionId;
+      private OffsetDateTime cleanupDate;
+      private int limit;
+
+      public Builder partitionId(final int partitionId) {
+        this.partitionId = partitionId;
+        return this;
+      }
+
+      public Builder cleanupDate(final OffsetDateTime cleanupDate) {
+        this.cleanupDate = cleanupDate;
+        return this;
+      }
+
+      public Builder limit(final int limit) {
+        this.limit = limit;
+        return this;
+      }
+
+      @Override
+      public CleanupHistoryDto build() {
+        return new CleanupHistoryDto(partitionId, cleanupDate, limit);
+      }
+    }
+  }
 }

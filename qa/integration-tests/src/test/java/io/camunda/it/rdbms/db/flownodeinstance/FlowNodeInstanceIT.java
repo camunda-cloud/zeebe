@@ -35,7 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(CamundaRdbmsInvocationContextProviderExtension.class)
 public class FlowNodeInstanceIT {
 
-  public static final Long PARTITION_ID = 0L;
+  public static final int PARTITION_ID = 0;
   public static final OffsetDateTime NOW = OffsetDateTime.now();
 
   @TestTemplate
@@ -246,11 +246,11 @@ public class FlowNodeInstanceIT {
                             p ->
                                 p.size(5)
                                     .searchAfter(
-                                        new Object[] {
-                                          instanceAfter.type(),
-                                          instanceAfter.tenantId(),
-                                          instanceAfter.startDate(),
-                                          instanceAfter.flowNodeInstanceKey()
+                                        new Object[]{
+                                            instanceAfter.type(),
+                                            instanceAfter.tenantId(),
+                                            instanceAfter.startDate(),
+                                            instanceAfter.flowNodeInstanceKey()
                                         }))));
 
     assertThat(nextPage.total()).isEqualTo(20);
@@ -288,7 +288,7 @@ public class FlowNodeInstanceIT {
     rdbmsWriter.flush();
 
     // cleanup
-    rdbmsWriter.getFlowNodeInstanceWriter().cleanupHistory(cleanupDate, 10);
+    rdbmsWriter.getFlowNodeInstanceWriter().cleanupHistory(PARTITION_ID, cleanupDate, 10);
 
     final var searchResult =
         reader.search(

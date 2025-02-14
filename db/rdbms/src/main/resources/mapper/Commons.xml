@@ -164,7 +164,8 @@
   <sql id="historyCleanup">
     DELETE
     FROM ${prefix}${tableName}
-    WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+    WHERE PARTITION_ID = #{partitionId}
+          AND HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
       LIMIT #{limit}
   </sql>
   <sql id="historyCleanup" databaseId="oracle">
@@ -172,7 +173,8 @@
     FROM ${prefix} ${tableName}
     WHERE rowid IN (SELECT rowid
                     FROM ${prefix} ${tableName}
-                    WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+                    WHERE PARTITION_ID = #{partitionId}
+                      AND HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
                       AND ROWNUM &lt;= #{limit})
   </sql>
   <sql id="historyCleanup" databaseId="postgresql">
@@ -180,7 +182,8 @@
     FROM ${prefix} ${tableName}
     WHERE ctid IN (SELECT ctid
                    FROM ${prefix} ${tableName}
-                   WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+                   WHERE PARTITION_ID = #{partitionId}
+                     AND HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
                    LIMIT #{limit})
   </sql>
 

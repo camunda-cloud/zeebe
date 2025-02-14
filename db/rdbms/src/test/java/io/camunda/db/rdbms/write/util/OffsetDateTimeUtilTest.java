@@ -11,21 +11,21 @@ public class OffsetDateTimeUtilTest {
 
   @Test
   public void testAddDurationWithDays() {
-    OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-    OffsetDateTime result = OffsetDateTimeUtil.addDuration(dateTime, "10");
+    final OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+    final OffsetDateTime result = OffsetDateTimeUtil.addDuration(dateTime, "10");
     assertThat(result).isEqualTo(OffsetDateTime.of(2023, 10, 11, 0, 0, 0, 0, ZoneOffset.UTC));
   }
 
   @Test
   public void testAddDurationWithIso8601() {
-    OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-    OffsetDateTime result = OffsetDateTimeUtil.addDuration(dateTime, "P10D");
+    final OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+    final OffsetDateTime result = OffsetDateTimeUtil.addDuration(dateTime, "P10D");
     assertThat(result).isEqualTo(OffsetDateTime.of(2023, 10, 11, 0, 0, 0, 0, ZoneOffset.UTC));
   }
 
   @Test
   public void testAddDurationWithInvalidIso8601() {
-    OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+    final OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
     assertThatThrownBy(() -> OffsetDateTimeUtil.addDuration(dateTime, "invalid"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid duration string");
@@ -33,8 +33,8 @@ public class OffsetDateTimeUtilTest {
 
   @Test
   public void testAddDurationWithNegativeDays() {
-    OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
-    OffsetDateTime result = OffsetDateTimeUtil.addDuration(dateTime, "-10");
+    final OffsetDateTime dateTime = OffsetDateTime.of(2023, 10, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+    final OffsetDateTime result = OffsetDateTimeUtil.addDuration(dateTime, "-10");
     assertThat(result).isEqualTo(OffsetDateTime.of(2023, 9, 21, 0, 0, 0, 0, ZoneOffset.UTC));
   }
 }
