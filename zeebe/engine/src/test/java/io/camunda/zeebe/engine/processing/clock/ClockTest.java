@@ -59,7 +59,7 @@ public final class ClockTest {
     assertThat(ENGINE.getStreamClock().instant()).isEqualTo(fakeNow);
     assertThat(ENGINE.getProcessingState().getClockState().getModification())
         .isEqualTo(Modification.pinAt(fakeNow));
-    verify(ENGINE.getCommandResponseWriter(), timeout(1000).times(0))
+    verify(ENGINE.getCommandResponseWriter(), timeout(1000).atLeastOnce())
         .tryWriteResponse(anyInt(), anyLong());
   }
 
