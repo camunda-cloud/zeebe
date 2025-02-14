@@ -361,33 +361,10 @@
 
   <delete
     flushCache="true"
-    id="cleanupCandidateUsersHistory"
-    statementType="PREPARED">
-    DELETE
-    FROM ${prefix}CANDIDATE_USER
-    WHERE USER_TASK_KEY IN (SELECT USER_TASK_KEY
-                                     FROM ${prefix}USER_TASK
-                                     WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate})
-  </delete>
-
-  <delete
-    flushCache="true"
-    id="cleanupCandidateGroupsHistory"
-    statementType="PREPARED">
-    DELETE
-    FROM ${prefix}CANDIDATE_GROUP
-    WHERE USER_TASK_KEY IN (SELECT USER_TASK_KEY
-                            FROM ${prefix}USER_TASK
-                            WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate})
-  </delete>
-
-  <delete
-    flushCache="true"
     id="cleanupHistory"
     statementType="PREPARED">
-    DELETE
-    FROM ${prefix}USER_TASK
-    WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+    <bind name="tableName" value="'USER_TASK'"/>
+    <include refid="io.camunda.db.rdbms.sql.Commons.historyCleanup"/>
   </delete>
 
 </mapper>

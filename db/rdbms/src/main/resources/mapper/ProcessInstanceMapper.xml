@@ -260,9 +260,7 @@
     flushCache="true"
     id="cleanupHistory"
     statementType="PREPARED">
-    DELETE
-    FROM ${prefix}PROCESS_INSTANCE
-    WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+    <bind name="tableName" value="'PROCESS_INSTANCE'"/>
+    <include refid="io.camunda.db.rdbms.sql.Commons.historyCleanup"/>
   </delete>
-
 </mapper>

@@ -73,8 +73,6 @@ public class DecisionInstanceWriter {
   }
 
   public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
-    mapper.cleanupInputMappingHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
-    mapper.cleanupOutputMappingHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
     mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }

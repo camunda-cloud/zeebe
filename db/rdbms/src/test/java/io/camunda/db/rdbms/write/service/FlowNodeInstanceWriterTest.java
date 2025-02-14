@@ -61,7 +61,7 @@ class FlowNodeInstanceWriterTest {
             eq(
                 new QueueItem(
                     ContextType.FLOW_NODE,
-                    StatementType.INSERT,
+                    StatementType.UPDATE,
                     1L,
                     "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateStateAndEndDate",
                     new FlowNodeInstanceMapper.EndFlowNodeDto(1L, FlowNodeState.COMPLETED, NOW))));

@@ -160,9 +160,8 @@
     flushCache="true"
     id="cleanupHistory"
     statementType="PREPARED">
-    DELETE
-    FROM ${prefix}VARIABLE
-    WHERE HISTORY_CLEANUP_DATE &lt; #{cleanupDate}
+    <bind name="tableName" value="'VARIABLE'"/>
+    <include refid="io.camunda.db.rdbms.sql.Commons.historyCleanup"/>
   </delete>
 
   <update

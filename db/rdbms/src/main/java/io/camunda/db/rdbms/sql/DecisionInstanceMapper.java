@@ -23,8 +23,4 @@ public interface DecisionInstanceMapper extends HistoryCleanupMapper {
   List<DecisionInstanceDbModel.EvaluatedInput> loadInputs(List<String> decisionInstanceIds);
 
   List<DecisionInstanceDbModel.EvaluatedOutput> loadOutputs(List<String> decisionInstanceIds);
-
-  void cleanupInputMappingHistory(CleanupHistoryDto dto);
-
-  void cleanupOutputMappingHistory(CleanupHistoryDto dto);
 }

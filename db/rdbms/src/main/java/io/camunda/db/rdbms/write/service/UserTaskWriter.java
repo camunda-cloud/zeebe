@@ -123,8 +123,6 @@ public class UserTaskWriter {
   }
 
   public void cleanupHistory(final OffsetDateTime cleanupDate, final int rowsToRemove) {
-    mapper.cleanupCandidateUsersHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
-    mapper.cleanupCandidateGroupsHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
     mapper.cleanupHistory(new CleanupHistoryDto(cleanupDate, rowsToRemove));
   }
 }
