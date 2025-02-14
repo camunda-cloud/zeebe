@@ -329,8 +329,7 @@ public class UserTaskDbModel implements Copyable<UserTaskDbModel> {
     private OffsetDateTime historyCleanupDate;
 
     // Public constructor to initialize the builder
-    public Builder() {
-    }
+    public Builder() {}
 
     public static UserTaskDbModel of(
         final Function<UserTaskDbModel.Builder, ObjectBuilder<UserTaskDbModel>> fn) {

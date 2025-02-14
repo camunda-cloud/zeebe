@@ -51,8 +51,7 @@ public class HistoryCleanupIT {
           "PROCESS_INSTANCE",
           "USER_TASK",
           "INCIDENT",
-          "DECISION_INSTANCE"
-      );
+          "DECISION_INSTANCE");
 
   @Autowired JdbcTemplate jdbcTemplate;
 
@@ -81,37 +80,44 @@ public class HistoryCleanupIT {
     // THEN
     final var expectedDate = historyCleanupService.calculateHistoryCleanupDate(now);
     getHistoryCleanupDates(processInstanceKey)
-        .forEach((tableName, historyCleanupDate) -> {
-          historyCleanupDate.forEach(date -> {
-            assertThat(date)
-                .describedAs("should update the history cleanup date for %s but date is null", tableName)
-                .isNotNull();
-            assertThat((OffsetDateTime) date)
-                .describedAs("should update the history cleanup date for %s but date is wrong", tableName)
-                .isCloseTo(expectedDate, within(10, ChronoUnit. MILLIS));
-          });
-    });
+        .forEach(
+            (tableName, historyCleanupDate) -> {
+              historyCleanupDate.forEach(
+                  date -> {
+                    assertThat(date)
+                        .describedAs(
+                            "should update the history cleanup date for %s but date is null",
+                            tableName)
+                        .isNotNull();
+                    assertThat((OffsetDateTime) date)
+                        .describedAs(
+                            "should update the history cleanup date for %s but date is wrong",
+                            tableName)
+                        .isCloseTo(expectedDate, within(10, ChronoUnit.MILLIS));
+                  });
+            });
   }
 
   private Long createRandomProcessWithCleanupRelevantData() {
-    final Long processInstanceKey = ProcessInstanceFixtures.createAndSaveRandomProcessInstance(
-        rdbmsService.createWriter(0), b -> b
-    ).processInstanceKey();
+    final Long processInstanceKey =
+        ProcessInstanceFixtures.createAndSaveRandomProcessInstance(
+                rdbmsService.createWriter(0), b -> b)
+            .processInstanceKey();
 
-    FlowNodeInstanceFixtures.createAndSaveRandomFlowNodeInstances(rdbmsWriter,
-        b -> b.processInstanceKey(processInstanceKey));
+    FlowNodeInstanceFixtures.createAndSaveRandomFlowNodeInstances(
+        rdbmsWriter, b -> b.processInstanceKey(processInstanceKey));
 
-    UserTaskFixtures.createAndSaveRandomUserTasks(rdbmsService,
-        b -> b.processInstanceKey(processInstanceKey));
+    UserTaskFixtures.createAndSaveRandomUserTasks(
+        rdbmsService, b -> b.processInstanceKey(processInstanceKey));
 
-    VariableFixtures.createAndSaveRandomVariables(rdbmsService,
-        b -> b.processInstanceKey(processInstanceKey));
+    VariableFixtures.createAndSaveRandomVariables(
+        rdbmsService, b -> b.processInstanceKey(processInstanceKey));
 
-    IncidentFixtures.createAndSaveRandomIncidents(rdbmsWriter,
-        b -> b.processInstanceKey(processInstanceKey));
+    IncidentFixtures.createAndSaveRandomIncidents(
+        rdbmsWriter, b -> b.processInstanceKey(processInstanceKey));
 
-    DecisionInstanceFixtures.createAndSaveRandomDecisionInstances(rdbmsWriter,
-        b -> b.processInstanceKey(processInstanceKey));
+    DecisionInstanceFixtures.createAndSaveRandomDecisionInstances(
+        rdbmsWriter, b -> b.processInstanceKey(processInstanceKey));
 
     return processInstanceKey;
   }
@@ -119,16 +125,20 @@ public class HistoryCleanupIT {
   private Map<String, List<Object>> getHistoryCleanupDates(final Long processInstanceKey) {
     final Map<String, List<Object>> historyCleanupDatesMap = new HashMap<>();
 
-    TABLE_NAMES.forEach(tableName -> {
-      final List<Object> historyCleanupDates = jdbcTemplate.queryForList(
-          "SELECT HISTORY_CLEANUP_DATE FROM " + tableName +
-              " WHERE PROCESS_INSTANCE_KEY = " + processInstanceKey)
-          .stream()
-          .map(row ->
-              row.get("HISTORY_CLEANUP_DATE"))
-          .collect(Collectors.toList());
-      historyCleanupDatesMap.put(tableName, historyCleanupDates);
-    });
+    TABLE_NAMES.forEach(
+        tableName -> {
+          final List<Object> historyCleanupDates =
+              jdbcTemplate
+                  .queryForList(
+                      "SELECT HISTORY_CLEANUP_DATE FROM "
+                          + tableName
+                          + " WHERE PROCESS_INSTANCE_KEY = "
+                          + processInstanceKey)
+                  .stream()
+                  .map(row -> row.get("HISTORY_CLEANUP_DATE"))
+                  .collect(Collectors.toList());
+          historyCleanupDatesMap.put(tableName, historyCleanupDates);
+        });
 
     return historyCleanupDatesMap;
   }

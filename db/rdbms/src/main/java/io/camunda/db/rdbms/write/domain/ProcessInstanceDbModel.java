@@ -72,8 +72,7 @@ public record ProcessInstanceDbModel(
     private OffsetDateTime historyCleanupDate;
 
     // Public constructor to initialize the builder
-    public ProcessInstanceDbModelBuilder() {
-    }
+    public ProcessInstanceDbModelBuilder() {}
 
     // Builder methods for each field
     public ProcessInstanceDbModelBuilder processInstanceKey(final Long processInstanceKey) {

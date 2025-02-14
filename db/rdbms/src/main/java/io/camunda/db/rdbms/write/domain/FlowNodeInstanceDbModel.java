@@ -76,8 +76,7 @@ public record FlowNodeInstanceDbModel(
     private OffsetDateTime historyCleanupDate;
 
     // Public constructor to initialize the builder
-    public FlowNodeInstanceDbModelBuilder() {
-    }
+    public FlowNodeInstanceDbModelBuilder() {}
 
     // Builder methods for each field
     public FlowNodeInstanceDbModelBuilder flowNodeInstanceKey(final Long key) {

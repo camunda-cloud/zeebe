@@ -87,8 +87,7 @@ public record VariableDbModel(
     private int partitionId;
     private OffsetDateTime historyCleanupDate;
 
-    public VariableDbModelBuilder() {
-    }
+    public VariableDbModelBuilder() {}
 
     public VariableDbModelBuilder variableKey(final Long variableKey) {
       this.variableKey = variableKey;
