@@ -7,15 +7,22 @@
  */
 package io.camunda.db.rdbms.write.service;
 
+import io.camunda.db.rdbms.write.RdbmsWriterConfig;
 import io.camunda.db.rdbms.write.util.OffsetDateTimeUtil;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HistoryCleanupService {
 
-  protected static final String DEFAULT_HISTORY_TIME_TO_LIVE = "P30D";
   private static final Logger LOG = LoggerFactory.getLogger(HistoryCleanupService.class);
+
+  private final Duration defaultHistoryTTL;
+  private final Duration minCleanupInterval;
+  private final Duration maxCleanupInterval;
+  private final int cleanupBatchSize;
+
   private final ProcessInstanceWriter processInstanceWriter;
   private final IncidentWriter incidentWriter;
   private final FlowNodeInstanceWriter flowNodeInstanceWriter;
@@ -24,12 +31,17 @@ public class HistoryCleanupService {
   private final DecisionInstanceWriter decisionInstanceWriter;
 
   public HistoryCleanupService(
+      final RdbmsWriterConfig config,
       final ProcessInstanceWriter processInstanceWriter,
       final IncidentWriter incidentWriter,
       final FlowNodeInstanceWriter flowNodeInstanceWriter,
       final UserTaskWriter userTaskWriter,
       final VariableWriter variableInstanceWriter,
       final DecisionInstanceWriter decisionInstanceWriter) {
+    this.defaultHistoryTTL = config.defaultHistoryTTL();
+    this.minCleanupInterval = config.minHistoryCleanupInterval();
+    this.maxCleanupInterval = config.maxHistoryCleanupInterval();
+    this.cleanupBatchSize = config.historyCleanupBatchSize();
     this.processInstanceWriter = processInstanceWriter;
     this.incidentWriter = incidentWriter;
     this.flowNodeInstanceWriter = flowNodeInstanceWriter;
@@ -55,6 +67,19 @@ public class HistoryCleanupService {
   }
 
   public OffsetDateTime calculateHistoryCleanupDate(OffsetDateTime endDate) {
-    return OffsetDateTimeUtil.addDuration(endDate, DEFAULT_HISTORY_TIME_TO_LIVE);
+    return OffsetDateTimeUtil.addDuration(endDate, this.defaultHistoryTTL.toString());
+  }
+
+  public Duration cleanupHistory(int partitionId, OffsetDateTime cleanupDate) {
+    LOG.info("Cleanup history for partition {} with TTL before {}", partitionId, cleanupDate);
+
+    processInstanceWriter.cleanupHistory(partitionId, cleanupDate, cleanupBatchSize);
+    flowNodeInstanceWriter.cleanupHistory(partitionId, cleanupDate, cleanupBatchSize);
+    incidentWriter.cleanupHistory(partitionId, cleanupDate, cleanupBatchSize);
+    userTaskWriter.cleanupHistory(partitionId, cleanupDate, cleanupBatchSize);
+    variableInstanceWriter.cleanupHistory(partitionId, cleanupDate, cleanupBatchSize);
+    decisionInstanceWriter.cleanupHistory(partitionId, cleanupDate, cleanupBatchSize);
+
+    return this.minCleanupInterval;
   }
 }
