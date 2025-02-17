@@ -8,8 +8,10 @@
 package io.camunda.exporter.rdbms;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import org.junit.jupiter.api.Test;
@@ -87,5 +89,40 @@ public class DateUtilTest {
 
     // Then
     assertNull(result);
+  }
+
+  @Test
+  public void shouldConvertDaysToDuration() {
+    // Given
+    final String duration = "10";
+
+    // When
+    final Duration result = DateUtil.toDuration(duration);
+
+    // Then
+    assertThat(result).isEqualTo(Duration.ofDays(10));
+  }
+
+  @Test
+  public void shouldConvertIso8601ToDuration() {
+    // Given
+    final String duration = "P10D";
+
+    // When
+    final Duration result = DateUtil.toDuration(duration);
+
+    // Then
+    assertThat(result).isEqualTo(Duration.ofDays(10));
+  }
+
+  @Test
+  public void shouldThrowExceptionForInvalidDuration() {
+    // Given
+    final String duration = "invalid";
+
+    // When / Then
+    assertThatThrownBy(() -> DateUtil.toDuration(duration))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Invalid duration string");
   }
 }

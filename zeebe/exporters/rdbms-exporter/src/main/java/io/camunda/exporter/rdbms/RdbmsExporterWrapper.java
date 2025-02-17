@@ -14,11 +14,14 @@ import io.camunda.exporter.rdbms.handlers.DecisionDefinitionExportHandler;
 import io.camunda.exporter.rdbms.handlers.DecisionInstanceExportHandler;
 import io.camunda.exporter.rdbms.handlers.DecisionRequirementsExportHandler;
 import io.camunda.exporter.rdbms.handlers.FlowNodeExportHandler;
+import io.camunda.exporter.rdbms.handlers.FlowNodeInstanceIncidentExportHandler;
 import io.camunda.exporter.rdbms.handlers.FormExportHandler;
 import io.camunda.exporter.rdbms.handlers.GroupExportHandler;
+import io.camunda.exporter.rdbms.handlers.IncidentExportHandler;
 import io.camunda.exporter.rdbms.handlers.MappingExportHandler;
 import io.camunda.exporter.rdbms.handlers.ProcessExportHandler;
 import io.camunda.exporter.rdbms.handlers.ProcessInstanceExportHandler;
+import io.camunda.exporter.rdbms.handlers.ProcessInstanceIncidentExportHandler;
 import io.camunda.exporter.rdbms.handlers.RoleExportHandler;
 import io.camunda.exporter.rdbms.handlers.TenantExportHandler;
 import io.camunda.exporter.rdbms.handlers.UserExportHandler;
@@ -127,8 +130,7 @@ public class RdbmsExporterWrapper implements Exporter {
       final Duration defaultValue) {
     final var arguments = context.getConfiguration().getArguments();
     if (arguments != null && arguments.containsKey(property)) {
-      final var flushIntervalMillis = (Integer) arguments.get(property);
-      return Duration.ofMillis(flushIntervalMillis);
+      return DateUtil.toDuration((String)arguments.get(property));
     } else {
       return defaultValue;
     }
