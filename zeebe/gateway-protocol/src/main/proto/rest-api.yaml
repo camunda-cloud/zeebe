@@ -1870,7 +1870,31 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
-
+  /resources/{resourceKey}/content:
+    get:
+      tags:
+        - Resource
+      summary: Get resource content
+      parameters:
+        - name: resourceKey
+          in: path
+          required: true
+          description: The key of the resource to fetch.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The resource content was fetched.
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: A resource with the given key was not found.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
 
   /element-instances/{elementInstanceKey}/variables:
     post:

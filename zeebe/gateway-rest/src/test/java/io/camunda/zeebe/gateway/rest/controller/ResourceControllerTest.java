@@ -12,15 +12,21 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.camunda.service.CamundaServiceException;
 import io.camunda.service.ResourceServices;
 import io.camunda.service.ResourceServices.DeployResourcesRequest;
 import io.camunda.service.ResourceServices.ResourceDeletionRequest;
+import io.camunda.service.ResourceServices.ResourceFetchRequest;
 import io.camunda.service.security.auth.Authentication;
+import io.camunda.zeebe.broker.client.api.dto.BrokerRejection;
 import io.camunda.zeebe.gateway.impl.configuration.MultiTenancyCfg;
 import io.camunda.zeebe.gateway.rest.RequestMapper;
 import io.camunda.zeebe.gateway.rest.RestControllerTest;
 import io.camunda.zeebe.protocol.impl.record.value.deployment.DeploymentRecord;
+import io.camunda.zeebe.protocol.impl.record.value.deployment.ResourceRecord;
 import io.camunda.zeebe.protocol.impl.record.value.resource.ResourceDeletionRecord;
+import io.camunda.zeebe.protocol.record.RejectionType;
+import io.camunda.zeebe.protocol.record.intent.ResourceIntent;
 import io.camunda.zeebe.util.buffer.BufferUtil;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +45,7 @@ public class ResourceControllerTest extends RestControllerTest {
   static final String RESOURCES_BASE_URL = "/v2";
   static final String DEPLOY_RESOURCES_ENDPOINT = RESOURCES_BASE_URL + "/deployments";
   static final String DELETE_RESOURCE_ENDPOINT = RESOURCES_BASE_URL + "/resources/%s/deletion";
+  static final String GET_RESOURCE_CONTENT_ENDPOINT = RESOURCES_BASE_URL + "/resources/%s/content";
 
   @MockBean ResourceServices resourceServices;
   @MockBean MultiTenancyCfg multiTenancyCfg;
@@ -544,5 +551,66 @@ public class ResourceControllerTest extends RestControllerTest {
         .contentType(MediaType.APPLICATION_PROBLEM_JSON)
         .expectBody()
         .json(expectedBody);
+  }
+
+  @Test
+  void shouldGetResourceContent() {
+    // given
+    final var content =
+        """
+        {
+          "id": "test",
+          "name": "test RPA script",
+          "script": "foo"
+        }
+        """;
+    when(resourceServices.fetchResource(new ResourceFetchRequest(1)))
+        .thenReturn(
+            CompletableFuture.completedFuture(
+                new ResourceRecord().setResource(BufferUtil.wrapString(content))));
+
+    // when / then
+    webClient
+        .get()
+        .uri(GET_RESOURCE_CONTENT_ENDPOINT.formatted(1))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .json(content);
+  }
+
+  @Test
+  void shouldYieldNotFoundWhenResourceNotFound() {
+    // given
+    when(resourceServices.fetchResource(new ResourceFetchRequest(1)))
+        .thenReturn(
+            CompletableFuture.failedFuture(
+                new CamundaServiceException(
+                    new BrokerRejection(
+                        ResourceIntent.FETCH, 1L, RejectionType.NOT_FOUND, "Resource not found"))));
+    final var url = GET_RESOURCE_CONTENT_ENDPOINT.formatted(1);
+
+    // when / then
+    webClient
+        .get()
+        .uri(url)
+        .exchange()
+        .expectStatus()
+        .isNotFound()
+        .expectHeader()
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .expectBody()
+        .json(
+            """
+            {
+              "type": "about:blank",
+              "status": 404,
+              "title": "NOT_FOUND",
+              "detail": "Command 'FETCH' rejected with code 'NOT_FOUND': Resource not found",
+              "instance": "%s"
+            }
+            """
+                .formatted(url));
   }
 }

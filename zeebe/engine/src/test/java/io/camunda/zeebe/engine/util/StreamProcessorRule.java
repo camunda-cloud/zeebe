@@ -247,6 +247,17 @@ public final class StreamProcessorRule implements TestRule, CommandWriter {
   }
 
   @Override
+  public long writeCommand(
+      final int requestStreamId,
+      final long requestId,
+      final Intent intent,
+      final UnifiedRecordValue value,
+      final String... authorizedTenants) {
+    return streamProcessingComposite.writeCommand(
+        requestStreamId, requestId, intent, value, authorizedTenants);
+  }
+
+  @Override
   public long writeCommandOnPartition(
       final int partition, final Intent intent, final UnifiedRecordValue value) {
     return streamProcessingComposite.writeCommandOnPartition(partition, intent, value);

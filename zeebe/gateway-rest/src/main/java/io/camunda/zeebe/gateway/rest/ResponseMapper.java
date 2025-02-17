@@ -52,6 +52,7 @@ import io.camunda.zeebe.protocol.impl.record.value.deployment.DecisionRequiremen
 import io.camunda.zeebe.protocol.impl.record.value.deployment.DeploymentRecord;
 import io.camunda.zeebe.protocol.impl.record.value.deployment.FormMetadataRecord;
 import io.camunda.zeebe.protocol.impl.record.value.deployment.ResourceMetadataRecord;
+import io.camunda.zeebe.protocol.impl.record.value.deployment.ResourceRecord;
 import io.camunda.zeebe.protocol.impl.record.value.job.JobRecord;
 import io.camunda.zeebe.protocol.impl.record.value.message.MessageCorrelationRecord;
 import io.camunda.zeebe.protocol.impl.record.value.message.MessageRecord;
@@ -259,6 +260,11 @@ public final class ResponseMapper {
     addDeployedForm(response, brokerResponse.formMetadata());
     addDeployedResource(response, brokerResponse.resourceMetadata());
     return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+  public static ResponseEntity<Object> toGetResourceContentResponse(
+      final ResourceRecord resourceRecord) {
+    return ResponseEntity.ok(resourceRecord.getResourceProp());
   }
 
   public static ResponseEntity<Object> toMessagePublicationResponse(
