@@ -20,6 +20,7 @@ import io.camunda.zeebe.db.impl.FineGrainedColumnFamilyMetrics;
 import io.camunda.zeebe.db.impl.NoopColumnFamilyMetrics;
 import io.camunda.zeebe.db.impl.rocksdb.Loggers;
 import io.camunda.zeebe.db.impl.rocksdb.RocksDbConfiguration;
+import io.camunda.zeebe.db.impl.rocksdb.ZeebeRocksDBMetricExporter;
 import io.camunda.zeebe.protocol.EnumValue;
 import java.io.File;
 import java.util.ArrayList;
@@ -54,6 +55,8 @@ public class ZeebeTransactionDb<ColumnFamilyNames extends Enum<? extends EnumVal
   private final long defaultNativeHandle;
   private final ConsistencyChecksSettings consistencyChecksSettings;
   private final AccessMetricsConfiguration accessMetricsConfiguration;
+  private final StatefulMeterRegistry meterRegistry;
+  private final ZeebeRocksDBMetricExporter<ColumnFamilyNames> metricExporter;
 
   protected ZeebeTransactionDb(
       final ColumnFamilyHandle defaultHandle,
@@ -68,6 +71,8 @@ public class ZeebeTransactionDb<ColumnFamilyNames extends Enum<? extends EnumVal
     this.closables = closables;
     this.consistencyChecksSettings = consistencyChecksSettings;
     this.accessMetricsConfiguration = accessMetricsConfiguration;
+    this.meterRegistry = meterRegistry;
+    metricExporter = new ZeebeRocksDBMetricExporter<>(this, meterRegistry);
 
     prefixReadOptions =
         new ReadOptions()
@@ -154,9 +159,7 @@ public class ZeebeTransactionDb<ColumnFamilyNames extends Enum<? extends EnumVal
     final var metrics =
         switch (accessMetricsConfiguration.kind()) {
           case NONE -> new NoopColumnFamilyMetrics();
-          case FINE ->
-              new FineGrainedColumnFamilyMetrics(
-                  accessMetricsConfiguration.partitionId(), columnFamily);
+          case FINE -> new FineGrainedColumnFamilyMetrics(columnFamily, meterRegistry);
         };
     return new TransactionalColumnFamily<>(
         this,
@@ -204,6 +207,16 @@ public class ZeebeTransactionDb<ColumnFamilyNames extends Enum<? extends EnumVal
       final ColumnFamilyNames columnFamilyName, final TransactionContext context) {
     return createColumnFamily(columnFamilyName, context, DbNullKey.INSTANCE, DbNil.INSTANCE)
         .isEmpty();
+  }
+
+  @Override
+  public StatefulMeterRegistry getMeterRegistry() {
+    return meterRegistry;
+  }
+
+  @Override
+  public void exportMetrics() {
+    metricExporter.exportMetrics();
   }
 
   @Override
