@@ -32,4 +32,21 @@ class WildcardTransformingStringTypeHandlerTest {
         Arguments.of("some*query?with*wildcards", "some%query_with%wildcards"),
         Arguments.of("some\\*query\\?with*wildcards?", "some\\*query\\?with%wildcards_"));
   }
+
+  private static Stream<Arguments> provideSqlQueries() {
+    return Stream.of(
+        Arguments.of("some%query", "some\\%query"),
+        Arguments.of("some\\%query", "some\\%query"),
+        Arguments.of("some_query", "some\\_query"),
+        Arguments.of("some\\_query", "some\\_query"),
+        Arguments.of("some%query_with%wildcards", "some\\%query\\_with\\%wildcards"),
+        Arguments.of("some\\*query\\_with%wild*cards?", "some\\*query\\_with\\%wild%cards_"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideSqlQueries")
+  void shouldEscapeSqlWildcards(final String input, final String expected) {
+    final String result = WildcardTransformingStringTypeHandler.transformElasticsearchToSql(input);
+    assertEquals(expected, result);
+  }
 }

@@ -15,6 +15,16 @@ import org.apache.ibatis.type.StringTypeHandler;
 
 public class WildcardTransformingStringTypeHandler extends StringTypeHandler {
 
+  // Regular expression to match unescaped wildcards
+  public static final String REGEX_ASTERISK = "(?<!\\\\)\\*";
+  public static final String REGEX_QUESTION_MARK = "(?<!\\\\)\\?";
+  public static final String REGEX_PERCENT = "(?<!\\\\)%";
+  public static final String REGEX_UNDERSCORE = "(?<!\\\\)_";
+  public static final Pattern PATTERN_ASTERISK = Pattern.compile(REGEX_ASTERISK);
+  public static final Pattern PATTERN_QUESTION_MARK = Pattern.compile(REGEX_QUESTION_MARK);
+  public static final Pattern PATTERN_PERCENT = Pattern.compile(REGEX_PERCENT);
+  public static final Pattern PATTERN_UNDERSCORE = Pattern.compile(REGEX_UNDERSCORE);
+
   @Override
   public void setNonNullParameter(
       final PreparedStatement ps, final int i, final String parameter, final JdbcType jdbcType)
@@ -22,29 +32,27 @@ public class WildcardTransformingStringTypeHandler extends StringTypeHandler {
     ps.setString(i, transformElasticsearchToSql(parameter));
   }
 
-  public static String transformElasticsearchToSql(final String elasticsearchQuery) {
-    // Regular expression to match unescaped wildcards
-    final var regexAsterisk = "(?<!\\\\)\\*";
-    final var regexQuestionMark = "(?<!\\\\)\\?";
+  private static String replace(
+      final Pattern pattern, final String input, final String replacement) {
+    final var matcher = pattern.matcher(input);
+    final var builder = new StringBuilder();
+    while (matcher.find()) {
+      matcher.appendReplacement(builder, replacement);
+    }
+    matcher.appendTail(builder);
+    return builder.toString();
+  }
 
+  public static String transformElasticsearchToSql(String exp) {
+    // Escape unescaped %
+    exp = replace(PATTERN_PERCENT, exp, "\\\\%");
+    // Escape unescaped _
+    exp = replace(PATTERN_UNDERSCORE, exp, "\\\\_");
     // Replace unescaped * with %
-    final var patternAsterisk = Pattern.compile(regexAsterisk);
-    final var matcherAsterisk = patternAsterisk.matcher(elasticsearchQuery);
-    final var sqlQuery = new StringBuilder();
-    while (matcherAsterisk.find()) {
-      matcherAsterisk.appendReplacement(sqlQuery, "%");
-    }
-    matcherAsterisk.appendTail(sqlQuery);
-
+    exp = replace(PATTERN_ASTERISK, exp, "%");
     // Replace unescaped ? with _
-    final var patternQuestionMark = Pattern.compile(regexQuestionMark);
-    final var matcherQuestionMark = patternQuestionMark.matcher(sqlQuery.toString());
-    final var finalSqlQuery = new StringBuilder();
-    while (matcherQuestionMark.find()) {
-      matcherQuestionMark.appendReplacement(finalSqlQuery, "_");
-    }
-    matcherQuestionMark.appendTail(finalSqlQuery);
+    exp = replace(PATTERN_QUESTION_MARK, exp, "_");
 
-    return finalSqlQuery.toString();
+    return exp;
   }
 }
