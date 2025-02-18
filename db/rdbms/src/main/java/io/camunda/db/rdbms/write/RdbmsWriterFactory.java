@@ -67,6 +67,7 @@ public class RdbmsWriterFactory {
         config,
         executionQueue,
         new ExporterPositionService(executionQueue, exporterPositionMapper),
+        metrics,
         decisionInstanceMapper,
         flowNodeInstanceMapper,
         incidentMapper,

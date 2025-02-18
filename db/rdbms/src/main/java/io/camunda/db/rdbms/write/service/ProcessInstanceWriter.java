@@ -124,9 +124,9 @@ public class ProcessInstanceWriter {
     }
   }
 
-  public void cleanupHistory(final int partitionId, final OffsetDateTime cleanupDate,
+  public int cleanupHistory(final int partitionId, final OffsetDateTime cleanupDate,
       final int rowsToRemove) {
-    mapper.cleanupHistory(new CleanupHistoryDto.Builder()
+    return mapper.cleanupHistory(new CleanupHistoryDto.Builder()
         .partitionId(partitionId)
         .cleanupDate(cleanupDate)
         .limit(rowsToRemove)
