@@ -186,6 +186,27 @@ public class MultiDbConfigurator {
         });
   }
 
+  public void configureAWSOSupport(final String opensearchUrl, final String indexPrefix) {
+    configureOpenSearchSupport(opensearchUrl, indexPrefix, "", "");
+    operateProperties.getOpensearch().setAwsEnabled(true);
+    tasklistProperties.getOpenSearch().setAwsEnabled(true);
+    testApplication.withExporter(
+        "OpensearchExporter",
+        cfg -> {
+          cfg.setClassName(OpensearchExporter.class.getName());
+          cfg.setArgs(
+              Map.of(
+                  "url",
+                  opensearchUrl,
+                  "index",
+                  Map.of("prefix", indexPrefix),
+                  "bulk",
+                  Map.of("size", 1),
+                  "aws",
+                  Map.of("enabled", true)));
+        });
+  }
+
   public OperateProperties getOperateProperties() {
     return operateProperties;
   }
