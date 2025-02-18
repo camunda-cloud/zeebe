@@ -97,7 +97,6 @@ public class ConfigurationServiceTest {
     };
     final ConfigurationService underTest = createConfiguration(locations);
     assertThat(underTest.getConfiguredEngines()).hasSize(1);
-    assertThat(underTest.getConfiguredEngines().get("myAwesomeEngine").getName()).isNotNull();
   }
 
   @Test
@@ -599,20 +598,6 @@ public class ConfigurationServiceTest {
             .isNotNull();
       }
     }
-  }
-
-  @Test
-  public void testCutTrailingSlash() {
-    // given
-    final String[] locations = {defaultConfigFile(), "override-engine-config.yaml"};
-    final ConfigurationService underTest = createConfiguration(locations);
-
-    // when
-    final String resultUrl =
-        underTest.getConfiguredEngines().get("myAwesomeEngine").getWebapps().getEndpoint();
-
-    // then
-    assertThat(resultUrl.endsWith("/")).isFalse();
   }
 
   private ConfigurationService createConfiguration(final String... locations) {

@@ -41,7 +41,6 @@ import io.camunda.optimize.dto.optimize.datasource.IngestedDataSourceDto;
 import io.camunda.optimize.service.exceptions.OptimizeConfigurationException;
 import io.camunda.optimize.service.util.configuration.analytics.AnalyticsConfiguration;
 import io.camunda.optimize.service.util.configuration.cleanup.CleanupConfiguration;
-import io.camunda.optimize.service.util.configuration.engine.EngineAuthenticationConfiguration;
 import io.camunda.optimize.service.util.configuration.engine.EngineConfiguration;
 import io.camunda.optimize.service.util.configuration.engine.UserIdentityCacheConfiguration;
 import io.camunda.optimize.service.util.configuration.engine.UserTaskIdentityCacheConfiguration;
@@ -870,61 +869,6 @@ public class ConfigurationService {
 
   public void setMaxStatusConnections(final Integer maxStatusConnections) {
     this.maxStatusConnections = maxStatusConnections;
-  }
-
-  public Optional<String> getEngineDefaultTenantIdOfCustomEngine(final String engineAlias) {
-    return getEngineConfiguration(engineAlias)
-        .map(EngineConfiguration::getDefaultTenantId)
-        .orElseThrow(
-            () -> new OptimizeConfigurationException(ERROR_NO_ENGINE_WITH_ALIAS + engineAlias));
-  }
-
-  public List<String> getExcludedTenants(final String engineAlias) {
-    return getEngineConfiguration(engineAlias)
-        .map(EngineConfiguration::getExcludedTenants)
-        .orElseThrow(
-            () -> new OptimizeConfigurationException(ERROR_NO_ENGINE_WITH_ALIAS + engineAlias));
-  }
-
-  public String getEngineRestApiEndpointOfCustomEngine(final String engineAlias) {
-    return getEngineRestApiEndpoint(engineAlias) + "/engine/" + getEngineName(engineAlias);
-  }
-
-  public String getDefaultEngineAuthenticationUser(final String engineAlias) {
-    return getEngineConfiguration(engineAlias)
-        .map(EngineConfiguration::getAuthentication)
-        .map(EngineAuthenticationConfiguration::getUser)
-        .orElseThrow(
-            () -> new OptimizeConfigurationException(ERROR_NO_ENGINE_WITH_ALIAS + engineAlias));
-  }
-
-  public String getDefaultEngineAuthenticationPassword(final String engineAlias) {
-    return getEngineConfiguration(engineAlias)
-        .map(EngineConfiguration::getAuthentication)
-        .map(EngineAuthenticationConfiguration::getPassword)
-        .orElseThrow(
-            () -> new OptimizeConfigurationException(ERROR_NO_ENGINE_WITH_ALIAS + engineAlias));
-  }
-
-  /**
-   * This method is mostly for internal usage. All API invocations should rely on {@link
-   * #getEngineRestApiEndpointOfCustomEngine(String)}
-   *
-   * @param engineAlias - an alias of configured engine
-   * @return <b>raw</b> REST endpoint, without engine suffix
-   */
-  private String getEngineRestApiEndpoint(final String engineAlias) {
-    return getEngineConfiguration(engineAlias)
-        .map(EngineConfiguration::getRest)
-        .orElseThrow(
-            () -> new OptimizeConfigurationException(ERROR_NO_ENGINE_WITH_ALIAS + engineAlias));
-  }
-
-  public String getEngineName(final String engineAlias) {
-    return getEngineConfiguration(engineAlias)
-        .map(EngineConfiguration::getName)
-        .orElseThrow(
-            () -> new OptimizeConfigurationException(ERROR_NO_ENGINE_WITH_ALIAS + engineAlias));
   }
 
   public boolean isImportEnabled(final SchedulerConfig dataSourceDto) {
