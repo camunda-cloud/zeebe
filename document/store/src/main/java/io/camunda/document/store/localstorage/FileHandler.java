@@ -12,7 +12,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+<<<<<<< HEAD
 class FileHandler {
+=======
+public class FileHandler {
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
 
   public InputStream getInputStream(final Path documentPath) throws IOException {
     return Files.newInputStream(documentPath);

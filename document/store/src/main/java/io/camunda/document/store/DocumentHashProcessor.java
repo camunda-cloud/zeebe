@@ -12,6 +12,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+<<<<<<< HEAD
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 
 public class DocumentHashProcessor {
@@ -21,6 +22,12 @@ public class DocumentHashProcessor {
   }
 
   private static HashResult hash(final InputStream stream, final String algorithm) {
+=======
+
+public class DocumentHashProcessor {
+
+  public static HashResult hash(final InputStream stream, final String algorithm) {
+>>>>>>> 2c5476f5 (feat: add LocalStorage document store implementation)
     final MessageDigest md;
     try {
       md = MessageDigest.getInstance(algorithm);
