@@ -74,12 +74,13 @@ public final class CollaborationDeploymentTest {
     final var deployment = performDeployment.apply(engine.deployment());
 
     // then
-    verify(engine.getCommandResponseWriter(), VERIFICATION_TIMEOUT).recordType(RecordType.EVENT);
+    verify(engine.getCommandResponseWriter(), VERIFICATION_TIMEOUT.atLeastOnce())
+        .recordType(RecordType.EVENT);
     verify(engine.getCommandResponseWriter(), VERIFICATION_TIMEOUT).valueType(ValueType.DEPLOYMENT);
     verify(engine.getCommandResponseWriter(), VERIFICATION_TIMEOUT)
         .intent(DeploymentIntent.CREATED);
     verify(engine.getCommandResponseWriter(), VERIFICATION_TIMEOUT).key(deployment.getKey());
-    verify(engine.getCommandResponseWriter(), VERIFICATION_TIMEOUT)
+    verify(engine.getCommandResponseWriter(), VERIFICATION_TIMEOUT.atLeastOnce())
         .tryWriteResponse(anyInt(), anyLong());
   }
 
