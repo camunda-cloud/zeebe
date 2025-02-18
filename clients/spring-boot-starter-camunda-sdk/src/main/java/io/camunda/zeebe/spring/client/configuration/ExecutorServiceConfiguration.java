@@ -15,12 +15,11 @@
  */
 package io.camunda.zeebe.spring.client.configuration;
 
-import static io.camunda.zeebe.spring.client.configuration.PropertyUtil.getOrLegacyOrDefault;
-import static io.camunda.zeebe.spring.client.properties.ZeebeClientConfigurationProperties.DEFAULT;
+import static io.camunda.zeebe.spring.client.configuration.ZeebeClientConfigurationImpl.DEFAULT;
+import static java.util.Optional.ofNullable;
 
 import io.camunda.zeebe.spring.client.jobhandling.ZeebeClientExecutorService;
 import io.camunda.zeebe.spring.client.properties.CamundaClientProperties;
-import io.camunda.zeebe.spring.client.properties.ZeebeClientConfigurationProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
@@ -36,13 +35,9 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnMissingBean(ZeebeClientExecutorService.class)
 public class ExecutorServiceConfiguration {
 
-  private final ZeebeClientConfigurationProperties configurationProperties;
   private final CamundaClientProperties camundaClientProperties;
 
-  public ExecutorServiceConfiguration(
-      final ZeebeClientConfigurationProperties configurationProperties,
-      final CamundaClientProperties camundaClientProperties) {
-    this.configurationProperties = configurationProperties;
+  public ExecutorServiceConfiguration(final CamundaClientProperties camundaClientProperties) {
     this.camundaClientProperties = camundaClientProperties;
   }
 
@@ -51,12 +46,8 @@ public class ExecutorServiceConfiguration {
       @Autowired(required = false) final MeterRegistry meterRegistry) {
     final ScheduledExecutorService threadPool =
         Executors.newScheduledThreadPool(
-            getOrLegacyOrDefault(
-                "NumJobWorkerExecutionThreads",
-                () -> camundaClientProperties.getZeebe().getExecutionThreads(),
-                configurationProperties::getNumJobWorkerExecutionThreads,
-                DEFAULT.getNumJobWorkerExecutionThreads(),
-                null));
+            ofNullable(camundaClientProperties.getZeebe().getExecutionThreads())
+                .orElse(DEFAULT.getNumJobWorkerExecutionThreads()));
     if (meterRegistry != null) {
       final MeterBinder threadPoolMetrics =
           new ExecutorServiceMetrics(
