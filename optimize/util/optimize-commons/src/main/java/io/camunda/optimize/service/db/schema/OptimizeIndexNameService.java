@@ -31,6 +31,12 @@ public class OptimizeIndexNameService implements ConfigurationReloadable {
   public OptimizeIndexNameService(
       final ConfigurationService configurationService, final Environment environment) {
     setIndexPrefix(configurationService, ConfigurationService.getDatabaseType(environment));
+
+    // Temporary hack to make PrefixMigrationIT work
+    final String prefix = System.getenv("CAMUNDA_OPTIMIZE_ELASTICSEARCH_SETTINGS_INDEX_PREFIX");
+    if(prefix != null && !prefix.isEmpty()) {
+      setIndexPrefix(prefix);
+    }
   }
 
   public OptimizeIndexNameService(
@@ -163,8 +169,15 @@ public class OptimizeIndexNameService implements ConfigurationReloadable {
     return completeIndexPrefix;
   }
 
+  public String getShortIndexPrefix() {
+    // TODO: Reconcile nomenclature in the callers and in this callee, by not returning
+    //  completeIndexPrefix in the getIndexPrefix(), once Optimize is fully identical to other
+    //  applications.
+    return indexPrefix;
+  }
+
   @VisibleForTesting
-  void setIndexPrefix(final String indexPrefix) {
+  public void setIndexPrefix(final String indexPrefix) {
     if (indexPrefix.equals(COMPONENT_NAME)) {
       throw new IllegalArgumentException("Invalid prefix " + indexPrefix);
     }

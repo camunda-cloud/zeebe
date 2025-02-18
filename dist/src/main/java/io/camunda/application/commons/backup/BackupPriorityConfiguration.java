@@ -125,7 +125,7 @@ public class BackupPriorityConfiguration {
   private <A> Function<Map<String, A>, String> differentConfigFor(final String field) {
     return values ->
         String.format(
-            "Expected %s to be configured with the same value in operate and tasklist. Got %s. Active profiles: %s",
+            "Expected %s to be configured with the same value in operate, optimize and tasklist. Got %s. Active profiles: %s",
             field, values, Arrays.asList(profiles));
   }
 
@@ -263,9 +263,10 @@ public class BackupPriorityConfiguration {
                 "operate",
                 Optional.ofNullable(operateProperties).map(OperateProperties::getIndexPrefix),
                 "tasklist",
-                Optional.ofNullable(tasklistProperties).map(TasklistProperties::getIndexPrefix)),
-            // optimize does not use the global index prefix as the other apps, so it's not included
-            // in this check.
+                Optional.ofNullable(tasklistProperties).map(TasklistProperties::getIndexPrefix),
+                "optimize",
+                Optional.ofNullable(optimizeIndexNameService)
+                    .map(OptimizeIndexNameService::getShortIndexPrefix)),
             skipEmptyOptional());
     if (indexOptional.isEmpty()) {
       throw new IllegalArgumentException(NO_CONFIG_ERROR_MESSAGE);
