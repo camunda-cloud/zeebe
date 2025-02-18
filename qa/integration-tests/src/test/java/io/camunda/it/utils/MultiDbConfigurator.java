@@ -111,6 +111,8 @@ public class MultiDbConfigurator {
     tasklistOpensearch.setIndexPrefix(indexPrefix);
     tasklistOpensearch.setPassword(userPassword);
     tasklistOpensearch.setUsername(userName);
+    /*TODO Tasklist SchemaManager fails on startup for Settings, need to investigate this*/
+    tasklistOpensearch.setCreateSchema(false);
 
     final var zeebeTasklistOS = tasklistProperties.getZeebeOpenSearch();
     zeebeTasklistOS.setUrl(opensearchUrl);
