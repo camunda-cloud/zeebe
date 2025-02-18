@@ -19,6 +19,7 @@ import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.DefaultExecutionQueue;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import io.camunda.search.entities.FlowNodeInstanceEntity.FlowNodeState;
 import java.time.OffsetDateTime;
@@ -30,12 +31,14 @@ class FlowNodeInstanceWriterTest {
   private static final OffsetDateTime NOW = OffsetDateTime.now();
 
   private ExecutionQueue executionQueue;
+  private FlowNodeInstanceMapper mapper;
   private FlowNodeInstanceWriter writer;
 
   @BeforeEach
   void setUp() {
     executionQueue = mock(DefaultExecutionQueue.class);
-    writer = new FlowNodeInstanceWriter(executionQueue);
+    mapper = mock(FlowNodeInstanceMapper.class);
+    writer = new FlowNodeInstanceWriter(executionQueue, mapper);
   }
 
   @Test
@@ -58,6 +61,7 @@ class FlowNodeInstanceWriterTest {
             eq(
                 new QueueItem(
                     ContextType.FLOW_NODE,
+                    StatementType.UPDATE,
                     1L,
                     "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateStateAndEndDate",
                     new FlowNodeInstanceMapper.EndFlowNodeDto(1L, FlowNodeState.COMPLETED, NOW))));

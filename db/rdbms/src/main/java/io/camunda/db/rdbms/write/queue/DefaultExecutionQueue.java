@@ -14,6 +14,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.ibatis.executor.BatchResult;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -80,7 +82,7 @@ public class DefaultExecutionQueue implements ExecutionQueue {
   public int flush() {
     synchronized (queue) {
       if (queue.isEmpty()) {
-        LOG.debug(
+        LOG.trace(
             "[RDBMS ExecutionQueue, Partition {}] Skip Flushing because execution queue is empty",
             partitionId);
         return 0;
@@ -136,11 +138,10 @@ public class DefaultExecutionQueue implements ExecutionQueue {
         sessionFactory.openSession(ExecutorType.BATCH, TransactionIsolationLevel.READ_UNCOMMITTED);
 
     var flushedElements = 0;
-    final var items = new ArrayList<>(queue);
-    items.sort(Comparator.comparing(QueueItem::contextType).thenComparing(QueueItem::statementId));
+    final var optimizedItems = optimizeQueueOrder(queue);
 
     try {
-      for (final var entry : items) {
+      for (final var entry : optimizedItems) {
         LOG.trace("[RDBMS ExecutionQueue, Partition {}] Executing entry: {}", partitionId, entry);
         session.update(entry.statementId(), entry.parameter());
         queue.remove();
@@ -185,6 +186,29 @@ public class DefaultExecutionQueue implements ExecutionQueue {
     } finally {
       session.close();
     }
+  }
+
+  private List<QueueItem> optimizeQueueOrder(final List<QueueItem> items) {
+    final Map<ContextType, List<QueueItem>> itemsByContextType =
+        items.stream().collect(Collectors.groupingBy(QueueItem::contextType));
+
+    final List<QueueItem> resultList = new ArrayList<>();
+    for (final var contextType : ContextType.values()) {
+      if (!itemsByContextType.containsKey(contextType)) {
+        continue;
+      }
+
+      if (contextType.preserveOrder()) {
+        resultList.addAll(itemsByContextType.get(contextType));
+      } else {
+        final var contextItems = new ArrayList<>(itemsByContextType.get(contextType));
+        contextItems.sort(
+            Comparator.comparing(QueueItem::statementType).thenComparing(QueueItem::statementId));
+        resultList.addAll(contextItems);
+      }
+    }
+
+    return resultList;
   }
 
   LinkedList<QueueItem> getQueue() {

@@ -5,13 +5,12 @@
  * Licensed under the Camunda License 1.0. You may not use this file
  * except in compliance with the Camunda License 1.0.
  */
-package io.camunda.db.rdbms.sql;
+package io.camunda.db.rdbms.write.queue;
 
-public interface PurgeMapper {
+public enum StatementType {
 
-  void disableForeignKeyChecks();
-
-  void enableForeignKeyChecks();
-
-  void truncateTable(String tableName);
+  // do not change order
+  INSERT,
+  UPDATE,
+  DELETE
 }

@@ -7,6 +7,7 @@
  */
 package io.camunda.exporter.rdbms;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -14,6 +15,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,5 +47,25 @@ public final class DateUtil {
     }
 
     return null;
+  }
+
+  /**
+   * Parses the string to a duration, where it can either be simple a amount of days, or a ISO-8601
+   * duration
+   *
+   * @param duration ... Number of days or ISO-8601 duration
+   * @return Duration
+   */
+  public static Duration toDuration(final String duration) {
+    if (NumberUtils.isCreatable(duration)) {
+      return Duration.ofDays(NumberUtils.toLong(duration));
+    }
+
+    try {
+      return Duration.parse(duration);
+    } catch (final DateTimeParseException e) {
+      throw new IllegalArgumentException(
+          "Invalid duration string (Must be ISO-8601 or just a number of days): " + duration, e);
+    }
   }
 }

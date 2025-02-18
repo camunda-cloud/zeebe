@@ -11,6 +11,7 @@ import io.camunda.db.rdbms.write.domain.UserDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 import io.camunda.db.rdbms.write.queue.UpsertMerger;
 import java.util.function.Function;
 
@@ -25,7 +26,11 @@ public class UserWriter {
   public void create(final UserDbModel user) {
     executionQueue.executeInQueue(
         new QueueItem(
-            ContextType.USER, user.userKey(), "io.camunda.db.rdbms.sql.UserMapper.insert", user));
+            ContextType.USER,
+            StatementType.INSERT,
+            user.userKey(),
+            "io.camunda.db.rdbms.sql.UserMapper.insert",
+            user));
   }
 
   public void update(final UserDbModel user) {
@@ -38,6 +43,7 @@ public class UserWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.USER,
+              StatementType.UPDATE,
               user.username(),
               "io.camunda.db.rdbms.sql.UserMapper.update",
               user));
@@ -47,7 +53,11 @@ public class UserWriter {
   public void delete(final String username) {
     executionQueue.executeInQueue(
         new QueueItem(
-            ContextType.USER, username, "io.camunda.db.rdbms.sql.UserMapper.delete", username));
+            ContextType.USER,
+            StatementType.DELETE,
+            username,
+            "io.camunda.db.rdbms.sql.UserMapper.delete",
+            username));
   }
 
   private boolean mergeToQueue(
