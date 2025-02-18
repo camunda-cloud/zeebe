@@ -1024,14 +1024,14 @@ jobs:
 
   deploy-snapshots:
     name: Deploy snapshot artifacts
-    needs: [ check-results ]
+    #needs: [ check-results ]
+    needs: [detect-changes]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions: {}  # GITHUB_TOKEN unused in this job
-    if: github.repository == 'camunda/camunda' && github.ref == 'refs/heads/main'
-    concurrency:
-      group: deploy-maven-snapshot
-      cancel-in-progress: false
+    # concurrency:
+    #   group: deploy-maven-snapshot
+    #   cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - name: Import Secrets
@@ -1080,10 +1080,11 @@ jobs:
       # compile and generate-sources to ensure that the Javadoc can be properly generated; compile is
       # necessary when using annotation preprocessors for code generation, as otherwise the symbols are
       # not resolve-able by the Javadoc generator
-      - run: ./mvnw -B -D skipTests -D skipChecks -PskipFrontendBuild compile generate-sources source:jar javadoc:jar deploy
-        env:
-          MAVEN_USERNAME: ${{ steps.secrets.outputs.ARTIFACTS_USR }}
-          MAVEN_PASSWORD: ${{ steps.secrets.outputs.ARTIFACTS_PSW }}
+      - run: ./mvnw -B -T1C -D skipTests -D skipChecks -PskipFrontendBuild compile generate-sources source:jar javadoc:jar
+        #deploy
+        # env:
+        #   MAVEN_USERNAME: ${{ steps.secrets.outputs.ARTIFACTS_USR }}
+        #   MAVEN_PASSWORD: ${{ steps.secrets.outputs.ARTIFACTS_PSW }}
       - name: Observe build status
         if: always()
         continue-on-error: true
