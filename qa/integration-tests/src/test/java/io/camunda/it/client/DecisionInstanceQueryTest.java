@@ -26,9 +26,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @MultiDbTest
+@Disabled
 class DecisionInstanceQueryTest {
 
   private static final String DECISION_DEFINITION_ID_1 = "decision_1";

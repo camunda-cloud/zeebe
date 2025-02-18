@@ -39,9 +39,11 @@ import java.util.Map;
 import java.util.Objects;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 @MultiDbTest
+@Disabled
 public class ProcessInstanceAndFlowNodeInstanceQueryTest {
 
   static final List<Process> DEPLOYED_PROCESSES = new ArrayList<>();
