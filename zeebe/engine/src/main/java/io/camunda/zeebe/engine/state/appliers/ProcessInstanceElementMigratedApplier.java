@@ -49,10 +49,14 @@ final class ProcessInstanceElementMigratedApplier
               .setBpmnProcessId(value.getBpmnProcessId())
               .setVersion(value.getVersion())
               .setElementId(value.getElementId())
-              .setFlowScopeKey(value.getFlowScopeKey());
+              .setFlowScopeKey(value.getFlowScopeKey())
+              .setElementInstancePath(value.getElementInstancePath())
+              .setProcessDefinitionPath(value.getProcessDefinitionPath())
+              .setCallingElementPath(value.getCallingElementPath());
         });
 
-    if (value.getBpmnElementType() == BpmnElementType.PROCESS) {
+    if (value.getBpmnElementType() == BpmnElementType.PROCESS
+        && previousProcessDefinitionKey.get() != value.getProcessDefinitionKey()) {
       elementInstanceState.deleteProcessInstanceKeyByDefinitionKey(
           value.getProcessInstanceKey(), previousProcessDefinitionKey.get());
       elementInstanceState.insertProcessInstanceKeyByDefinitionKey(
