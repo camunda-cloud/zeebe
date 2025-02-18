@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 public class FlowNodeInstanceFromProcessInstanceHandlerTest {
   private final ProtocolFactory factory = new ProtocolFactory();
@@ -409,5 +411,34 @@ public class FlowNodeInstanceFromProcessInstanceHandlerTest {
     assertThat(flowNodeInstanceEntity.getStartDate()).isNull();
     assertThat(flowNodeInstanceEntity.getEndDate()).isNull();
     assertThat(flowNodeInstanceEntity.getPosition()).isNull();
+  }
+
+  @ParameterizedTest
+  @EnumSource(BpmnElementType.class)
+  public void shouldSetFlowNodeType(final BpmnElementType bpmnElementType) {
+    // given
+    final ProcessInstanceRecordValue processInstanceRecordValue =
+        ImmutableProcessInstanceRecordValue.builder()
+            .from(factory.generateObject(ProcessInstanceRecordValue.class))
+            .withBpmnElementType(bpmnElementType)
+            .build();
+
+    final Record<ProcessInstanceRecordValue> processInstanceRecord =
+        factory.generateRecord(
+            ValueType.PROCESS_INSTANCE,
+            r ->
+                r.withIntent(ProcessInstanceIntent.ELEMENT_ACTIVATING)
+                    .withValue(processInstanceRecordValue));
+
+    // when - then
+    final FlowNodeInstanceEntity entity = new FlowNodeInstanceEntity();
+
+    underTest.updateEntity(processInstanceRecord, entity);
+
+    // then
+    assertThat(entity.getType())
+        .describedAs("Should set flow-node type for element: %s", bpmnElementType)
+        .isNotNull()
+        .isNotEqualTo(FlowNodeType.UNKNOWN);
   }
 }
