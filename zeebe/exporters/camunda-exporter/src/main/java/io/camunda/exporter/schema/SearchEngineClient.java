@@ -44,4 +44,7 @@ public interface SearchEngineClient {
 
   boolean importersCompleted(
       final int partitionId, final List<IndexDescriptor> importPositionIndices);
+
+  void updateSchemaSettings(
+      final IndexDescriptor indexTemplateDescriptor, final IndexSettings currentSettings);
 }

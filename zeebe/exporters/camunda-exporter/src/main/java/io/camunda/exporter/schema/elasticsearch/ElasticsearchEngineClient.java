@@ -227,6 +227,28 @@ public class ElasticsearchEngineClient implements SearchEngineClient {
     }
   }
 
+  /**
+   * Overwrites the settings of the existing index template with the settings block in the
+   * descriptor schema json file. Only able updates replicas for live indices.
+   *
+   * <p>If you try to update a static setting the attempt will fail
+   *
+   * @param indexTemplateDescriptor of the index template to have its settings overwritten.
+   */
+  @Override
+  public void updateSchemaSettings(
+      final IndexDescriptor indexTemplateDescriptor, final IndexSettings currentSettings) {
+
+    if (indexTemplateDescriptor instanceof IndexTemplateDescriptor) {
+      updateTemplateSettings((IndexTemplateDescriptor) indexTemplateDescriptor, currentSettings);
+    } else {
+      // only able change number of replicas on live indices
+      final var updatedIndexSettings =
+          Map.of("number_of_replicas", currentSettings.getNumberOfReplicas().toString());
+      putSettings(List.of(indexTemplateDescriptor), updatedIndexSettings);
+    }
+  }
+
   private SearchRequest allImportPositionDocuments(
       final int partitionId, final List<IndexDescriptor> importPositionIndices) {
     final var importPositionIndicesNames =
@@ -384,6 +406,59 @@ public class ElasticsearchEngineClient implements SearchEngineClient {
           "Failed to load file "
               + indexTemplateDescriptor.getMappingsClasspathFilename()
               + " from classpath.",
+          e);
+    }
+  }
+
+  private InputStream getUpdatedTemplateSettings(
+      final InputStream templateFile, final int numberOfShards, final int numberOfReplicas)
+      throws IOException {
+    return utils.new SchemaSettingsAppender(templateFile)
+        .withNumberOfShards(numberOfShards)
+        .withNumberOfReplicas(numberOfReplicas)
+        .build();
+  }
+
+  private void updateTemplateSettings(
+      final IndexTemplateDescriptor indexTemplateDescriptor, final IndexSettings currentSettings) {
+    try (final var templateFile =
+        getResourceAsStream(indexTemplateDescriptor.getMappingsClasspathFilename())) {
+      final var updatedTemplateSettings =
+          deserializeJson(
+                  IndexTemplateMapping._DESERIALIZER,
+                  getUpdatedTemplateSettings(
+                      templateFile,
+                      currentSettings.getNumberOfShards(),
+                      currentSettings.getNumberOfReplicas()))
+              .settings();
+
+      final var currentIndexTemplateState =
+          client
+              .indices()
+              .getIndexTemplate(r -> r.name(indexTemplateDescriptor.getTemplateName()))
+              .indexTemplates()
+              .getFirst()
+              .indexTemplate()
+              .template();
+
+      final var updateIndexTemplateSettings =
+          new PutIndexTemplateRequest.Builder()
+              .name(indexTemplateDescriptor.getTemplateName())
+              .indexPatterns(indexTemplateDescriptor.getIndexPattern())
+              .template(
+                  t ->
+                      t.settings(updatedTemplateSettings)
+                          .mappings(currentIndexTemplateState.mappings())
+                          .aliases(currentIndexTemplateState.aliases()))
+              .build();
+
+      client.indices().putIndexTemplate(updateIndexTemplateSettings);
+
+    } catch (final IOException | ElasticsearchException e) {
+      throw new ElasticsearchExporterException(
+          "Failed to update settings of template ["
+              + indexTemplateDescriptor.getTemplateName()
+              + "]",
           e);
     }
   }

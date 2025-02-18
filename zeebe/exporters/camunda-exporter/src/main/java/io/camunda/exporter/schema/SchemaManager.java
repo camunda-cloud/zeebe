@@ -61,6 +61,14 @@ public class SchemaManager {
         newIndexProperties.size());
     updateSchemaMappings(newIndexTemplateProperties);
 
+    indexTemplateDescriptors.forEach(
+        desc ->
+            searchEngineClient.updateSchemaSettings(desc, getIndexSettings(desc.getIndexName())));
+
+    indexDescriptors.forEach(
+        desc ->
+            searchEngineClient.updateSchemaSettings(desc, getIndexSettings(desc.getIndexName())));
+
     final RetentionConfiguration retention = config.getRetention();
     if (retention.isEnabled()) {
       LOG.info(
