@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 public record QueueItem(
     ContextType contextType,
-    StatementType statementType,
+    WriteStatementType statementType,
     Object id,
     String statementId,
     Object parameter) {
@@ -32,7 +32,7 @@ public record QueueItem(
   public static class QueueItemBuilder {
 
     private ContextType contextType;
-    private StatementType statementType;
+    private WriteStatementType statementType;
     private Object id;
     private String statementId;
     private Object parameter;
@@ -42,7 +42,7 @@ public record QueueItem(
       return this;
     }
 
-    public QueueItemBuilder statementType(final StatementType statementType) {
+    public QueueItemBuilder statementType(final WriteStatementType statementType) {
       this.statementType = statementType;
       return this;
     }

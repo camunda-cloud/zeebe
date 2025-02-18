@@ -188,6 +188,23 @@ public class DefaultExecutionQueue implements ExecutionQueue {
     }
   }
 
+  /**
+   * Optimizes the order of the queue items to minimize the number of executed statements. Primary
+   * goal of this optimization is to batch as many statements as possible For this statements with
+   * the same MyBatis-ID have to be executed sequentially directly after each other. A second goal
+   * is to ensure that INSERT statements are always executed before UPDATE statements. <br>
+   * The optimization happens in two steps: <br>
+   * <br>
+   * First the queue is grouped by the {@link ContextType}. Here the order of the items inside this
+   * group is still preserved.<br>
+   * <br>
+   * In the second step the items inside the groups are sorted by the {@link WriteStatementType}
+   * (natural order) and {@link QueueItem#statementId()}. For some entities this step will lead to
+   * errors. Therefore, this second step can be deactivated in the {@link ContextType}.
+   *
+   * @param items queue of items
+   * @return optimized queue of items
+   */
   private List<QueueItem> optimizeQueueOrder(final List<QueueItem> items) {
     final Map<ContextType, List<QueueItem>> itemsByContextType =
         items.stream().collect(Collectors.groupingBy(QueueItem::contextType));

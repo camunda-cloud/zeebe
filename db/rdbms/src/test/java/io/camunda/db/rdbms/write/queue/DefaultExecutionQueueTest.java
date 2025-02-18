@@ -67,13 +67,25 @@ class DefaultExecutionQueueTest {
     executionQueue = new DefaultExecutionQueue(sqlSessionFactory, 1, 3, metrics);
     final var item1 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", "parameter1");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement1",
+            "parameter1");
     final var item2 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement2", "parameter2");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement2",
+            "parameter2");
     final var item3 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement3", "parameter3");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement3",
+            "parameter3");
     executionQueue.executeInQueue(item1);
     executionQueue.executeInQueue(item2);
     executionQueue.executeInQueue(item3);
@@ -90,7 +102,11 @@ class DefaultExecutionQueueTest {
   public void whenFlushIsCalledFlushShouldHappen() {
     final var item1 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", "parameter1");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement1",
+            "parameter1");
     executionQueue.executeInQueue(item1);
 
     // when
@@ -116,7 +132,11 @@ class DefaultExecutionQueueTest {
   public void whenFlushIsCalledFlushListenersAreCalled() {
     final var item1 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", "parameter1");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement1",
+            "parameter1");
     executionQueue.executeInQueue(item1);
 
     final var preFlushListener = mock(PreFlushListener.class);
@@ -136,7 +156,11 @@ class DefaultExecutionQueueTest {
   public void whenFlushIsExceptionalSessionIsRolledBack() {
     final var item1 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", "parameter1");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement1",
+            "parameter1");
     executionQueue.executeInQueue(item1);
 
     final var preFlushListener = mock(PreFlushListener.class);
@@ -161,10 +185,18 @@ class DefaultExecutionQueueTest {
   public void whenMatchingItemFoundShouldMergeItems() {
     final var item1 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", "parameter1");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement1",
+            "parameter1");
     final var item2 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 2L, "statement2", "parameter2");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            2L,
+            "statement2",
+            "parameter2");
     executionQueue.executeInQueue(item1);
     executionQueue.executeInQueue(item2);
 
@@ -180,7 +212,7 @@ class DefaultExecutionQueueTest {
               public QueueItem merge(final QueueItem originalItem) {
                 return new QueueItem(
                     originalItem.contextType(),
-                    StatementType.INSERT,
+                    WriteStatementType.INSERT,
                     1L,
                     "statement1",
                     "parameter1+");
@@ -198,10 +230,18 @@ class DefaultExecutionQueueTest {
   public void whenNoMatchingItemFoundShouldNotMergeItems() {
     final var item1 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", "parameter1");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement1",
+            "parameter1");
     final var item2 =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 2L, "statement2", "parameter2");
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            2L,
+            "statement2",
+            "parameter2");
     executionQueue.executeInQueue(item1);
     executionQueue.executeInQueue(item2);
 
@@ -217,7 +257,7 @@ class DefaultExecutionQueueTest {
               public QueueItem merge(final QueueItem originalItem) {
                 return new QueueItem(
                     originalItem.contextType(),
-                    StatementType.INSERT,
+                    WriteStatementType.INSERT,
                     1L,
                     "statement1",
                     "parameter1+");
@@ -234,23 +274,40 @@ class DefaultExecutionQueueTest {
   public void shouldSortQueueItemsDuringFlush() {
     executionQueue.executeInQueue(
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.UPDATE, 1L, "statement1", "parameter1"));
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.UPDATE,
+            1L,
+            "statement1",
+            "parameter1"));
     executionQueue.executeInQueue(
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement2", "parameter2"));
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement2",
+            "parameter2"));
     executionQueue.executeInQueue(
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.DELETE, 1L, "statement3", "parameter3"));
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.DELETE,
+            1L,
+            "statement3",
+            "parameter3"));
     executionQueue.executeInQueue(
-        new QueueItem(ContextType.FLOW_NODE, StatementType.UPDATE, 1L, "statement4", "parameter4"));
+        new QueueItem(
+            ContextType.FLOW_NODE, WriteStatementType.UPDATE, 1L, "statement4", "parameter4"));
     executionQueue.executeInQueue(
-        new QueueItem(ContextType.FLOW_NODE, StatementType.INSERT, 1L, "statement5", "parameter5"));
+        new QueueItem(
+            ContextType.FLOW_NODE, WriteStatementType.INSERT, 1L, "statement5", "parameter5"));
     executionQueue.executeInQueue(
-        new QueueItem(ContextType.USER_TASK, StatementType.DELETE, 1L, "statement6", "parameter6"));
+        new QueueItem(
+            ContextType.USER_TASK, WriteStatementType.DELETE, 1L, "statement6", "parameter6"));
     executionQueue.executeInQueue(
-        new QueueItem(ContextType.USER_TASK, StatementType.INSERT, 1L, "statement7", "parameter7"));
+        new QueueItem(
+            ContextType.USER_TASK, WriteStatementType.INSERT, 1L, "statement7", "parameter7"));
     executionQueue.executeInQueue(
-        new QueueItem(ContextType.USER_TASK, StatementType.DELETE, 1L, "statement8", "parameter8"));
+        new QueueItem(
+            ContextType.USER_TASK, WriteStatementType.DELETE, 1L, "statement8", "parameter8"));
 
     // when
     executionQueue.flush();

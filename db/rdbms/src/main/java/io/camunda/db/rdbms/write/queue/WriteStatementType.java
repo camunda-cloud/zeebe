@@ -7,7 +7,7 @@
  */
 package io.camunda.db.rdbms.write.queue;
 
-public enum StatementType {
+public enum WriteStatementType {
 
   // do not change order
   INSERT,

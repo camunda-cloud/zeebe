@@ -19,8 +19,8 @@ import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.DefaultExecutionQueue;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
-import io.camunda.db.rdbms.write.queue.StatementType;
 import io.camunda.db.rdbms.write.queue.UpsertMerger;
+import io.camunda.db.rdbms.write.queue.WriteStatementType;
 import io.camunda.search.entities.FlowNodeInstanceEntity.FlowNodeState;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +59,7 @@ class FlowNodeInstanceWriterTest {
             eq(
                 new QueueItem(
                     ContextType.FLOW_NODE,
-                    StatementType.UPDATE,
+                    WriteStatementType.UPDATE,
                     1L,
                     "io.camunda.db.rdbms.sql.FlowNodeInstanceMapper.updateStateAndEndDate",
                     new FlowNodeInstanceMapper.EndFlowNodeDto(1L, FlowNodeState.COMPLETED, NOW))));

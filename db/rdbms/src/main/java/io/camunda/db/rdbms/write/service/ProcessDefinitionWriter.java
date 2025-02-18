@@ -11,7 +11,7 @@ import io.camunda.db.rdbms.write.domain.ProcessDefinitionDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
-import io.camunda.db.rdbms.write.queue.StatementType;
+import io.camunda.db.rdbms.write.queue.WriteStatementType;
 
 public class ProcessDefinitionWriter {
 
@@ -25,7 +25,7 @@ public class ProcessDefinitionWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.PROCESS_DEFINITION,
-            StatementType.INSERT,
+            WriteStatementType.INSERT,
             processDefinition.processDefinitionKey(),
             "io.camunda.db.rdbms.sql.ProcessDefinitionMapper.insert",
             processDefinition));

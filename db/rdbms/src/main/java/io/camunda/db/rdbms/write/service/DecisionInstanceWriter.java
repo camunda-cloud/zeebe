@@ -11,7 +11,7 @@ import io.camunda.db.rdbms.write.domain.DecisionInstanceDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
-import io.camunda.db.rdbms.write.queue.StatementType;
+import io.camunda.db.rdbms.write.queue.WriteStatementType;
 
 public class DecisionInstanceWriter {
 
@@ -25,7 +25,7 @@ public class DecisionInstanceWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.DECISION_INSTANCE,
-            StatementType.INSERT,
+            WriteStatementType.INSERT,
             decisionInstance.decisionInstanceKey(),
             "io.camunda.db.rdbms.sql.DecisionInstanceMapper.insert",
             decisionInstance));
@@ -34,7 +34,7 @@ public class DecisionInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.DECISION_INSTANCE,
-              StatementType.INSERT,
+              WriteStatementType.INSERT,
               decisionInstance.decisionInstanceKey(),
               "io.camunda.db.rdbms.sql.DecisionInstanceMapper.insertInput",
               decisionInstance));
@@ -44,7 +44,7 @@ public class DecisionInstanceWriter {
       executionQueue.executeInQueue(
           new QueueItem(
               ContextType.DECISION_INSTANCE,
-              StatementType.INSERT,
+              WriteStatementType.INSERT,
               decisionInstance.decisionInstanceKey(),
               "io.camunda.db.rdbms.sql.DecisionInstanceMapper.insertOutput",
               decisionInstance));

@@ -11,7 +11,7 @@ import io.camunda.db.rdbms.write.domain.FormDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
-import io.camunda.db.rdbms.write.queue.StatementType;
+import io.camunda.db.rdbms.write.queue.WriteStatementType;
 
 public class FormWriter {
 
@@ -25,7 +25,7 @@ public class FormWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.FORM,
-            StatementType.INSERT,
+            WriteStatementType.INSERT,
             form.formKey(),
             "io.camunda.db.rdbms.sql.FormMapper.insert",
             form));
@@ -35,7 +35,7 @@ public class FormWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.FORM,
-            StatementType.UPDATE,
+            WriteStatementType.UPDATE,
             form.formKey(),
             "io.camunda.db.rdbms.sql.FormMapper.update",
             form));

@@ -43,7 +43,11 @@ class UpsertMergerTest {
                     .state(ProcessInstanceState.ACTIVE));
     final var queueItem =
         new QueueItem(
-            ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement", insertParameter);
+            ContextType.PROCESS_INSTANCE,
+            WriteStatementType.INSERT,
+            1L,
+            "statement",
+            insertParameter);
     final var newQueueItem = merger.merge(queueItem);
 
     assertThat(queueItem)
@@ -75,25 +79,25 @@ class UpsertMergerTest {
         Arguments.of(
             new QueueItem(
                 ContextType.PROCESS_INSTANCE,
-                StatementType.INSERT,
+                WriteStatementType.INSERT,
                 1L,
                 "statement1",
                 mock(ProcessInstanceDbModel.class)),
             true),
         Arguments.of(
             new QueueItem(
-                ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", "bla"),
+                ContextType.PROCESS_INSTANCE, WriteStatementType.INSERT, 1L, "statement1", "bla"),
             false),
         Arguments.of(
             new QueueItem(
-                ContextType.PROCESS_INSTANCE, StatementType.INSERT, 1L, "statement1", null),
+                ContextType.PROCESS_INSTANCE, WriteStatementType.INSERT, 1L, "statement1", null),
             false),
         Arguments.of(
             new QueueItem(
-                ContextType.PROCESS_INSTANCE, StatementType.INSERT, 2L, "statement1", null),
+                ContextType.PROCESS_INSTANCE, WriteStatementType.INSERT, 2L, "statement1", null),
             false),
         Arguments.of(
-            new QueueItem(ContextType.FLOW_NODE, StatementType.INSERT, 1L, "statement1", null),
+            new QueueItem(ContextType.FLOW_NODE, WriteStatementType.INSERT, 1L, "statement1", null),
             false));
   }
 

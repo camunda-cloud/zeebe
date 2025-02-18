@@ -11,7 +11,7 @@ import io.camunda.db.rdbms.write.domain.AuthorizationDbModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
-import io.camunda.db.rdbms.write.queue.StatementType;
+import io.camunda.db.rdbms.write.queue.WriteStatementType;
 
 public class AuthorizationWriter {
 
@@ -25,7 +25,7 @@ public class AuthorizationWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.AUTHORIZATION,
-            StatementType.INSERT,
+            WriteStatementType.INSERT,
             authorization.authorizationKey().toString(),
             "io.camunda.db.rdbms.sql.AuthorizationMapper.insert",
             authorization));
@@ -42,7 +42,7 @@ public class AuthorizationWriter {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.AUTHORIZATION,
-            StatementType.DELETE,
+            WriteStatementType.DELETE,
             authorization.authorizationKey().toString(),
             "io.camunda.db.rdbms.sql.AuthorizationMapper.delete",
             authorization));
