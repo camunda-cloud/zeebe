@@ -12,6 +12,7 @@ import io.camunda.db.rdbms.write.domain.ExporterPositionModel;
 import io.camunda.db.rdbms.write.queue.ContextType;
 import io.camunda.db.rdbms.write.queue.ExecutionQueue;
 import io.camunda.db.rdbms.write.queue.QueueItem;
+import io.camunda.db.rdbms.write.queue.StatementType;
 
 public class ExporterPositionService {
 
@@ -28,6 +29,7 @@ public class ExporterPositionService {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.EXPORTER_POSITION,
+            StatementType.INSERT,
             variable.partitionId(),
             "io.camunda.db.rdbms.sql.ExporterPositionMapper.insert",
             variable));
@@ -41,6 +43,7 @@ public class ExporterPositionService {
     executionQueue.executeInQueue(
         new QueueItem(
             ContextType.EXPORTER_POSITION,
+            StatementType.UPDATE,
             variable.partitionId(),
             "io.camunda.db.rdbms.sql.ExporterPositionMapper.update",
             variable));
