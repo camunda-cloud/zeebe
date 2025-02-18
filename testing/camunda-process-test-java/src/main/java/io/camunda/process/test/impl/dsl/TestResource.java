@@ -13,17 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda;
+package io.camunda.process.test.impl.dsl;
 
-import io.camunda.spring.client.annotation.Deployment;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+public class TestResource {
 
-@SpringBootApplication
-@Deployment(resources = "classpath*:/bpmn/**/*.bpmn")
-public class MySpringBootApplication {
+  private String name;
+  private byte[] resource;
 
-  public static void main(final String[] args) {
-    SpringApplication.run(MySpringBootApplication.class, args);
+  public TestResource() {}
+
+  public TestResource(final String name, final byte[] resource) {
+    this.name = name;
+    this.resource = resource;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(final String name) {
+    this.name = name;
+  }
+
+  public byte[] getResource() {
+    return resource;
+  }
+
+  public void setResource(final byte[] resource) {
+    this.resource = resource;
   }
 }

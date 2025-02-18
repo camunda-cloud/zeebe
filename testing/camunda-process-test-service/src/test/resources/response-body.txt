@@ -1,0 +1,38 @@
+{
+   "passesTestCases":1,
+   "totalTestCases":2,
+   "totalTestDuration":"PT1M11.07278457S",
+   "testResults":[
+      {
+         "name":"case-1",
+         "success":true,
+         "failedInstruction":null,
+         "failureMessage":null,
+         "testDuration":"PT30.550703302S",
+         "testOutput":null
+      },
+      {
+         "name":"case-2",
+         "success":false,
+         "failedInstruction":{
+            "name":"process-instance-state",
+            "processInstanceAlias":"process-instance",
+            "state":"COMPLETED"
+         },
+         "failureMessage":"Process instance [key: 2251799813685256] should be completed but was active.",
+         "testDuration":"PT37.854557058S",
+         "testOutput":[
+            {
+               "processInstanceKey":2251799813685256,
+               "processId":"process",
+               "variables":{
+
+               },
+               "openIncidents":[
+
+               ]
+            }
+         ]
+      }
+   ]
+}
