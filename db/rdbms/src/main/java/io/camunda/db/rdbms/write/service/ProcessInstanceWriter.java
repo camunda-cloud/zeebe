@@ -124,12 +124,13 @@ public class ProcessInstanceWriter {
     }
   }
 
-  public int cleanupHistory(final int partitionId, final OffsetDateTime cleanupDate,
-      final int rowsToRemove) {
-    return mapper.cleanupHistory(new CleanupHistoryDto.Builder()
-        .partitionId(partitionId)
-        .cleanupDate(cleanupDate)
-        .limit(rowsToRemove)
-        .build());
+  public int cleanupHistory(
+      final int partitionId, final OffsetDateTime cleanupDate, final int rowsToRemove) {
+    return mapper.cleanupHistory(
+        new CleanupHistoryDto.Builder()
+            .partitionId(partitionId)
+            .cleanupDate(cleanupDate)
+            .limit(rowsToRemove)
+            .build());
   }
 }

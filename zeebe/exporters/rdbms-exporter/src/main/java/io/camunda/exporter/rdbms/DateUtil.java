@@ -50,7 +50,8 @@ public final class DateUtil {
   }
 
   /**
-   * Parses the string to a duration, where it can either be simple a amount of days, or a ISO-8601 duration
+   * Parses the string to a duration, where it can either be simple a amount of days, or a ISO-8601
+   * duration
    *
    * @param duration ... Number of days or ISO-8601 duration
    * @return Duration

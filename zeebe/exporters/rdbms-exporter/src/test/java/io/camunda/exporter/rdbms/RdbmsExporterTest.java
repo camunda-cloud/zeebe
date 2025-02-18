@@ -196,8 +196,8 @@ class RdbmsExporterTest {
     // given
     createExporter(b -> b.withHandler(ValueType.JOB, mockHandler(ValueType.JOB)));
     final var runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
-    verify(controller, times(2)).scheduleCancellableTask(any(Duration.class),
-        runnableCaptor.capture());
+    verify(controller, times(2))
+        .scheduleCancellableTask(any(Duration.class), runnableCaptor.capture());
     final var runnable = runnableCaptor.getAllValues().getFirst();
 
     // when
@@ -254,7 +254,8 @@ class RdbmsExporterTest {
 
     controller = mock(Controller.class);
     when(controller.getLastExportedRecordPosition()).thenReturn(-1L);
-    when(controller.scheduleCancellableTask(any(), any())).thenReturn(flushTask)
+    when(controller.scheduleCancellableTask(any(), any()))
+        .thenReturn(flushTask)
         .thenReturn(cleanupTask);
 
     rdbmsWriter = mock(RdbmsWriter.class);

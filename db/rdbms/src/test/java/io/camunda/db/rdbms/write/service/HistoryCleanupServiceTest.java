@@ -60,21 +60,21 @@ class HistoryCleanupServiceTest {
     when(config.maxHistoryCleanupInterval()).thenReturn(Duration.ofDays(1));
     when(config.historyCleanupBatchSize()).thenReturn(100);
 
-    historyCleanupService = new HistoryCleanupService(
-        config,
-        processInstanceWriter,
-        incidentWriter,
-        flowNodeInstanceWriter,
-        userTaskWriter,
-        variableInstanceWriter,
-        decisionInstanceWriter,
-        mock(RdbmsWriterMetrics.class, Mockito.RETURNS_DEEP_STUBS)
-    );
+    historyCleanupService =
+        new HistoryCleanupService(
+            config,
+            processInstanceWriter,
+            incidentWriter,
+            flowNodeInstanceWriter,
+            userTaskWriter,
+            variableInstanceWriter,
+            decisionInstanceWriter,
+            mock(RdbmsWriterMetrics.class, Mockito.RETURNS_DEEP_STUBS));
   }
 
   @Test
   void testFirstCleanupHistory() {
-    //given
+    // given
     when(processInstanceWriter.cleanupHistory(anyInt(), any(), anyInt())).thenReturn(1);
     when(flowNodeInstanceWriter.cleanupHistory(anyInt(), any(), anyInt())).thenReturn(1);
     when(incidentWriter.cleanupHistory(anyInt(), any(), anyInt())).thenReturn(1);
@@ -83,8 +83,8 @@ class HistoryCleanupServiceTest {
     when(decisionInstanceWriter.cleanupHistory(anyInt(), any(), anyInt())).thenReturn(1);
 
     // when
-    final Duration nextCleanupInterval = historyCleanupService.cleanupHistory(PARTITION_ID,
-        CLEANUP_DATE);
+    final Duration nextCleanupInterval =
+        historyCleanupService.cleanupHistory(PARTITION_ID, CLEANUP_DATE);
 
     // then
     assertEquals(Duration.ofHours(1), nextCleanupInterval);
@@ -99,18 +99,18 @@ class HistoryCleanupServiceTest {
   @Test
   void testCalculateNewDurationWhenDeletedNothing() {
     // given
-    final Map<String, Integer> numDeletedRecords = Map.of(
-        "processInstance", 0,
-        "flowNodeInstance", 0,
-        "incident", 0,
-        "userTask", 0,
-        "variable", 0,
-        "decisionInstance", 0
-    );
+    final Map<String, Integer> numDeletedRecords =
+        Map.of(
+            "processInstance", 0,
+            "flowNodeInstance", 0,
+            "incident", 0,
+            "userTask", 0,
+            "variable", 0,
+            "decisionInstance", 0);
 
     // when
-    final Duration nextDuration = historyCleanupService.calculateNewDuration(Duration.ofHours(4),
-        numDeletedRecords);
+    final Duration nextDuration =
+        historyCleanupService.calculateNewDuration(Duration.ofHours(4), numDeletedRecords);
 
     // then
     assertEquals(Duration.ofHours(8), nextDuration); // assuming minCleanupInterval is 1 hour
@@ -119,18 +119,18 @@ class HistoryCleanupServiceTest {
   @Test
   void testCalculateNewDurationWhenExceededBatchSize() {
     // given
-    final Map<String, Integer> numDeletedRecords = Map.of(
-        "processInstance", 100,
-        "flowNodeInstance", 100,
-        "incident", 100,
-        "userTask", 100,
-        "variable", 100,
-        "decisionInstance", 100
-    );
+    final Map<String, Integer> numDeletedRecords =
+        Map.of(
+            "processInstance", 100,
+            "flowNodeInstance", 100,
+            "incident", 100,
+            "userTask", 100,
+            "variable", 100,
+            "decisionInstance", 100);
 
     // when
-    final Duration nextDuration = historyCleanupService.calculateNewDuration(Duration.ofHours(4),
-        numDeletedRecords);
+    final Duration nextDuration =
+        historyCleanupService.calculateNewDuration(Duration.ofHours(4), numDeletedRecords);
 
     // then
     assertEquals(Duration.ofHours(2), nextDuration); // assuming minCleanupInterval is 1 hour
@@ -139,21 +139,20 @@ class HistoryCleanupServiceTest {
   @Test
   void testCalculateNewDurationWhenNormalCleanup() {
     // given
-    final Map<String, Integer> numDeletedRecords = Map.of(
-        "processInstance", 50,
-        "flowNodeInstance", 50,
-        "incident", 50,
-        "userTask", 50,
-        "variable", 50,
-        "decisionInstance", 50
-    );
+    final Map<String, Integer> numDeletedRecords =
+        Map.of(
+            "processInstance", 50,
+            "flowNodeInstance", 50,
+            "incident", 50,
+            "userTask", 50,
+            "variable", 50,
+            "decisionInstance", 50);
 
     // when
-    final Duration nextDuration = historyCleanupService.calculateNewDuration(Duration.ofHours(4),
-        numDeletedRecords);
+    final Duration nextDuration =
+        historyCleanupService.calculateNewDuration(Duration.ofHours(4), numDeletedRecords);
 
     // then
     assertEquals(Duration.ofHours(4), nextDuration); // assuming minCleanupInterval is 1 hour
   }
-
 }

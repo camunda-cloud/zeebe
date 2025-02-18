@@ -52,8 +52,8 @@ public class RdbmsWriterMetrics {
         .record(bulkSize);
   }
 
-  public void registerCleanupBackoffDurationGauge(final Integer partitionId,
-      final Supplier<Number> supplier) {
+  public void registerCleanupBackoffDurationGauge(
+      final Integer partitionId, final Supplier<Number> supplier) {
     Gauge.builder(meterName("historyCleanup.backoffDuration"), supplier)
         .description("Current backoff duration for cleanup of entity")
         .tag("partitionId", String.valueOf(partitionId))
@@ -71,8 +71,9 @@ public class RdbmsWriterMetrics {
     DistributionSummary.builder(meterName("historyCleanup.bulk.size"))
         .description("Exporter bulk size")
         .tag("entity", entityName)
-        .serviceLevelObjectives(1, 2, 5, 10, 20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000,
-            20_000, 50_000, 100_000)
+        .serviceLevelObjectives(
+            1, 2, 5, 10, 20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 50_000,
+            100_000)
         .register(meterRegistry)
         .record(bulkSize);
   }

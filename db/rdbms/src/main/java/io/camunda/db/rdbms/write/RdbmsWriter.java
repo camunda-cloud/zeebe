@@ -93,15 +93,16 @@ public class RdbmsWriter {
     formWriter = new FormWriter(executionQueue);
     mappingWriter = new MappingWriter(executionQueue);
 
-    historyCleanupService = new HistoryCleanupService(
-        config,
-        processInstanceWriter,
-        incidentWriter,
-        flowNodeInstanceWriter,
-        userTaskWriter,
-        variableWriter,
-        decisionInstanceWriter,
-        metrics);
+    historyCleanupService =
+        new HistoryCleanupService(
+            config,
+            processInstanceWriter,
+            incidentWriter,
+            flowNodeInstanceWriter,
+            userTaskWriter,
+            variableWriter,
+            decisionInstanceWriter,
+            metrics);
   }
 
   public AuthorizationWriter getAuthorizationWriter() {
